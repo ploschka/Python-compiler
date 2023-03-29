@@ -1,5 +1,5 @@
 #pragma once
-#include "LexemeInterface.hpp"
+#include "pycom/interface/LexemeInterface.hpp"
 
 class LexerInterface
 {

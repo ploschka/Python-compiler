@@ -6,7 +6,9 @@ project(Python_compiler
 
 include_directories(include)
 
-add_subdirectory(tests/googletest)
+add_library(lexer src/pycom/Lexer.cpp)
+
+# add_subdirectory(tests/googletest)
 
 add_executable(main main.cpp)
 
