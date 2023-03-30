@@ -1,7 +1,11 @@
 #pragma once
-#include "pycom/interface/LexemeInterface.hpp"
+#include <string>
 
-class Lexeme: public LexemeInterface
+enum class Type {
+
+};
+
+class Lexeme
 {
 private:
     std::string value;
@@ -9,6 +13,6 @@ private:
 public:
     std::string getValue() const;
     Type getType() const;
-    int setValue(std::string value);
-    int setType(Type type);
+    void setValue(std::string value);
+    void setType(Type type);
 };

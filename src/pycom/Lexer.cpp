@@ -1,4 +1,10 @@
 #include "pycom/lexer/Lexer.hpp"
+#include <fstream>
 
-int Lexer::openFile(std::string filename) {}
-Lexeme Lexer::getLexeme() const {}
+bool Lexer::openFile(std::string filename) {
+    file.open(filename);
+    return file.is_open();
+}
+Lexeme Lexer::getLexeme() const {
+    
+}

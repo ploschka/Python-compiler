@@ -6,7 +6,15 @@ project(Python_compiler
 
 include_directories(include)
 
-add_library(lexer src/pycom/Lexer.cpp)
+set(lexlib src/pycom/Lexer.cpp src/pycom/Lexeme.cpp src/pycom/LexerFactory.cpp)
+set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
+set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp)
+set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
+
+add_library(lexer ${lexlib})
+add_library(parser ${parslib})
+add_library(codegen ${codegenlib})
+add_library(semanalyzer ${semanalyzerlib})
 
 # add_subdirectory(tests/googletest)
 

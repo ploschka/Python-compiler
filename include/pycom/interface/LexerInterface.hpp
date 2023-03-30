@@ -1,9 +1,9 @@
 #pragma once
-#include "pycom/interface/LexemeInterface.hpp"
+#include <pycom/lexer/Lexeme.hpp>
 
 class LexerInterface
 {
 public:
-    virtual int openFile(std::string filename) = 0;
-    virtual LexemeInterface getLexeme() = 0;
+    virtual bool openFile(std::string filename) = 0;
+    virtual Lexeme getLexeme() const = 0;
 };

@@ -1,14 +1,16 @@
 #pragma once
-#include "pycom/interface/LexerInterface.hpp"
-#include "pycom/lexer/Lexeme.hpp"
+#include <pycom/interface/LexerInterface.hpp>
+#include <pycom/lexer/Lexeme.hpp>
 #include <memory>
+#include <fstream>
 
 class Lexer: public LexerInterface
 {
 private:
-    std::unique_ptr<char> buffer1;
-    std::unique_ptr<char> buffer2;
+    std::ifstream file;
+    std::string buffer1;
+    std::string buffer2;
 public:
-    int openFile(std::string filename);
+    bool openFile(std::string filename);
     Lexeme getLexeme() const;
 };

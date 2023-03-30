@@ -6,14 +6,14 @@
 #include <pycom/factory/CodeGenFactory.hpp>
 
 int main() {
-    auto lexfac = LexerFactory();
-    auto parfac = ParserFactory();
-    auto semfac = SemanticFactory();
-    auto cdgfac = CodeGenFactory();
+//     auto lexfac = LexerFactory();
+//     auto parfac = ParserFactory();
+//     auto semfac = SemanticFactory();
+//     auto cdgfac = CodeGenFactory();
 
 
-    auto lexer = lexfac.create();
-    auto parser = parfac.create();
-    auto seman = semfac.create();
-    auto codegen = cdgfac.create();
+//     auto lexer = lexfac.create();
+//     auto parser = parfac.create();
+//     auto seman = semfac.create();
+//     auto codegen = cdgfac.create();
 }
