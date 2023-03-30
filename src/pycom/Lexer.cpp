@@ -6,5 +6,5 @@ bool Lexer::openFile(std::string filename) {
     return file.is_open();
 }
 Lexeme Lexer::getLexeme() const {
-    
+    return Lexeme();
 }

@@ -16,7 +16,9 @@ add_library(parser ${parslib})
 add_library(codegen ${codegenlib})
 add_library(semanalyzer ${semanalyzerlib})
 
+set(libs lexer parser codegen semanalyzer)
+
 # add_subdirectory(tests/googletest)
 
 add_executable(main main.cpp)
-
+target_link_libraries(main ${libs})
