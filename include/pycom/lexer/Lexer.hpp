@@ -1,7 +1,6 @@
 #pragma once
 #include <pycom/interface/LexerInterface.hpp>
-#include <pycom/lexer/Lexeme.hpp>
-#include <memory>
+#include <pycom/lexeme/Lexeme.hpp>
 #include <fstream>
 
 class Lexer: public LexerInterface

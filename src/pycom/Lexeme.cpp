@@ -1,4 +1,4 @@
-#include <pycom/lexer/Lexeme.hpp>
+#include <pycom/lexeme/Lexeme.hpp>
 
 std::string Lexeme::getValue() const {
     return value;
