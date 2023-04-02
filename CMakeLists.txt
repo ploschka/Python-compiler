@@ -6,24 +6,28 @@ project(Python_compiler
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" OFF)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 include_directories(include)
 
 set(exename pycom)
 set(testname test_pycom)
 
 set(lexemelib src/pycom/Lexeme.cpp)
-set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp)
+set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp)
 set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
-set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
+set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 
 add_library(lexeme STATIC ${lexemelib})
 add_library(lexer STATIC ${lexlib})
 add_library(parser STATIC ${parslib})
-add_library(codegen STATIC ${codegenlib})
 add_library(semanalyzer STATIC ${semanalyzerlib})
+add_library(codegen STATIC ${codegenlib})
 
-set(libs lexeme lexer parser codegen semanalyzer)
+target_link_libraries(lexer lexeme)
+
+set(libs lexer parser codegen semanalyzer)
 
 add_executable(${exename} main.cpp)
 set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)

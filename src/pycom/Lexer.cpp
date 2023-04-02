@@ -1,12 +1,37 @@
-#include "pycom/lexer/Lexer.hpp"
-#include <fstream>
-#define CHARCOUNT 20
+#include <pycom/lexer/Lexer.hpp>
+#include <pycom/lexer/LexerStates.hpp>
+#define CHARCOUNT 1000
 
-bool Lexer::openFile(std::string filename) {
-    file.open(filename);
-    return file.is_open();
+Type Lexer::recognize() const
+{
+    return Type();
 }
-Lexeme Lexer::getLexeme() const {
-    std::string str(CHARCOUNT, ' ');
-    return Lexeme();
+
+bool Lexer::openFile(std::string filename)
+{
+    file.open(filename);
+    auto op = file.is_open();
+    if (op) {
+        buffer1.clear();
+        buffer2.clear();
+
+        buffer1.append(CHARCOUNT, '\0');
+        file.read(&buffer1[0], CHARCOUNT);
+        eof = file.eof();
+    }
+    return op;
+}
+
+void Lexer::setState(LexerStateInterface* state)
+{
+    this->state.reset(state);
+}
+
+Lexeme Lexer::getLexeme()
+{
+    if (file.is_open()) {
+        std::string str(CHARCOUNT, '\0');
+        file.read(&str[0], CHARCOUNT);
+    }
+    return Lexeme("eof", Type::eof);
 }
