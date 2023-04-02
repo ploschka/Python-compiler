@@ -1,2 +1,5 @@
 build
 .vscode
+.idea
+temp
+[Tt][Oo][Dd][Oo]\.*

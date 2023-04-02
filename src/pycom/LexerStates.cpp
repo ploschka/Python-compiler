@@ -1,9 +1,11 @@
 #include <pycom/lexer/LexerStates.hpp>
 
-void SomeLexerState::recognize() {
+bool SomeLexerState::recognize(char ch) {
     int a = 2 + 2;
+    return true;
 }
 
-void OtherLexerState::recognize() {
+bool OtherLexerState::recognize(char ch) {
     lexer->setState(new SomeLexerState());
+    return true;
 }

@@ -7,16 +7,17 @@ class BaseLexerState: public LexerStateInterface
 {
 protected:
     LexerInterface* lexer;
+    std::string accum;
 };
 
 class SomeLexerState: public BaseLexerState
 {
 public:
-    void recognize();
+    bool recognize(char ch);
 };
 
 class OtherLexerState: public BaseLexerState
 {
 public:
-    void recognize();
+    bool recognize(char ch);
 };
