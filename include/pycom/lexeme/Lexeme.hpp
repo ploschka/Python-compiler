@@ -17,6 +17,9 @@ enum class Type {
     minus,      // Оператор -
     star,       // Оператор *
     div,        // Оператор /
+    mod,        // Оператор %
+    idiv,       // Оператор //
+    matmul,     // Оператор @
     dot,        // Оператор .
     greater,    // Оператор >
     less,       // Оператор <
@@ -27,18 +30,35 @@ enum class Type {
     notop,      // Оператор not
     in,         // Оператор in
     is,         // Оператор is
+    andop,      // Оператор and
+    orop,       // Оператор or
+    inv,        // Оператор ~
+    lshift,     // Оператор <<
+    rshift,     // Оператор >>
+    land,       // Оператор &
+    lor,        // Оператор |
+    xorop,      // Оператор ^
     assign,     // Оператор =
     plusass,    // Оператор +=
     minass,     // Оператор -=
     mulass,     // Оператор *=
     divass,     // Оператор /=
+    modass,     // Оператор %=
+    idivass,    // Оператор //=
+    matmulass,  // Оператор @=
+    invass,     // Оператор ~=
+    lshiftass,  // Оператор <<=
+    rshiftass,  // Оператор >>=
+    landass,    // Оператор &=
+    lorass,     // Оператор |=
+    xorass,     // Оператор ^=
     def,        // Ключевое слово def
     ifop,       // Ключевое слово if
     elifop,     // Ключевое слово elif
     elseop,     // Ключевое слово else
     forop,      // Ключевое слово for
     whileop,    // Ключевое слово while
-    class,      // Ключевое слово class
+    classop,    // Ключевое слово class
     indent,     // Eсли отступ от края больше, чем у предыдущей строки
     dedent,     // Eсли отступ от края меньше, чем у предыдущей строки
     newline,    // Новая строка
