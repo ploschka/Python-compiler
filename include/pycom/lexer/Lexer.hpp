@@ -13,10 +13,11 @@ private:
     std::string* currBuff;
     std::string* otherBuff;
     std::string accum;
-    Type token;
+    Type type;
     std::unique_ptr<LexerStateInterface> state;
     std::string::const_iterator iter;
-    bool eof;
+    unsigned int row;
+    unsigned int pos;
     Type recognize(const std::string& id) const;
 public:
     bool openFile(std::string filename);

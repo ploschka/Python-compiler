@@ -3,7 +3,7 @@
 
 /// @brief Тип токена
 enum class Type {
-    id,         // Любой любое слово, позже оно будет распознано как ключевое слово, оператор или реально как идентификатор
+    id,         // Идентификатор
     number,     // Любое число, на последующих этапах трансляции будет распознано как целое или вещественное
     string,     // Строка
     lpr,        // Символ (
@@ -64,7 +64,7 @@ enum class Type {
     dedent,     // Eсли отступ от края меньше, чем у предыдущей строки
     newline,    // Новая строка
     eof,        // Конец файла
-    unexpected_token
+    unexpected  // Без комментариев
 };
 
 class Lexeme
@@ -72,11 +72,12 @@ class Lexeme
 private:
     std::string value;
     Type type;
+    unsigned int row;
+    unsigned int pos;
 public:
     std::string getValue() const;
     Type getType() const;
     void setValue(std::string value);
     void setType(Type type);
-    Lexeme() = default;
-    Lexeme(std::string value, Type type);
+    Lexeme(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0);
 };

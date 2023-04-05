@@ -6,7 +6,7 @@
 #define st(name) class name: public BaseLexerState \
                  { \
                  public: \
-                     name(LexerInterface* lex, std::string& acc, Type& t); \
+                     name(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos); \
                      bool recognize(char c); \
                  };
 
@@ -16,8 +16,9 @@ protected:
     LexerInterface* lexer;
     std::string& accum;
     Type& type;
-public:
-    BaseLexerState(LexerInterface* lex, std::string& acc, Type& t);
+    unsigned int& row;
+    unsigned int& pos;
+    BaseLexerState(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos);
 };
 
 st(Start)
@@ -42,12 +43,12 @@ st(Inv)
 st(Land)
 st(Lor)
 st(Xor)
-st(Lpr)
-st(Rpr)
-st(Lsbr)
-st(Rsbr)
-st(Lbr)
-st(Rbr)
+// st(Lpr)
+// st(Rpr)
+// st(Lsbr)
+// st(Rsbr)
+// st(Lbr)
+// st(Rbr)
 st(Idiv)
 st(Equal)
 st(Noteq)
@@ -68,5 +69,6 @@ st(Bandass)
 st(Borass)
 st(Xorass)
 st(Newline)
+st(Comment)
 
 #undef st

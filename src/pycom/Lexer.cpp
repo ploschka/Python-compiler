@@ -20,9 +20,10 @@ bool Lexer::openFile(std::string filename)
         iter = buffer1.cbegin();
         currBuff = &buffer1;
         otherBuff = &buffer2;
-        eof = file.eof();
-        token = Type::eof;
-        setState(new Start(this, this->accum, this->token));
+        type = Type::eof;
+        row = 1;
+        pos = 1;
+        setState(new Start(this, this->accum, this->type, this->row, this->pos));
     }
     return op;
 }
@@ -36,8 +37,9 @@ Lexeme Lexer::getLexeme()
 {
     if (file.is_open()) {
         while (!(this->state->recognize(*iter++)) &&
-               iter != currBuff->cend());
-        if (token == Type::eof) {
+              iter != currBuff->cend());
+        
+        if (type == Type::eof) {
             if (iter == currBuff->cend()) {
                 otherBuff->clear();
                 otherBuff->append(CHARCOUNT + 1, '\0');
@@ -46,15 +48,15 @@ Lexeme Lexer::getLexeme()
                 std::swap(currBuff, otherBuff);
                 while (!(this->state->recognize(*iter++)) &&
                     iter != currBuff->cend());
-                if (token == Type::eof)
+                if (type == Type::eof)
                     return Lexeme("eof", Type::eof);
             } else
-                Lexeme("eof", Type::eof);
+                Lexeme("eof", Type::eof, row, pos);
         }
-        if (token == Type::id)
-            return Lexeme(accum, recognize(accum));
+        if (type == Type::id)
+            return Lexeme(accum, recognize(accum), row, pos);
         else
-            return Lexeme(accum, token);
+            return Lexeme(accum, type);
     }
     return Lexeme("eof", Type::eof);
 }
