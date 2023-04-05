@@ -22,6 +22,7 @@ bool Lexer::openFile(std::string filename)
         otherBuff = &buffer2;
         eof = file.eof();
         token = Type::eof;
+        setState(new Start(this, this->accum, this->token));
     }
     return op;
 }

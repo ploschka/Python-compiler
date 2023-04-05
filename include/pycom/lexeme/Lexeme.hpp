@@ -13,8 +13,10 @@ enum class Type {
     lbr,        // Символ {
     rbr,        // Символ }
     colon,      // Символ :
-    plus,       // Оператор +
-    minus,      // Оператор -
+    unarplus,   // Унарный плюс
+    binarplus,  // Бинарный плюс
+    unarminus,  // Унарный минус
+    binarminus, // Бинарный минус
     star,       // Оператор *
     div,        // Оператор /
     mod,        // Оператор %
@@ -46,11 +48,10 @@ enum class Type {
     modass,     // Оператор %=
     idivass,    // Оператор //=
     matmulass,  // Оператор @=
-    invass,     // Оператор ~=
     lshiftass,  // Оператор <<=
     rshiftass,  // Оператор >>=
-    landass,    // Оператор &=
-    lorass,     // Оператор |=
+    bandass,    // Оператор &=
+    borass,     // Оператор |=
     xorass,     // Оператор ^=
     def,        // Ключевое слово def
     ifop,       // Ключевое слово if
@@ -62,7 +63,8 @@ enum class Type {
     indent,     // Eсли отступ от края больше, чем у предыдущей строки
     dedent,     // Eсли отступ от края меньше, чем у предыдущей строки
     newline,    // Новая строка
-    eof         // Конец файла
+    eof,        // Конец файла
+    unexpected_token
 };
 
 class Lexeme
