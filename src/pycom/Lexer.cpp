@@ -22,7 +22,7 @@ bool Lexer::openFile(std::string filename)
         otherBuff = &buffer2;
         type = Type::eof;
         row = 1;
-        pos = 1;
+        pos = 0;
         setState(new Start(this, this->accum, this->type, this->row, this->pos));
     }
     return op;

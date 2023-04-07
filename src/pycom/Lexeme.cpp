@@ -16,4 +16,4 @@ void Lexeme::setType(Type type) {
     this->type = type;
 }
 
-Lexeme::Lexeme(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0): value(value), type(type), row(row), pos(pos) {}
+Lexeme::Lexeme(std::string value, Type type, unsigned int row, unsigned int pos): value(value), type(type), row(row), pos(pos) {}

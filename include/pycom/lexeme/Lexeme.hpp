@@ -13,10 +13,8 @@ enum class Type {
     lbr,        // Символ {
     rbr,        // Символ }
     colon,      // Символ :
-    unarplus,   // Унарный плюс
-    binarplus,  // Бинарный плюс
-    unarminus,  // Унарный минус
-    binarminus, // Бинарный минус
+    plus,       // Оператор +
+    minus,      // Оператор -
     star,       // Оператор *
     div,        // Оператор /
     mod,        // Оператор %
