@@ -10,6 +10,13 @@
                                     type = t; \
                                     return true; \
                                     break
+#define justswitch(symbol, state) case symbol: \
+                                    newstate(state); \
+                                    break
+
+inline bool isSuitableForIdBeginning(char c) {
+    return std::isalpha(c) || c == '_';
+}
 
 inline bool isSuitableForId(char c) {
     return std::isalnum(c) || c == '_';
@@ -20,7 +27,7 @@ BaseLexerState::BaseLexerState(LexerInterface* lex, std::string& acc, Type& t, u
 
 impl(Start) {
     pos++;
-    if (std::isalpha(c)) {
+    if (isSuitableForIdBeginning(c)) {
         toacc;
         newstate(Id);
     } else if (std::isdigit(c)) {
@@ -36,41 +43,15 @@ impl(Start) {
             pos = 0;
             break;
 
-        case '#':
-            newstate(Comment);
-            break;
-
-        case '(':
-            newstate(Lpr);
-            break;
-
-        case '{':
-            newstate(Lbr);
-            break;
-
-        case '[':
-            newstate(Lsbr);
-            break;
-
-        case '+':
-            newstate(Plus);
-            break;
-
-        case '-':
-            newstate(Minus);
-            break;
-
-        case '~':
-            newstate(Inv);
-            break;
-
-        case '"':
-            newstate(String);
-            break;
-
-        case '\'':
-            newstate(String);
-            break;
+        justswitch('#', Comment);
+        justswitch('(', Lpr);
+        justswitch('{', Lbr);
+        justswitch('[', Lsbr);
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('~', Inv);
+        justswitch('"', String);
+        justswitch('\'', String);
 
         default:
             type = Type::unexpected;
@@ -83,7 +64,7 @@ impl(Start) {
 
 impl(Space) {
     pos++;
-    if (std::isalpha(c)) {
+    if (isSuitableForIdBeginning(c)) {
         toacc;
         newstate(Id);
     } else if (std::isdigit(c)) {
@@ -94,133 +75,70 @@ impl(Space) {
         case ' ':
             break;
 
-        case '+':
-            newstate(Plus);
-            break;
-
-        case '-':
-            newstate(Minus);
-            break;
-
-        case '*':
-            newstate(Star);
-            break;
-
-        case '/':
-            newstate(Div);
-            break;
-
-        case '@':
-            newstate(Matmul);
-            break;
-
-        case '<':
-            newstate(Less);
-            break;
-
-        case '>':
-            newstate(Greater);
-            break;
-
-        case '=':
-            newstate(Assign);
-            break;
-
-        case '%':
-            newstate(Mod);
-            break;
-
-        case '&':
-            newstate(Band);
-            break;
-
-        case '|':
-            newstate(Bor);
-            break;
-
-        case '^':
-            newstate(Xor);
-            break;
-
-        case '(':
-            newstate(Lpr);
-            break;
-
-        case ')':
-            newstate(Rpr);
-            break;
-
-        case '[':
-            newstate(Lsbr);
-            break;
-
-        case ']':
-            newstate(Rsbr);
-            break;
-
-        case '{':
-            newstate(Lbr);
-            break;
-
-        case '}':
-            newstate(Rbr);
-            break;
-
-        case ',':
-            newstate(Comma);
-            break;
-
-        case '.':
-            newstate(Dot);
-            break;
-
-        case '\n':
-            newstate(Newline);
-            break;
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('*', Star);
+        justswitch('/', Div);
+        justswitch('@', Matmul);
+        justswitch('<', Less);
+        justswitch('>', Greater);
+        justswitch('=', Assign);
+        justswitch('%', Mod);
+        justswitch('&', Band);
+        justswitch('|', Bor);
+        justswitch('^', Xor);
+        justswitch('(', Lpr);
+        justswitch(')', Rpr);
+        justswitch('[', Lsbr);
+        justswitch(']', Rsbr);
+        justswitch('{', Lbr);
+        justswitch('}', Rbr);
+        justswitch(',', Comma);
+        justswitch('.', Dot);
+        justswitch('\n', Newline);
         }
     }
     return false;
 }
 
 impl(Id) {
-    #define t Type::id;
     pos++;
     if (isSuitableForId(c)) {
         toacc;
     } else {
+        type = Type::id;
         switch (c)
         {
-        singlesymbol(' ', Space, t);
-        singlesymbol('+', Plus, t);
-        singlesymbol('-', Minus, t);
-        singlesymbol('*', Star, t);
-        singlesymbol('/', Div, t);
-        singlesymbol('@', Matmul, t);
-        singlesymbol('<', Less, t);
-        singlesymbol('>', Greater, t);
-        singlesymbol('=', Assign, t);
-        singlesymbol('%', Mod, t);
-        singlesymbol('&', Band, t);
-        singlesymbol('|', Bor, t);
-        singlesymbol('^', Xor, t);
-        singlesymbol('(', Lpr, t);
-        singlesymbol(')', Rpr, t);
-        singlesymbol('[', Lsbr, t);
-        singlesymbol(']', Rsbr, t);
-        singlesymbol('{', Lbr, t);
-        singlesymbol('}', Rbr, t);
-        singlesymbol(',', Comma, t);
-        singlesymbol('.', Dot, t);
-        singlesymbol('\n', Newline, t);
+        justswitch(' ', Space);
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('*', Star);
+        justswitch('/', Div);
+        justswitch('@', Matmul);
+        justswitch('<', Less);
+        justswitch('>', Greater);
+        justswitch('=', Assign);
+        justswitch('%', Mod);
+        justswitch('&', Band);
+        justswitch('|', Bor);
+        justswitch('^', Xor);
+        justswitch('(', Lpr);
+        justswitch(')', Rpr);
+        justswitch('[', Lsbr);
+        justswitch(']', Rsbr);
+        justswitch('{', Lbr);
+        justswitch('}', Rbr);
+        justswitch(',', Comma);
+        justswitch('.', Dot);
+        justswitch('\n', Newline);
 
         default:
             type = Type::unexpected;
-            return true;
             break;
         }
+        return true;
     }
     return false;
-    #undef t
 }
 
 impl(String) {
@@ -235,41 +153,22 @@ impl(String) {
     }
 }
 
-impl(Colon) {}
-impl(Dot) {}
-impl(FirstNumPart) {
-    #define t Type::number
+impl(Colon) {
     pos++;
-    if (std::isdigit(c)) {
-        toacc;
+    if (isSuitableForIdBeginning(c)) {
+        newstate(Id);
+    } else if (std::isdigit(c)) {
+        newstate(FirstNumPart);
     } else {
         switch (c) {
-        singlesymbol(' ', Space, t);
-        singlesymbol('+', Plus, t);
-        singlesymbol('-', Minus, t);
-        singlesymbol('*', Star, t);
-        singlesymbol('/', Div, t);
-        singlesymbol('@', Matmul, t);
-        singlesymbol('<', Less, t);
-        singlesymbol('>', Greater, t);
-        singlesymbol('=', Assign, t);
-        singlesymbol('%', Mod, t);
-        singlesymbol('&', Band, t);
-        singlesymbol('|', Bor, t);
-        singlesymbol('^', Xor, t);
-        singlesymbol('(', Lpr, t);
-        singlesymbol(')', Rpr, t);
-        singlesymbol('[', Lsbr, t);
-        singlesymbol(']', Rsbr, t);
-        singlesymbol('{', Lbr, t);
-        singlesymbol('}', Rbr, t);
-        singlesymbol(',', Comma, t);
-        singlesymbol('\n', Newline, t);
-
-        case '.':
-            toacc;
-            newstate(SecondNumPart);
-            break;
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('~', Inv);
+        justswitch('"', String);
+        justswitch('\'', String);
+        justswitch('\n', Newline);
+        justswitch(' ', Space);            
+        justswitch('#', Comment);
 
         default:
             type = Type::unexpected;
@@ -277,47 +176,99 @@ impl(FirstNumPart) {
             break;
         }
     }
+    type = Type::colon;
+    return true;
+}
+
+impl(Dot) {
+    pos++;
+    if (isSuitableForIdBeginning(c)) {
+        type = Type::dot;
+        newstate(Id);
+        return true;
+    } else {
+        type = Type::unexpected;
+        return true;
+    }
+}
+
+impl(FirstNumPart) {
+    pos++;
+    if (std::isdigit(c)) {
+        toacc;
+    } else if (c == '.') {
+        toacc;
+        newstate(SecondNumPart);
+    } else {
+        type = Type::number;
+        switch (c) {
+        justswitch(' ', Space);
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('*', Star);
+        justswitch('/', Div);
+        justswitch('@', Matmul);
+        justswitch('<', Less);
+        justswitch('>', Greater);
+        justswitch('=', Assign);
+        justswitch('%', Mod);
+        justswitch('&', Band);
+        justswitch('|', Bor);
+        justswitch('^', Xor);
+        justswitch('(', Lpr);
+        justswitch(')', Rpr);
+        justswitch('[', Lsbr);
+        justswitch(']', Rsbr);
+        justswitch('{', Lbr);
+        justswitch('}', Rbr);
+        justswitch(',', Comma);
+        justswitch('\n', Newline);
+
+        default:
+            type = Type::unexpected;
+            break;
+        }
+        return true;
+    }
     return false;
-    #undef t
 }
 
 impl(SecondNumPart) {
-    #define t Type::number
     pos++;
     if (std::isdigit(c)) {
         toacc;
     } else {
+        type = Type::number;
         switch (c) {
-        singlesymbol(' ', Space, t);
-        singlesymbol('+', Plus, t);
-        singlesymbol('-', Minus, t);
-        singlesymbol('*', Star, t);
-        singlesymbol('/', Div, t);
-        singlesymbol('@', Matmul, t);
-        singlesymbol('<', Less, t);
-        singlesymbol('>', Greater, t);
-        singlesymbol('=', Assign, t);
-        singlesymbol('%', Mod, t);
-        singlesymbol('&', Band, t);
-        singlesymbol('|', Bor, t);
-        singlesymbol('^', Xor, t);
-        singlesymbol('(', Lpr, t);
-        singlesymbol(')', Rpr, t);
-        singlesymbol('[', Lsbr, t);
-        singlesymbol(']', Rsbr, t);
-        singlesymbol('{', Lbr, t);
-        singlesymbol('}', Rbr, t);
-        singlesymbol(',', Comma, t);
-        singlesymbol('\n', Newline, t);
+        justswitch(' ', Space);
+        justswitch('+', Plus);
+        justswitch('-', Minus);
+        justswitch('*', Star);
+        justswitch('/', Div);
+        justswitch('@', Matmul);
+        justswitch('<', Less);
+        justswitch('>', Greater);
+        justswitch('=', Assign);
+        justswitch('%', Mod);
+        justswitch('&', Band);
+        justswitch('|', Bor);
+        justswitch('^', Xor);
+        justswitch('(', Lpr);
+        justswitch(')', Rpr);
+        justswitch('[', Lsbr);
+        justswitch(']', Rsbr);
+        justswitch('{', Lbr);
+        justswitch('}', Rbr);
+        justswitch(',', Comma);
+        justswitch('\n', Newline);
 
         default:
             type = Type::unexpected;
-            return true;
             break;
         }
+        return true;
     }
     return false;
-    #undef t
 }
 
 impl(Plus) {}
