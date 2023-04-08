@@ -55,5 +55,6 @@ st(Rshift)
 st(Newline)
 st(Comment)
 st(Comma)
+st(Indent)
 
 #undef st

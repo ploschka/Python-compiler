@@ -104,7 +104,7 @@ impl(Start)
         toacc;
         newstate(FirstNumPart);
     }
-    else
+    else if (c != '\n')
     {
         tablestate;
     }
@@ -451,7 +451,20 @@ impl(Xor)
 impl(Lpr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::lpr;
     return true;
 }
@@ -459,7 +472,20 @@ impl(Lpr)
 impl(Rpr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::rpr;
     return true;
 }
@@ -467,7 +493,20 @@ impl(Rpr)
 impl(Lsbr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::lsbr;
     return true;
 }
@@ -475,7 +514,20 @@ impl(Lsbr)
 impl(Rsbr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::rsbr;
     return true;
 }
@@ -483,7 +535,20 @@ impl(Rsbr)
 impl(Lbr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::lbr;
     return true;
 }
@@ -491,7 +556,20 @@ impl(Lbr)
 impl(Rbr)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else
+    {
+        tablestate;
+    }
     type = Type::rbr;
     return true;
 }
@@ -560,12 +638,32 @@ impl(Exclamation)
     return true;
 }
 
-impl(Newline) {}
-impl(Comment) {}
+impl(Newline) {
+    pos++;
+    newstate(Indent);
+    type = Type::newline;
+    return true;
+}
+
+impl(Comment)
+{
+    if (c == '\n')
+    {
+        newstate(Newline);
+    }
+    return false;
+}
+
 impl(Comma)
 {
     pos++;
     newstate(Skip);
     type = Type::comma;
     return true;
+}
+
+impl(Indent) {
+    pos = 1;
+    row++;
+    
 }
