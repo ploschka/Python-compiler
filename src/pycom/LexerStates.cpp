@@ -15,6 +15,12 @@
     {                                                                                                                        \
         return new state(a, b, c, d, e);                                                                                     \
     }
+#define tab(symbol, state)     \
+    {                          \
+        symbol, state##Factory \
+    }
+
+typedef std::function<LexerStateInterface *(LexerInterface *, std::string &, Type &, unsigned int &, unsigned int &)> stateFactory;
 
 fac(String)
 fac(Colon)
@@ -43,16 +49,7 @@ fac(Newline)
 fac(Comment)
 fac(Comma)
 
-#define tab(symbol, state)     \
-    {                          \
-        symbol, state##Factory \
-    }
-
-static std::unordered_map<char, std::function<LexerStateInterface *(LexerInterface *,
-                                                                    std::string &,
-                                                                    Type &,
-                                                                    unsigned int &,
-                                                                    unsigned int &)>> table = {
+static std::unordered_map<char, stateFactory> table = {
     tab('+', Plus),
     tab('-', Minus),
     tab('*', Star),
@@ -237,29 +234,338 @@ impl(SecondNumPart)
     return false;
 }
 
-impl(Plus) {}
-impl(Minus) {}
-impl(Star) {}
-impl(Div) {}
-impl(Mod) {}
-impl(Matmul) {}
-impl(Greater) {}
-impl(Less) {}
-impl(Assign) {}
-impl(Inv) {}
-impl(Band) {}
-impl(Bor) {}
-impl(Xor) {}
-impl(Lpr) {}
-impl(Rpr) {}
-impl(Lsbr) {}
-impl(Rsbr) {}
-impl(Lbr) {}
-impl(Rbr) {}
-impl(Idiv) {}
-impl(Lshift) {}
-impl(Rshift) {}
-impl(Exclamation) {}
+impl(Plus)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::plusass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::plus;
+    }
+    return true;
+}
+
+impl(Minus)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::minass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::minus;
+    }
+    return true;
+}
+
+impl(Star)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::mulass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::star;
+    }
+    return true;
+}
+
+impl(Div)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::plusass;
+    }
+    else if (c == '/')
+    {
+        newstate(Idiv);
+        return false;
+    }
+    else
+    {
+        tablestate;
+        type = Type::div;
+    }
+    return true;
+}
+impl(Mod)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::modass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::mod;
+    }
+    return true;
+}
+
+impl(Matmul)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::matmulass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::matmul;
+    }
+    return true;
+}
+
+impl(Greater)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::grequal;
+    }
+    else if (c == '>')
+    {
+        newstate(Rshift);
+        return false;
+    }
+    else
+    {
+        tablestate;
+        type = Type::greater;
+    }
+    return true;
+}
+
+impl(Less)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::lequal;
+    }
+    else if (c == '<')
+    {
+        newstate(Lshift);
+        return false;
+    }
+    else
+    {
+        tablestate;
+        type = Type::less;
+    }
+    return true;
+}
+
+impl(Assign)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::equal;
+    }
+    else
+    {
+        tablestate;
+        type = Type::assign;
+    }
+    return true;
+}
+
+impl(Inv)
+{
+    pos++;
+    tablestate;
+    type = Type::inv;
+    return true;
+}
+
+impl(Band)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::bandass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::band;
+    }
+    return true;
+}
+
+impl(Bor)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::borass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::bor;
+    }
+    return true;
+}
+
+impl(Xor)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::xorass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::xorop;
+    }
+    return true;
+}
+
+impl(Lpr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::lpr;
+    return true;
+}
+
+impl(Rpr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::rpr;
+    return true;
+}
+
+impl(Lsbr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::lsbr;
+    return true;
+}
+
+impl(Rsbr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::rsbr;
+    return true;
+}
+
+impl(Lbr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::lbr;
+    return true;
+}
+
+impl(Rbr)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::rbr;
+    return true;
+}
+
+impl(Idiv)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::idivass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::idiv;
+    }
+    return true;
+}
+
+impl(Lshift)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::lshiftass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::lshift;
+    }
+    return true;
+}
+
+impl(Rshift)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::rshiftass;
+    }
+    else
+    {
+        tablestate;
+        type = Type::rshift;
+    }
+    return true;
+}
+
+impl(Exclamation)
+{
+    pos++;
+    if (c == '=')
+    {
+        newstate(Skip);
+        type = Type::noteq;
+    }
+    else
+    {
+        tablestate;
+        type = Type::unexpected;
+    }
+    return true;
+}
+
 impl(Newline) {}
 impl(Comment) {}
-impl(Comma) {}
+impl(Comma)
+{
+    pos++;
+    newstate(Skip);
+    type = Type::comma;
+    return true;
+}
