@@ -76,7 +76,10 @@ private:
 public:
     std::string getValue() const;
     Type getType() const;
+    unsigned int getPos() const;
+    unsigned int getRow() const;
     void setValue(std::string value);
     void setType(Type type);
     Lexeme(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0);
+    Lexeme(Type type, unsigned int row = 0, unsigned int pos = 0);
 };

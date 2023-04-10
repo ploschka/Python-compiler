@@ -1,6 +1,7 @@
 #include <pycom/lexer/LexerStates.hpp>
 #include <unordered_map>
 #include <functional>
+#include <unordered_set>
 
 #define impl(name)                                                                                                                           \
     name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : BaseLexerState(lex, acc, t, row, pos) \
@@ -9,7 +10,11 @@
     bool name::recognize(char c)
 #define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos))
 #define toacc accum.push_back(c)
-#define tablestate lexer->setState(table[c](lexer, accum, type, row, pos))
+#define tablestate                                               \
+    if (alphabet.find(c) != alphabet.end())                      \
+        lexer->setState(table[c](lexer, accum, type, row, pos)); \
+    else                                                         \
+        newstate(Skip)
 #define fac(state)                                                                                                           \
     inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e) \
     {                                                                                                                        \
@@ -48,6 +53,7 @@ fac(Exclamation)
 fac(Newline)
 fac(Comment)
 fac(Comma)
+fac(End)
 
 static std::unordered_map<char, stateFactory> table = {
     tab('+', Plus),
@@ -77,7 +83,11 @@ static std::unordered_map<char, stateFactory> table = {
     tab('"', String),
     tab('\'', String),
     tab('\n', Newline),
+    tab('\0', End)
 };
+
+static const std::unordered_set<char> alphabet = {
+    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\'', '\n', '\0'};
 
 inline bool isSuitableForIdBeginning(char c)
 {
@@ -638,7 +648,8 @@ impl(Exclamation)
     return true;
 }
 
-impl(Newline) {
+impl(Newline)
+{
     pos++;
     newstate(Indent);
     type = Type::newline;
@@ -662,8 +673,18 @@ impl(Comma)
     return true;
 }
 
-impl(Indent) {
+impl(Indent)
+{
     pos = 1;
     row++;
-    
+    tablestate;
+    type = Type::indent;
+    return true;
+}
+
+impl(End)
+{
+    pos++;
+    type = Type::eof;
+    return true;
 }

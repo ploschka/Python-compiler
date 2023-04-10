@@ -5,6 +5,7 @@ project(Python_compiler
     LANGUAGES CXX)
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" OFF)
+option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -39,4 +40,10 @@ if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
     add_executable(${testname} tests/test.cpp)
     target_link_libraries(${testname} gtest gtest_main ${libs})
-endif()
+endif(PYCOM_BUILD_TESTS)
+
+if(PYCOM_BUILD_EXAMPLES)
+    set(examplename example)
+    add_executable(${examplename}1 examples/1.cpp)
+    target_link_libraries(${examplename}1 ${libs})    
+endif(PYCOM_BUILD_EXAMPLES)

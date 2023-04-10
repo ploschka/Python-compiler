@@ -1,17 +1,32 @@
 #include <pycom/lexer/Lexer.hpp>
 #include <pycom/lexer/LexerStates.hpp>
+#include <unordered_map>
+#include <iostream>
 #define CHARCOUNT 1000
 
-Type Lexer::recognize(const std::string& id) const
+Type Lexer::recognize(const std::string &id) const
 {
-    return Type();
+    static const std::unordered_map<std::string, Type> map = {
+        {"def", Type::def},
+        {"if", Type::ifop},
+        {"elif", Type::elifop},
+        {"else", Type::elseop},
+        {"for", Type::forop},
+        {"while", Type::whileop},
+        {"class", Type::classop}};
+
+    if (map.find(id) != map.end())
+        return map.at(id);
+    else
+        return Type::id;
 }
 
 bool Lexer::openFile(std::string filename)
 {
     file.open(filename);
     auto op = file.is_open();
-    if (op) {
+    if (op)
+    {
         buffer1.clear();
         buffer2.clear();
 
@@ -28,35 +43,52 @@ bool Lexer::openFile(std::string filename)
     return op;
 }
 
-void Lexer::setState(LexerStateInterface* state)
+void Lexer::setState(LexerStateInterface *state)
 {
     this->state.reset(state);
 }
 
 Lexeme Lexer::getLexeme()
 {
-    if (file.is_open()) {
+    if (file.is_open())
+    {
         while (!(this->state->recognize(*iter++)) &&
-              iter != currBuff->cend());
-        
-        if (type == Type::eof) {
-            if (iter == currBuff->cend()) {
+               iter != currBuff->cend())
+            ;
+
+        if (type == Type::eof)
+        {
+            if (iter == currBuff->cend())
+            {
                 otherBuff->clear();
                 otherBuff->append(CHARCOUNT + 1, '\0');
                 file.read(&(*otherBuff)[0], CHARCOUNT);
                 iter = otherBuff->cbegin();
                 std::swap(currBuff, otherBuff);
                 while (!(this->state->recognize(*iter++)) &&
-                    iter != currBuff->cend());
+                       iter != currBuff->cend())
+                    ;
                 if (type == Type::eof)
-                    return Lexeme("eof", Type::eof);
-            } else
-                Lexeme("eof", Type::eof, row, pos);
+                {
+                    return Lexeme(Type::eof, row, pos);
+                    file.close();
+                }
+            }
+            else
+            {
+                Lexeme(Type::eof, row, pos);
+                file.close();
+            }
         }
+        Type retType;
         if (type == Type::id)
-            return Lexeme(accum, recognize(accum), row, pos);
+            retType = recognize(accum);
         else
-            return Lexeme(accum, type);
+            retType = type;
+
+        auto retAcc = accum;
+        accum.assign("");
+        return Lexeme(retAcc, retType, row, pos);
     }
-    return Lexeme("eof", Type::eof);
+    return Lexeme(Type::eof);
 }
