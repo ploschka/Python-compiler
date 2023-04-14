@@ -6,7 +6,7 @@ int main()
     auto lexfac = LexerFactory();
     auto lexer = lexfac.create();
 
-    lexer->openFile("/scripts/1.py");
+    lexer->openFile("scripts/1.py");
     for (int i = 0; i < 20; i++)
     {
         auto lexeme = lexer->getLexeme();

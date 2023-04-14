@@ -52,7 +52,8 @@ Lexeme Lexer::getLexeme()
 {
     if (file.is_open())
     {
-        while (!(this->state->recognize(*iter++)) &&
+        unsigned int position;
+        while (!(position = this->state->recognize(*iter++)) &&
                iter != currBuff->cend())
             ;
 
@@ -70,25 +71,30 @@ Lexeme Lexer::getLexeme()
                     ;
                 if (type == Type::eof)
                 {
-                    return Lexeme(Type::eof, row, pos);
+                    return Lexeme(Type::eof, row, position);
                     file.close();
                 }
             }
             else
             {
-                Lexeme(Type::eof, row, pos);
+                Lexeme(Type::eof, row, position);
                 file.close();
             }
         }
         Type retType;
+        std::string retAcc;
+        if (type == Type::id || type == Type::number)
+        {
+            retAcc = accum;
+            accum.assign("");
+        }
         if (type == Type::id)
-            retType = recognize(accum);
+        {
+            retType = recognize(retAcc);
+        }
         else
             retType = type;
-
-        auto retAcc = accum;
-        accum.assign("");
-        return Lexeme(retAcc, retType, row, pos);
+        return Lexeme(retAcc, retType, row, position);
     }
     return Lexeme(Type::eof);
 }

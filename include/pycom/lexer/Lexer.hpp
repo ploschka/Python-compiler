@@ -3,6 +3,7 @@
 #include <pycom/lexeme/Lexeme.hpp>
 #include <fstream>
 #include <memory>
+#include <stack>
 
 class Lexer: public LexerInterface
 {
@@ -18,6 +19,7 @@ private:
     std::string::const_iterator iter;
     unsigned int row;
     unsigned int pos;
+    std::stack<unsigned int> indentStack;
     Type recognize(const std::string& id) const;
 public:
     bool openFile(std::string filename);

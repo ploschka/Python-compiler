@@ -3,6 +3,6 @@
 class LexerStateInterface
 {
 public:
-    virtual bool recognize(char ch) = 0;
+    virtual unsigned int recognize(char ch) = 0;
     virtual ~LexerStateInterface() = default;
 };

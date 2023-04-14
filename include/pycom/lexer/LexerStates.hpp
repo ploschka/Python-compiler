@@ -7,7 +7,7 @@
                  { \
                  public: \
                      name(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos); \
-                     bool recognize(char c); \
+                     unsigned int recognize(char c); \
                  };
 
 class BaseLexerState: public LexerStateInterface
@@ -18,6 +18,7 @@ protected:
     Type& type;
     unsigned int& row;
     unsigned int& pos;
+    unsigned int initpos;
     BaseLexerState(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos);
 };
 

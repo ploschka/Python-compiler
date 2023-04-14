@@ -7,8 +7,6 @@ project(Python_compiler
 option(PYCOM_BUILD_TESTS "Build pycom tests" OFF)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 include_directories(include)
 
 set(exename pycom)
@@ -43,7 +41,17 @@ if(PYCOM_BUILD_TESTS)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
-    set(examplename example)
-    add_executable(${examplename}1 examples/1.cpp)
-    target_link_libraries(${examplename}1 ${libs})    
-endif(PYCOM_BUILD_EXAMPLES)
+    set(script_source examples/scripts)
+    set(script_output scripts)
+
+    set(lexex lexerexample)
+    set(examples ${lexex})
+
+    add_executable(${lexex} examples/1.cpp)
+
+    foreach(ex ${examples})
+        target_link_libraries(${ex} ${libs})        
+    endforeach()
+    
+    configure_file(${script_source}/1.py ${script_output}/1.py COPYONLY)
+endif()

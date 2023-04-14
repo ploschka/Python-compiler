@@ -3,22 +3,22 @@
 #include <functional>
 #include <unordered_set>
 
-#define impl(name)                                                                                                                           \
+#define impl(name)                                                                                                                                                           \
     name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : BaseLexerState(lex, acc, t, row, pos) \
-    {                                                                                                                                        \
-    }                                                                                                                                        \
-    bool name::recognize(char c)
+    {                                                                                                                                                                        \
+    }                                                                                                                                                                        \
+    unsigned int name::recognize(char c)
 #define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos))
 #define toacc accum.push_back(c)
-#define tablestate                                               \
-    if (alphabet.find(c) != alphabet.end())                      \
+#define tablestate                                                        \
+    if (symbols.find(c) != symbols.end())                                 \
         lexer->setState(table[c](lexer, accum, type, row, pos)); \
-    else                                                         \
+    else                                                                  \
         newstate(Skip)
-#define fac(state)                                                                                                           \
+#define fac(state)                                                                                                                            \
     inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e) \
-    {                                                                                                                        \
-        return new state(a, b, c, d, e);                                                                                     \
+    {                                                                                                                                         \
+        return new state(a, b, c, d, e);                                                                                                   \
     }
 #define tab(symbol, state)     \
     {                          \
@@ -83,10 +83,9 @@ static std::unordered_map<char, stateFactory> table = {
     tab('"', String),
     tab('\'', String),
     tab('\n', Newline),
-    tab('\0', End)
-};
+    tab('\0', End)};
 
-static const std::unordered_set<char> alphabet = {
+static const std::unordered_set<char> symbols = {
     '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\'', '\n', '\0'};
 
 inline bool isSuitableForIdBeginning(char c)
@@ -99,7 +98,7 @@ inline bool isSuitableForId(char c)
     return std::isalnum(c) || c == '_';
 }
 
-BaseLexerState::BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : lexer(lex), accum(acc), type(t), row(row), pos(pos) {}
+BaseLexerState::BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : lexer(lex), accum(acc), type(t), row(row), pos(pos), initpos(pos) {}
 
 impl(Start)
 {
@@ -108,17 +107,21 @@ impl(Start)
     {
         toacc;
         newstate(Id);
+        initpos = pos;
     }
     else if (std::isdigit(c))
     {
         toacc;
         newstate(FirstNumPart);
+        initpos = pos;
+
     }
     else if (c != '\n')
     {
         tablestate;
+        initpos = pos;
     }
-    return false;
+    return 0;
 }
 
 impl(Skip)
@@ -128,17 +131,19 @@ impl(Skip)
     {
         toacc;
         newstate(Id);
+        initpos = pos;
     }
     else if (std::isdigit(c))
     {
         toacc;
         newstate(FirstNumPart);
+        initpos = pos;
     }
-    else
-    {
+    else {
         tablestate;
+        initpos = pos;
     }
-    return false;
+    return 0;
 }
 
 impl(Id)
@@ -152,9 +157,9 @@ impl(Id)
     {
         tablestate;
         type = Type::id;
-        return true;
+        return initpos;
     }
-    return false;
+    return 0;
 }
 
 impl(String)
@@ -164,12 +169,12 @@ impl(String)
     {
         type = Type::string;
         newstate(Skip);
-        return true;
+        return initpos;
     }
     else
     {
         toacc;
-        return false;
+        return 0;
     }
 }
 
@@ -189,7 +194,7 @@ impl(Colon)
         tablestate;
     }
     type = Type::colon;
-    return true;
+    return initpos;
 }
 
 impl(Dot)
@@ -204,7 +209,7 @@ impl(Dot)
         tablestate;
     }
     type = Type::dot;
-    return true;
+    return initpos;
 }
 
 impl(FirstNumPart)
@@ -223,9 +228,9 @@ impl(FirstNumPart)
     {
         tablestate;
         type = Type::number;
-        return true;
+        return initpos;
     }
-    return false;
+    return 0;
 }
 
 impl(SecondNumPart)
@@ -239,25 +244,36 @@ impl(SecondNumPart)
     {
         tablestate;
         type = Type::number;
-        return true;
+        return initpos;
     }
-    return false;
+    return 0;
 }
 
 impl(Plus)
 {
     pos++;
-    if (c == '=')
+    if (isSuitableForIdBeginning(c))
+    {
+        toacc;
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        toacc;
+        newstate(FirstNumPart);
+    }
+    else if (c == '=')
     {
         newstate(Skip);
         type = Type::plusass;
+        return initpos;
     }
     else
     {
         tablestate;
-        type = Type::plus;
     }
-    return true;
+    type = Type::plus;
+    return initpos;
 }
 
 impl(Minus)
@@ -273,7 +289,7 @@ impl(Minus)
         tablestate;
         type = Type::minus;
     }
-    return true;
+    return initpos;
 }
 
 impl(Star)
@@ -289,7 +305,7 @@ impl(Star)
         tablestate;
         type = Type::star;
     }
-    return true;
+    return initpos;
 }
 
 impl(Div)
@@ -303,14 +319,14 @@ impl(Div)
     else if (c == '/')
     {
         newstate(Idiv);
-        return false;
+        return 0;
     }
     else
     {
         tablestate;
         type = Type::div;
     }
-    return true;
+    return initpos;
 }
 impl(Mod)
 {
@@ -325,7 +341,7 @@ impl(Mod)
         tablestate;
         type = Type::mod;
     }
-    return true;
+    return initpos;
 }
 
 impl(Matmul)
@@ -341,7 +357,7 @@ impl(Matmul)
         tablestate;
         type = Type::matmul;
     }
-    return true;
+    return initpos;
 }
 
 impl(Greater)
@@ -355,14 +371,14 @@ impl(Greater)
     else if (c == '>')
     {
         newstate(Rshift);
-        return false;
+        return 0;
     }
     else
     {
         tablestate;
         type = Type::greater;
     }
-    return true;
+    return initpos;
 }
 
 impl(Less)
@@ -376,14 +392,14 @@ impl(Less)
     else if (c == '<')
     {
         newstate(Lshift);
-        return false;
+        return 0;
     }
     else
     {
         tablestate;
         type = Type::less;
     }
-    return true;
+    return initpos;
 }
 
 impl(Assign)
@@ -399,7 +415,7 @@ impl(Assign)
         tablestate;
         type = Type::assign;
     }
-    return true;
+    return initpos;
 }
 
 impl(Inv)
@@ -407,7 +423,7 @@ impl(Inv)
     pos++;
     tablestate;
     type = Type::inv;
-    return true;
+    return initpos;
 }
 
 impl(Band)
@@ -423,7 +439,7 @@ impl(Band)
         tablestate;
         type = Type::band;
     }
-    return true;
+    return initpos;
 }
 
 impl(Bor)
@@ -439,7 +455,7 @@ impl(Bor)
         tablestate;
         type = Type::bor;
     }
-    return true;
+    return initpos;
 }
 
 impl(Xor)
@@ -455,7 +471,7 @@ impl(Xor)
         tablestate;
         type = Type::xorop;
     }
-    return true;
+    return initpos;
 }
 
 impl(Lpr)
@@ -476,7 +492,7 @@ impl(Lpr)
         tablestate;
     }
     type = Type::lpr;
-    return true;
+    return initpos;
 }
 
 impl(Rpr)
@@ -497,7 +513,7 @@ impl(Rpr)
         tablestate;
     }
     type = Type::rpr;
-    return true;
+    return initpos;
 }
 
 impl(Lsbr)
@@ -518,7 +534,7 @@ impl(Lsbr)
         tablestate;
     }
     type = Type::lsbr;
-    return true;
+    return initpos;
 }
 
 impl(Rsbr)
@@ -539,7 +555,7 @@ impl(Rsbr)
         tablestate;
     }
     type = Type::rsbr;
-    return true;
+    return initpos;
 }
 
 impl(Lbr)
@@ -560,7 +576,7 @@ impl(Lbr)
         tablestate;
     }
     type = Type::lbr;
-    return true;
+    return initpos;
 }
 
 impl(Rbr)
@@ -581,7 +597,7 @@ impl(Rbr)
         tablestate;
     }
     type = Type::rbr;
-    return true;
+    return initpos;
 }
 
 impl(Idiv)
@@ -597,7 +613,7 @@ impl(Idiv)
         tablestate;
         type = Type::idiv;
     }
-    return true;
+    return initpos;
 }
 
 impl(Lshift)
@@ -613,7 +629,7 @@ impl(Lshift)
         tablestate;
         type = Type::lshift;
     }
-    return true;
+    return initpos;
 }
 
 impl(Rshift)
@@ -629,7 +645,7 @@ impl(Rshift)
         tablestate;
         type = Type::rshift;
     }
-    return true;
+    return initpos;
 }
 
 impl(Exclamation)
@@ -645,15 +661,16 @@ impl(Exclamation)
         tablestate;
         type = Type::unexpected;
     }
-    return true;
+    return initpos;
 }
 
 impl(Newline)
 {
-    pos++;
+    pos = 1;
+    row++;
     newstate(Indent);
     type = Type::newline;
-    return true;
+    return initpos;
 }
 
 impl(Comment)
@@ -662,7 +679,7 @@ impl(Comment)
     {
         newstate(Newline);
     }
-    return false;
+    return 0;
 }
 
 impl(Comma)
@@ -670,21 +687,20 @@ impl(Comma)
     pos++;
     newstate(Skip);
     type = Type::comma;
-    return true;
+    return initpos;
 }
 
 impl(Indent)
 {
-    pos = 1;
-    row++;
+    pos++;
     tablestate;
     type = Type::indent;
-    return true;
+    return initpos;
 }
 
 impl(End)
 {
     pos++;
     type = Type::eof;
-    return true;
+    return initpos;
 }
