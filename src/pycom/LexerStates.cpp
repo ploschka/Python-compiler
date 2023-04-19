@@ -3,22 +3,22 @@
 #include <functional>
 #include <unordered_set>
 
-#define impl(name)                                                                                                                                                           \
+#define impl(name)                                                                                                                           \
     name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : BaseLexerState(lex, acc, t, row, pos) \
-    {                                                                                                                                                                        \
-    }                                                                                                                                                                        \
+    {                                                                                                                                        \
+    }                                                                                                                                        \
     unsigned int name::recognize(char c)
 #define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos))
 #define toacc accum.push_back(c)
-#define tablestate                                                        \
-    if (symbols.find(c) != symbols.end())                                 \
+#define tablestate                                               \
+    if (symbols.find(c) != symbols.end())                        \
         lexer->setState(table[c](lexer, accum, type, row, pos)); \
-    else                                                                  \
+    else                                                         \
         newstate(Skip)
-#define fac(state)                                                                                                                            \
+#define fac(state)                                                                                                           \
     inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e) \
-    {                                                                                                                                         \
-        return new state(a, b, c, d, e);                                                                                                   \
+    {                                                                                                                        \
+        return new state(a, b, c, d, e);                                                                                     \
     }
 #define tab(symbol, state)     \
     {                          \
@@ -107,19 +107,15 @@ impl(Start)
     {
         toacc;
         newstate(Id);
-        initpos = pos;
     }
     else if (std::isdigit(c))
     {
         toacc;
         newstate(FirstNumPart);
-        initpos = pos;
-
     }
     else if (c != '\n')
     {
         tablestate;
-        initpos = pos;
     }
     return 0;
 }
@@ -131,17 +127,15 @@ impl(Skip)
     {
         toacc;
         newstate(Id);
-        initpos = pos;
     }
     else if (std::isdigit(c))
     {
         toacc;
         newstate(FirstNumPart);
-        initpos = pos;
     }
-    else {
+    else
+    {
         tablestate;
-        initpos = pos;
     }
     return 0;
 }
