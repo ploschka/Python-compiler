@@ -46,12 +46,15 @@ if(PYCOM_BUILD_EXAMPLES)
 
     set(lexex lexerexample)
     set(examples ${lexex})
+    set(example_scripts lexer.py)
 
-    add_executable(${lexex} examples/1.cpp)
+    add_executable(${lexex} examples/lexer.cpp)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
     endforeach()
-    
-    configure_file(${script_source}/1.py ${script_output}/1.py COPYONLY)
+
+    foreach(ex ${example_scripts})
+        configure_file(${script_source}/${ex} ${script_output}/${ex} COPYONLY)        
+    endforeach()    
 endif()

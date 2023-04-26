@@ -52,19 +52,25 @@ static std::unordered_map<Type, std::string> map = {
     {Type::bandass, "bandass"},
     {Type::borass, "borass"},
     {Type::xorass, "xorass"},
-    {Type::def, "def"},
-    {Type::ifop, "ifop"},
-    {Type::elifop, "elifop"},
-    {Type::elseop, "elseop"},
-    {Type::forop, "forop"},
-    {Type::whileop, "whileop"},
-    {Type::classop, "classop"},
+    {Type::defkw, "defkw"},
+    {Type::ifkw, "ifkw"},
+    {Type::elifkw, "elifkw"},
+    {Type::elsekw, "elsekw"},
+    {Type::forkw, "forkw"},
+    {Type::whilekw, "whilekw"},
+    {Type::classkw, "classkw"},
+    {Type::returnkw, "returnkw"},
+    {Type::yieldkw, "yieldkw"},
+    {Type::continuekw, "continuekw"},
+    {Type::breakkw, "breakkw"},
     {Type::indent, "indent"},
     {Type::dedent, "dedent"},
     {Type::newline, "newline"},
     {Type::eof, "eof"},
     {Type::comma, "comma"},
-    {Type::unexpected, "unexpected"}
+    {Type::unexpected, "unexpected"},
+    {Type::arrow, "arrow"},
+    {Type::indenterror, "indenterror"}
 };
 
 int main()
@@ -72,10 +78,12 @@ int main()
     auto lexfac = LexerFactory();
     auto lexer = lexfac.create();
 
-    lexer->openFile("scripts/1.py");
-    for (int i = 0; i < 20; i++)
+    lexer->openFile("scripts/lexer.py");
+    bool keepGoing = true;
+    while (keepGoing)
     {
         auto lexeme = lexer->getLexeme();
-        std::cout << lexeme.getValue() << ((lexeme.getValue() == "") ? "" : " ") << map.at(lexeme.getType()) << " row: " << lexeme.getRow() <<  " pos: " << lexeme.getPos() << std::endl;
+        keepGoing = lexeme.getType() != Type::eof;
+        std::cout << '"' << lexeme.getValue() << "\"  " << map.at(lexeme.getType()) << " row: " << lexeme.getRow() << " pos: " << lexeme.getPos() << std::endl;
     }
 }

@@ -5,6 +5,9 @@
 #include <memory>
 #include <stack>
 
+enum class IndentType;
+typedef std::stack<unsigned int> instack;
+
 class Lexer: public LexerInterface
 {
 private:
@@ -19,7 +22,9 @@ private:
     std::string::const_iterator iter;
     unsigned int row;
     unsigned int pos;
-    std::stack<unsigned int> indentStack;
+    instack indentStack;
+    IndentType indentType;
+
     Type recognize(const std::string& id) const;
 public:
     bool openFile(std::string filename);

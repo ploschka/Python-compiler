@@ -7,13 +7,17 @@
 Type Lexer::recognize(const std::string &id) const
 {
     static const std::unordered_map<std::string, Type> map = {
-        {"def", Type::def},
-        {"if", Type::ifop},
-        {"elif", Type::elifop},
-        {"else", Type::elseop},
-        {"for", Type::forop},
-        {"while", Type::whileop},
-        {"class", Type::classop}};
+        {"def", Type::defkw},
+        {"if", Type::ifkw},
+        {"elif", Type::elifkw},
+        {"else", Type::elsekw},
+        {"for", Type::forkw},
+        {"while", Type::whilekw},
+        {"class", Type::classkw},
+        {"return", Type::returnkw},
+        {"yield", Type::yieldkw},
+        {"continue", Type::continuekw},
+        {"break", Type::breakkw}};
 
     if (map.find(id) != map.end())
         return map.at(id);
@@ -38,7 +42,9 @@ bool Lexer::openFile(std::string filename)
         type = Type::eof;
         row = 1;
         pos = 0;
-        setState(new Start(this, this->accum, this->type, this->row, this->pos));
+        indentStack = std::stack<unsigned int>();
+        indentStack.push(0);
+        setState(new Start(this, this->accum, this->type, this->row, this->pos, this->indentStack, this->indentType));
     }
     return op;
 }
@@ -83,7 +89,7 @@ Lexeme Lexer::getLexeme()
         }
         Type retType;
         std::string retAcc;
-        if (type == Type::id || type == Type::number)
+        if (type == Type::id || type == Type::number || type == Type::string)
         {
             retAcc = accum;
             accum.assign("");
@@ -94,6 +100,7 @@ Lexeme Lexer::getLexeme()
         }
         else
             retType = type;
+        type = Type::eof;
         return Lexeme(retAcc, retType, row, position);
     }
     return Lexeme(Type::eof);

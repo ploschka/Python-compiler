@@ -3,90 +3,88 @@
 #include <functional>
 #include <unordered_set>
 
-#define impl(name)                                                                                                                           \
-    name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : BaseLexerState(lex, acc, t, row, pos) \
-    {                                                                                                                                        \
-    }                                                                                                                                        \
+#define impl(name)                                                                                                                                                                              \
+    name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype) : BaseLexerState(lex, acc, t, row, pos, stack, intype) \
+    {                                                                                                                                                                                           \
+    }                                                                                                                                                                                           \
     unsigned int name::recognize(char c)
-#define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos))
-#define toacc accum.push_back(c)
-#define tablestate                                               \
-    if (symbols.find(c) != symbols.end())                        \
-        lexer->setState(table[c](lexer, accum, type, row, pos)); \
-    else                                                         \
+#define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos, stack, intype))
+#define tablestate                                                              \
+    if (symbols.find(c) != symbols.end())                                       \
+        lexer->setState(table[c](lexer, accum, type, row, pos, stack, intype)); \
+    else                                                                        \
         newstate(Skip)
-#define fac(state)                                                                                                           \
-    inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e) \
-    {                                                                                                                        \
-        return new state(a, b, c, d, e);                                                                                     \
+#define fac(state)                                                                                                                                      \
+    inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e, instack &f, IndentType &g) \
+    {                                                                                                                                                   \
+        return new state(a, b, c, d, e, f, g);                                                                                                          \
     }
 #define tab(symbol, state)     \
     {                          \
         symbol, state##Factory \
     }
 
-typedef std::function<LexerStateInterface *(LexerInterface *, std::string &, Type &, unsigned int &, unsigned int &)> stateFactory;
+typedef std::function<LexerStateInterface *(LexerInterface *, std::string &, Type &, unsigned int &, unsigned int &, instack &, IndentType &)> stateFactory;
 
 fac(String)
-fac(Colon)
-fac(Dot)
-fac(Plus)
-fac(Minus)
-fac(Star)
-fac(Div)
-fac(Mod)
-fac(Matmul)
-fac(Greater)
-fac(Less)
-fac(Assign)
-fac(Inv)
-fac(Band)
-fac(Bor)
-fac(Xor)
-fac(Lpr)
-fac(Rpr)
-fac(Lsbr)
-fac(Rsbr)
-fac(Lbr)
-fac(Rbr)
-fac(Exclamation)
-fac(Newline)
-fac(Comment)
-fac(Comma)
-fac(End)
+    fac(Colon)
+        fac(Dot)
+            fac(Plus)
+                fac(Minus)
+                    fac(Star)
+                        fac(Div)
+                            fac(Mod)
+                                fac(Matmul)
+                                    fac(Greater)
+                                        fac(Less)
+                                            fac(Assign)
+                                                fac(Inv)
+                                                    fac(Band)
+                                                        fac(Bor)
+                                                            fac(Xor)
+                                                                fac(Lpr)
+                                                                    fac(Rpr)
+                                                                        fac(Lsbr)
+                                                                            fac(Rsbr)
+                                                                                fac(Lbr)
+                                                                                    fac(Rbr)
+                                                                                        fac(Exclamation)
+                                                                                            fac(Newline)
+                                                                                                fac(Comment)
+                                                                                                    fac(Comma)
+                                                                                                        fac(End)
 
-static std::unordered_map<char, stateFactory> table = {
-    tab('+', Plus),
-    tab('-', Minus),
-    tab('*', Star),
-    tab('/', Div),
-    tab('@', Matmul),
-    tab('%', Mod),
-    tab('&', Band),
-    tab('|', Bor),
-    tab('^', Xor),
-    tab('!', Exclamation),
-    tab('<', Less),
-    tab('>', Greater),
-    tab('=', Assign),
-    tab('~', Inv),
-    tab('.', Dot),
-    tab(',', Comma),
-    tab('(', Lpr),
-    tab(')', Rpr),
-    tab('[', Lsbr),
-    tab(']', Rsbr),
-    tab('{', Lbr),
-    tab('}', Rbr),
-    tab('#', Comment),
-    tab(':', Colon),
-    tab('"', String),
-    tab('\'', String),
-    tab('\n', Newline),
-    tab('\0', End)};
+                                                                                                            static std::unordered_map<char, stateFactory> table = {
+                                                                                                                tab('+', Plus),
+                                                                                                                tab('-', Minus),
+                                                                                                                tab('*', Star),
+                                                                                                                tab('/', Div),
+                                                                                                                tab('@', Matmul),
+                                                                                                                tab('%', Mod),
+                                                                                                                tab('&', Band),
+                                                                                                                tab('|', Bor),
+                                                                                                                tab('^', Xor),
+                                                                                                                tab('!', Exclamation),
+                                                                                                                tab('<', Less),
+                                                                                                                tab('>', Greater),
+                                                                                                                tab('=', Assign),
+                                                                                                                tab('~', Inv),
+                                                                                                                tab('.', Dot),
+                                                                                                                tab(',', Comma),
+                                                                                                                tab('(', Lpr),
+                                                                                                                tab(')', Rpr),
+                                                                                                                tab('[', Lsbr),
+                                                                                                                tab(']', Rsbr),
+                                                                                                                tab('{', Lbr),
+                                                                                                                tab('}', Rbr),
+                                                                                                                tab('#', Comment),
+                                                                                                                tab(':', Colon),
+                                                                                                                tab('"', String),
+                                                                                                                tab('\n', Newline),
+                                                                                                                tab('\0', End)};
 
 static const std::unordered_set<char> symbols = {
-    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\'', '\n', '\0'};
+    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\n', '\0'};
 
 inline bool isSuitableForIdBeginning(char c)
 {
@@ -98,19 +96,19 @@ inline bool isSuitableForId(char c)
     return std::isalnum(c) || c == '_';
 }
 
-BaseLexerState::BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos) : lexer(lex), accum(acc), type(t), row(row), pos(pos), initpos(pos) {}
+BaseLexerState::BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype) : lexer(lex), accum(acc), type(t), row(row), pos(pos), initpos(pos), stack(stack), intype(intype) {}
 
 impl(Start)
 {
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else if (c != '\n')
@@ -125,12 +123,12 @@ impl(Skip)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -145,7 +143,7 @@ impl(Id)
     pos++;
     if (isSuitableForId(c))
     {
-        toacc;
+        accum.push_back(c);
     }
     else
     {
@@ -159,7 +157,7 @@ impl(Id)
 impl(String)
 {
     pos++;
-    if (c == '\'' || c == '"')
+    if (c == '"')
     {
         type = Type::string;
         newstate(Skip);
@@ -167,7 +165,7 @@ impl(String)
     }
     else
     {
-        toacc;
+        accum.push_back(c);
         return 0;
     }
 }
@@ -196,12 +194,16 @@ impl(Dot)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
+        accum.push_back(c);
         newstate(Id);
     }
-    else
+    else if (std::isdigit(c))
     {
-        tablestate;
+        accum.push_back(c);
+        newstate(FirstNumPart);
     }
+    else
+        tablestate;
     type = Type::dot;
     return initpos;
 }
@@ -211,16 +213,22 @@ impl(FirstNumPart)
     pos++;
     if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
     }
     else if (c == '.')
     {
-        toacc;
+        accum.push_back(c);
         newstate(SecondNumPart);
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else
+            tablestate;
         type = Type::number;
         return initpos;
     }
@@ -232,7 +240,7 @@ impl(SecondNumPart)
     pos++;
     if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
     }
     else
     {
@@ -248,12 +256,12 @@ impl(Plus)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else if (c == '=')
@@ -264,7 +272,18 @@ impl(Plus)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
     }
     type = Type::plus;
     return initpos;
@@ -278,9 +297,25 @@ impl(Minus)
         newstate(Skip);
         type = Type::minass;
     }
+    else if (c == '>')
+    {
+        newstate(Skip);
+        type = Type::arrow;
+    }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::minus;
     }
     return initpos;
@@ -296,7 +331,18 @@ impl(Star)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::star;
     }
     return initpos;
@@ -317,7 +363,18 @@ impl(Div)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::div;
     }
     return initpos;
@@ -332,7 +389,18 @@ impl(Mod)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::mod;
     }
     return initpos;
@@ -348,7 +416,18 @@ impl(Matmul)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::matmul;
     }
     return initpos;
@@ -369,7 +448,18 @@ impl(Greater)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::greater;
     }
     return initpos;
@@ -390,7 +480,18 @@ impl(Less)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::less;
     }
     return initpos;
@@ -406,7 +507,18 @@ impl(Assign)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::assign;
     }
     return initpos;
@@ -415,7 +527,18 @@ impl(Assign)
 impl(Inv)
 {
     pos++;
-    tablestate;
+    if (isSuitableForIdBeginning(c))
+    {
+        accum.push_back(c);
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        accum.push_back(c);
+        newstate(FirstNumPart);
+    }
+    else
+        tablestate;
     type = Type::inv;
     return initpos;
 }
@@ -430,7 +553,18 @@ impl(Band)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::band;
     }
     return initpos;
@@ -446,7 +580,18 @@ impl(Bor)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::bor;
     }
     return initpos;
@@ -462,7 +607,18 @@ impl(Xor)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::xorop;
     }
     return initpos;
@@ -473,12 +629,12 @@ impl(Lpr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -494,12 +650,12 @@ impl(Rpr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -515,12 +671,12 @@ impl(Lsbr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -536,12 +692,12 @@ impl(Rsbr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -557,12 +713,12 @@ impl(Lbr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -578,12 +734,12 @@ impl(Rbr)
     pos++;
     if (isSuitableForIdBeginning(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
-        toacc;
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
@@ -604,7 +760,18 @@ impl(Idiv)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::idiv;
     }
     return initpos;
@@ -620,7 +787,18 @@ impl(Lshift)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::lshift;
     }
     return initpos;
@@ -636,7 +814,18 @@ impl(Rshift)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::rshift;
     }
     return initpos;
@@ -652,7 +841,18 @@ impl(Exclamation)
     }
     else
     {
-        tablestate;
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+            tablestate;
         type = Type::unexpected;
     }
     return initpos;
@@ -662,7 +862,12 @@ impl(Newline)
 {
     pos = 1;
     row++;
-    newstate(Indent);
+    if (c == '\0')
+    {
+        newstate(End);
+        return 0;
+    }
+    lexer->setState(new Indent(lexer, accum, type, row, pos, stack, intype, c));
     type = Type::newline;
     return initpos;
 }
@@ -679,17 +884,120 @@ impl(Comment)
 impl(Comma)
 {
     pos++;
-    newstate(Skip);
+    if (isSuitableForIdBeginning(c))
+    {
+        accum.push_back(c);
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        accum.push_back(c);
+        newstate(FirstNumPart);
+    }
+    else
+        tablestate;
     type = Type::comma;
     return initpos;
 }
 
-impl(Indent)
+Indent::Indent(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype, char c) : BaseLexerState(lex, acc, t, row, pos, stack, intype), prevchar(c) {}
+unsigned int Indent::recognize(char c)
 {
     pos++;
-    tablestate;
-    type = Type::indent;
-    return initpos;
+    if (intype == IndentType::null)
+    {
+        switch (prevchar)
+        {
+        case ' ':
+            intype = IndentType::space;
+            break;
+        case '\t':
+            intype = IndentType::tab;
+            break;
+        }
+    }
+    switch (intype)
+    {
+    case (IndentType::space):
+        switch (prevchar)
+        {
+        case ' ':
+            intcount++;
+            break;
+        case '\t':
+            type = Type::indenterror;
+            return initpos;
+            break;
+        }
+        switch (c)
+        {
+        case ' ':
+            intcount++;
+            return 0;
+            break;
+        case '\t':
+            type = Type::indenterror;
+            return initpos;
+            break;
+        }
+        break;
+
+    case (IndentType::tab):
+        switch (prevchar)
+        {
+        case '\t':
+            intcount++;
+            break;
+        case ' ':
+            type = Type::indenterror;
+            return initpos;
+            break;
+        }
+        switch (c)
+        {
+        case '\t':
+            intcount++;
+            return 0;
+            break;
+        case ' ':
+            type = Type::indenterror;
+            return initpos;
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    prevchar = 0;
+    if (isSuitableForIdBeginning(c))
+    {
+        accum.push_back(c);
+        newstate(Id);
+    }
+    else if (std::isdigit(c))
+    {
+        accum.push_back(c);
+        newstate(FirstNumPart);
+    }
+    else
+        tablestate;
+
+    if (intcount > stack.top())
+    {
+        stack.push(intcount);
+        type = Type::indent;
+        return initpos;
+    }
+    if (intcount < stack.top())
+    {
+        stack.pop();
+        if (intcount == stack.top())
+            type = Type::dedent;
+        else
+            type = Type::indenterror;
+        return initpos;
+    }
+    return 0;
 }
 
 impl(End)

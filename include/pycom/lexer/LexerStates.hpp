@@ -2,24 +2,37 @@
 #include <pycom/interface/LexerStateInterface.hpp>
 #include <pycom/interface/LexerInterface.hpp>
 #include <memory>
+#include <stack>
 
-#define st(name) class name: public BaseLexerState \
-                 { \
-                 public: \
-                     name(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos); \
-                     unsigned int recognize(char c); \
-                 };
+#define st(name)                                                                                                                        \
+    class name : public BaseLexerState                                                                                                  \
+    {                                                                                                                                   \
+    public:                                                                                                                             \
+        name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype); \
+        unsigned int recognize(char c);                                                                                                 \
+    };
 
-class BaseLexerState: public LexerStateInterface
+enum class IndentType
+{
+    null,
+    space,
+    tab
+};
+
+typedef std::stack<unsigned int> instack;
+
+class BaseLexerState : public LexerStateInterface
 {
 protected:
-    LexerInterface* lexer;
-    std::string& accum;
-    Type& type;
-    unsigned int& row;
-    unsigned int& pos;
+    LexerInterface *lexer;
+    std::string &accum;
+    Type &type;
+    unsigned int &row;
+    unsigned int &pos;
     unsigned int initpos;
-    BaseLexerState(LexerInterface* lex, std::string& acc, Type& t, unsigned int& row, unsigned int& pos);
+    instack &stack;
+    IndentType &intype;
+    BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype);
 };
 
 st(Start)
@@ -56,7 +69,16 @@ st(Rshift)
 st(Newline)
 st(Comment)
 st(Comma)
-st(Indent)
 st(End)
+
+class Indent : public BaseLexerState
+{
+private:
+    unsigned int intcount = 0;
+    char prevchar;
+public:
+    Indent(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype, char c);
+    unsigned int recognize(char c);
+};
 
 #undef st

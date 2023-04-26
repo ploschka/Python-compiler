@@ -2,7 +2,8 @@
 #include <string>
 
 /// @brief Тип токена
-enum class Type {
+enum class Type
+{
     id,         // Идентификатор
     number,     // Любое число, на последующих этапах трансляции будет распознано как целое или вещественное
     string,     // Строка
@@ -51,19 +52,25 @@ enum class Type {
     bandass,    // Оператор &=
     borass,     // Оператор |=
     xorass,     // Оператор ^=
-    def,        // Ключевое слово def
-    ifop,       // Ключевое слово if
-    elifop,     // Ключевое слово elif
-    elseop,     // Ключевое слово else
-    forop,      // Ключевое слово for
-    whileop,    // Ключевое слово while
-    classop,    // Ключевое слово class
+    arrow,      // Оператор ->
+    defkw,      // Ключевое слово def
+    ifkw,       // Ключевое слово if
+    elifkw,     // Ключевое слово elif
+    elsekw,     // Ключевое слово else
+    forkw,      // Ключевое слово for
+    whilekw,    // Ключевое слово while
+    classkw,    // Ключевое слово class
+    yieldkw,    // Ключевое слово yield
+    returnkw,   // Ключевое слово return
+    continuekw, // Ключевое слово continue
+    breakkw,    // Ключевое слово break
     indent,     // Eсли отступ от края больше, чем у предыдущей строки
     dedent,     // Eсли отступ от края меньше, чем у предыдущей строки
     newline,    // Новая строка
     eof,        // Конец файла
     comma,      // Запятая
-    unexpected  // Без комментариев
+    unexpected, // Без комментариев
+    indenterror // Ошибка отступов
 };
 
 class Lexeme
@@ -73,6 +80,7 @@ private:
     Type type;
     unsigned int row;
     unsigned int pos;
+
 public:
     std::string getValue() const;
     Type getType() const;
