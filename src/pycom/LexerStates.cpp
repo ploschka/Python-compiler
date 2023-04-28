@@ -930,7 +930,7 @@ unsigned int Indent::recognize(char c)
             intcount++;
             break;
         case '\t':
-            type = Type::indenterror;
+            type = Type::tabspacemix;
             return initpos;
             break;
         }
@@ -941,7 +941,7 @@ unsigned int Indent::recognize(char c)
             return 0;
             break;
         case '\t':
-            type = Type::indenterror;
+            type = Type::tabspacemix;
             return initpos;
             break;
         }
@@ -954,7 +954,7 @@ unsigned int Indent::recognize(char c)
             intcount++;
             break;
         case ' ':
-            type = Type::indenterror;
+            type = Type::tabspacemix;
             return initpos;
             break;
         }
@@ -965,7 +965,7 @@ unsigned int Indent::recognize(char c)
             return 0;
             break;
         case ' ':
-            type = Type::indenterror;
+            type = Type::tabspacemix;
             return initpos;
             break;
         }
