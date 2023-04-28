@@ -69,16 +69,27 @@ st(Rshift)
 st(Newline)
 st(Comment)
 st(Comma)
-st(End)
 
 class Indent : public BaseLexerState
 {
 private:
     unsigned int intcount = 0;
     char prevchar;
+
 public:
     Indent(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype, char c);
     unsigned int recognize(char c);
+};
+
+class End : public BaseLexerState
+{
+private:
+    std::unique_ptr<LexerStateInterface> state;
+
+public:
+    End(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype);
+    unsigned int recognize(char c);
+    void setState(LexerStateInterface *state);
 };
 
 #undef st

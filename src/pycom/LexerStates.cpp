@@ -12,6 +12,13 @@
 #define tablestate                                                              \
     if (symbols.find(c) != symbols.end())                                       \
         lexer->setState(table[c](lexer, accum, type, row, pos, stack, intype)); \
+    else if (c == '\0')                                                         \
+    {                                                                           \
+        End *endstate = new End(lexer, accum, type, row, pos, stack, intype);   \
+        endstate->setState(lexer->getState());                                  \
+        lexer->setState(endstate);                                              \
+        return 0;                                                               \
+    }                                                                           \
     else                                                                        \
         newstate(Skip)
 #define fac(state)                                                                                                                                      \
@@ -27,64 +34,62 @@
 typedef std::function<LexerStateInterface *(LexerInterface *, std::string &, Type &, unsigned int &, unsigned int &, instack &, IndentType &)> stateFactory;
 
 fac(String)
-    fac(Colon)
-        fac(Dot)
-            fac(Plus)
-                fac(Minus)
-                    fac(Star)
-                        fac(Div)
-                            fac(Mod)
-                                fac(Matmul)
-                                    fac(Greater)
-                                        fac(Less)
-                                            fac(Assign)
-                                                fac(Inv)
-                                                    fac(Band)
-                                                        fac(Bor)
-                                                            fac(Xor)
-                                                                fac(Lpr)
-                                                                    fac(Rpr)
-                                                                        fac(Lsbr)
-                                                                            fac(Rsbr)
-                                                                                fac(Lbr)
-                                                                                    fac(Rbr)
-                                                                                        fac(Exclamation)
-                                                                                            fac(Newline)
-                                                                                                fac(Comment)
-                                                                                                    fac(Comma)
-                                                                                                        fac(End)
+fac(Colon)
+fac(Dot)
+fac(Plus)
+fac(Minus)
+fac(Star)
+fac(Div)
+fac(Mod)
+fac(Matmul)
+fac(Greater)
+fac(Less)
+fac(Assign)
+fac(Inv)
+fac(Band)
+fac(Bor)
+fac(Xor)
+fac(Lpr)
+fac(Rpr)
+fac(Lsbr)
+fac(Rsbr)
+fac(Lbr)
+fac(Rbr)
+fac(Exclamation)
+fac(Newline)
+fac(Comment)
+fac(Comma)
 
-                                                                                                            static std::unordered_map<char, stateFactory> table = {
-                                                                                                                tab('+', Plus),
-                                                                                                                tab('-', Minus),
-                                                                                                                tab('*', Star),
-                                                                                                                tab('/', Div),
-                                                                                                                tab('@', Matmul),
-                                                                                                                tab('%', Mod),
-                                                                                                                tab('&', Band),
-                                                                                                                tab('|', Bor),
-                                                                                                                tab('^', Xor),
-                                                                                                                tab('!', Exclamation),
-                                                                                                                tab('<', Less),
-                                                                                                                tab('>', Greater),
-                                                                                                                tab('=', Assign),
-                                                                                                                tab('~', Inv),
-                                                                                                                tab('.', Dot),
-                                                                                                                tab(',', Comma),
-                                                                                                                tab('(', Lpr),
-                                                                                                                tab(')', Rpr),
-                                                                                                                tab('[', Lsbr),
-                                                                                                                tab(']', Rsbr),
-                                                                                                                tab('{', Lbr),
-                                                                                                                tab('}', Rbr),
-                                                                                                                tab('#', Comment),
-                                                                                                                tab(':', Colon),
-                                                                                                                tab('"', String),
-                                                                                                                tab('\n', Newline),
-                                                                                                                tab('\0', End)};
+static std::unordered_map<char, stateFactory> table = {
+    tab('+', Plus),
+    tab('-', Minus),
+    tab('*', Star),
+    tab('/', Div),
+    tab('@', Matmul),
+    tab('%', Mod),
+    tab('&', Band),
+    tab('|', Bor),
+    tab('^', Xor),
+    tab('!', Exclamation),
+    tab('<', Less),
+    tab('>', Greater),
+    tab('=', Assign),
+    tab('~', Inv),
+    tab('.', Dot),
+    tab(',', Comma),
+    tab('(', Lpr),
+    tab(')', Rpr),
+    tab('[', Lsbr),
+    tab(']', Rsbr),
+    tab('{', Lbr),
+    tab('}', Rbr),
+    tab('#', Comment),
+    tab(':', Colon),
+    tab('"', String),
+    tab('\n', Newline)};
 
 static const std::unordered_set<char> symbols = {
-    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\n', '\0'};
+    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\n'};
 
 inline bool isSuitableForIdBeginning(char c)
 {
@@ -1004,5 +1009,11 @@ impl(End)
 {
     pos++;
     type = Type::eof;
+    lexer->setState(state.release());
     return initpos;
+}
+
+void End::setState(LexerStateInterface *state)
+{
+    this->state.reset(state);
 }

@@ -70,7 +70,8 @@ enum class Type
     eof,        // Конец файла
     comma,      // Запятая
     unexpected, // Без комментариев
-    indenterror // Ошибка отступов
+    indenterror,// Ошибка отступов
+    tabspacemix // Смесь табов и пробелов в отступах
 };
 
 class Lexeme

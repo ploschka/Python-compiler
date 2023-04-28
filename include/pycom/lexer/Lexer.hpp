@@ -29,5 +29,6 @@ private:
 public:
     bool openFile(std::string filename);
     void setState(LexerStateInterface* state);
+    LexerStateInterface* getState();
     Lexeme getLexeme();
 };

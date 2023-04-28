@@ -70,8 +70,7 @@ static std::unordered_map<Type, std::string> map = {
     {Type::comma, "comma"},
     {Type::unexpected, "unexpected"},
     {Type::arrow, "arrow"},
-    {Type::indenterror, "indenterror"}
-};
+    {Type::indenterror, "indenterror"}};
 
 int main()
 {

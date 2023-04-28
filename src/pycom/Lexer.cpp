@@ -54,6 +54,11 @@ void Lexer::setState(LexerStateInterface *state)
     this->state.reset(state);
 }
 
+LexerStateInterface *Lexer::getState()
+{
+    return state.release();
+}
+
 Lexeme Lexer::getLexeme()
 {
     if (file.is_open())
