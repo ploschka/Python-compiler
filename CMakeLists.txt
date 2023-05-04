@@ -12,21 +12,21 @@ include_directories(include)
 set(exename pycom)
 set(testname test_pycom)
 
-set(lexemelib src/pycom/Lexeme.cpp)
+set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
 set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp)
 set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 
-add_library(lexeme STATIC ${lexemelib})
+add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
 add_library(lexer STATIC ${lexlib})
 add_library(parser STATIC ${parslib})
 add_library(semanalyzer STATIC ${semanalyzerlib})
 add_library(codegen STATIC ${codegenlib})
 
-target_link_libraries(lexer lexeme)
+target_link_libraries(lexer token)
 
 set(libs lexer parser codegen semanalyzer)
 

@@ -59,7 +59,7 @@ LexerStateInterface *Lexer::getState()
     return state.release();
 }
 
-Lexeme Lexer::getLexeme()
+Token Lexer::getToken()
 {
     if (file.is_open())
     {
@@ -82,13 +82,13 @@ Lexeme Lexer::getLexeme()
                     ;
                 if (type == Type::eof)
                 {
-                    return Lexeme(Type::eof, row, position);
+                    return Token(Type::eof, row, position);
                     file.close();
                 }
             }
             else
             {
-                Lexeme(Type::eof, row, position);
+                Token(Type::eof, row, position);
                 file.close();
             }
         }
@@ -106,7 +106,29 @@ Lexeme Lexer::getLexeme()
         else
             retType = type;
         type = Type::eof;
-        return Lexeme(retAcc, retType, row, position);
+        return Token(retAcc, retType, row, position);
     }
-    return Lexeme(Type::eof);
+    return Token(Type::eof);
+}
+
+unsigned int& Lexer::getRow()
+{
+    return row;
+}
+
+unsigned int& Lexer::getPos()
+{
+    return pos;
+}
+
+void Lexer::pushToQueue(Token token)
+{
+    queue.push(token);
+}
+
+Token Lexer::popFromQueue(Token token)
+{
+    auto ret = queue.back();
+    queue.pop();
+    return ret;
 }

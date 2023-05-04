@@ -872,6 +872,10 @@ impl(Newline)
         newstate(End);
         return 0;
     }
+    if (c == '\n')
+    {
+        return 0;
+    }
     lexer->setState(new Indent(lexer, accum, type, row, pos, stack, intype, c));
     type = Type::newline;
     return initpos;

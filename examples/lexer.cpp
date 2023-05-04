@@ -81,7 +81,7 @@ int main()
     bool keepGoing = true;
     while (keepGoing)
     {
-        auto lexeme = lexer->getLexeme();
+        auto lexeme = lexer->getToken();
         keepGoing = lexeme.getType() != Type::eof;
         std::cout << '"' << lexeme.getValue() << "\"  " << map.at(lexeme.getType()) << " row: " << lexeme.getRow() << " pos: " << lexeme.getPos() << std::endl;
     }

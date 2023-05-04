@@ -74,7 +74,7 @@ enum class Type
     tabspacemix // Смесь табов и пробелов в отступах
 };
 
-class Lexeme
+class Token
 {
 private:
     std::string value;
@@ -89,6 +89,7 @@ public:
     unsigned int getRow() const;
     void setValue(std::string value);
     void setType(Type type);
-    Lexeme(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0);
-    Lexeme(Type type, unsigned int row = 0, unsigned int pos = 0);
+    Token(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0);
+    Token(Type type, unsigned int row = 0, unsigned int pos = 0);
+    bool operator==(const Token& l);
 };
