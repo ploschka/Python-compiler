@@ -8,8 +8,8 @@
     class name : public BaseLexerState                                                                                                  \
     {                                                                                                                                   \
     public:                                                                                                                             \
-        name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype); \
-        unsigned int recognize(char c);                                                                                                 \
+        name(LexerInterface *lex); \
+        bool recognize(char c);                                                                                                 \
     };
 
 enum class IndentType
@@ -25,14 +25,9 @@ class BaseLexerState : public LexerStateInterface
 {
 protected:
     LexerInterface *lexer;
-    std::string &accum;
-    Type &type;
-    unsigned int &row;
-    unsigned int &pos;
     unsigned int initpos;
-    instack &stack;
-    IndentType &intype;
-    BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype);
+    Type type;
+    BaseLexerState(LexerInterface *lex);
 };
 
 st(Start)
@@ -77,8 +72,8 @@ private:
     char prevchar;
 
 public:
-    Indent(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype, char c);
-    unsigned int recognize(char c);
+    Indent(LexerInterface *lex, char c);
+    bool recognize(char c);
 };
 
 class End : public BaseLexerState
@@ -87,8 +82,8 @@ private:
     std::unique_ptr<LexerStateInterface> state;
 
 public:
-    End(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype);
-    unsigned int recognize(char c);
+    End(LexerInterface *lex);
+    bool recognize(char c);
     void setState(LexerStateInterface *state);
 };
 

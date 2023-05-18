@@ -4,17 +4,17 @@
 #include <unordered_set>
 
 #define impl(name)                                                                                                                                                                              \
-    name::name(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype) : BaseLexerState(lex, acc, t, row, pos, stack, intype) \
+    name::name(LexerInterface *lex) : BaseLexerState(lex) \
     {                                                                                                                                                                                           \
     }                                                                                                                                                                                           \
-    unsigned int name::recognize(char c)
-#define newstate(name) lexer->setState(new name(lexer, accum, type, row, pos, stack, intype))
+    bool name::recognize(char c)
+#define newstate(name) lexer->setState(new name(lexer))
 #define tablestate                                                              \
     if (symbols.find(c) != symbols.end())                                       \
-        lexer->setState(table[c](lexer, accum, type, row, pos, stack, intype)); \
+        lexer->setState(table[c](lexer)); \
     else if (c == '\0')                                                         \
     {                                                                           \
-        End *endstate = new End(lexer, accum, type, row, pos, stack, intype);   \
+        End *endstate = new End(lexer);   \
         endstate->setState(lexer->getState());                                  \
         lexer->setState(endstate);                                              \
         return 0;                                                               \
@@ -22,16 +22,16 @@
     else                                                                        \
         newstate(Skip)
 #define fac(state)                                                                                                                                      \
-    inline LexerStateInterface *state##Factory(LexerInterface *a, std::string &b, Type &c, unsigned int &d, unsigned int &e, instack &f, IndentType &g) \
+    inline LexerStateInterface *state##Factory(LexerInterface *a) \
     {                                                                                                                                                   \
-        return new state(a, b, c, d, e, f, g);                                                                                                          \
+        return new state(a);                                                                                                          \
     }
 #define tab(symbol, state)     \
     {                          \
         symbol, state##Factory \
     }
 
-typedef std::function<LexerStateInterface *(LexerInterface *, std::string &, Type &, unsigned int &, unsigned int &, instack &, IndentType &)> stateFactory;
+typedef std::function<LexerStateInterface *(LexerInterface *)> stateFactory;
 
 fac(String)
 fac(Colon)
@@ -101,11 +101,33 @@ inline bool isSuitableForId(char c)
     return std::isalnum(c) || c == '_';
 }
 
-BaseLexerState::BaseLexerState(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype) : lexer(lex), accum(acc), type(t), row(row), pos(pos), initpos(pos), stack(stack), intype(intype) {}
+BaseLexerState::BaseLexerState(LexerInterface *lex) : lexer(lex) {}
+
+typedef std::stack<unsigned int> instack_t;
+
+static unsigned int pos = 0;
+static unsigned int row = 0;
+static instack_t stack;
+static std::string accum;
+static IndentType intype;
+
+void eraseStack(instack_t& s)
+{
+    while(!s.empty())
+    {
+        s.pop();
+    }
+}
 
 impl(Start)
 {
-    pos++;
+    pos = 1;
+    row = 1;
+    eraseStack(stack);
+    stack.push(0);
+    accum.assign("");
+    intype = IndentType::null;
+
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -876,7 +898,7 @@ impl(Newline)
     {
         return 0;
     }
-    lexer->setState(new Indent(lexer, accum, type, row, pos, stack, intype, c));
+    lexer->setState(new Indent(lexer, c));
     type = Type::newline;
     return initpos;
 }
@@ -909,8 +931,8 @@ impl(Comma)
     return initpos;
 }
 
-Indent::Indent(LexerInterface *lex, std::string &acc, Type &t, unsigned int &row, unsigned int &pos, instack &stack, IndentType &intype, char c) : BaseLexerState(lex, acc, t, row, pos, stack, intype), prevchar(c) {}
-unsigned int Indent::recognize(char c)
+Indent::Indent(LexerInterface *lex, char c) : BaseLexerState(lex), prevchar(c) {}
+bool Indent::recognize(char c)
 {
     pos++;
     if (intype == IndentType::null)

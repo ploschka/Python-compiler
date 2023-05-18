@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <fstream>
 
 static std::unordered_map<Type, std::string> map = {
     {Type::id, "id"},
@@ -76,8 +77,9 @@ int main()
 {
     auto lexfac = LexerFactory();
     auto lexer = lexfac.create();
+    std::ifstream file("scripts/lexer.py");
 
-    lexer->openFile("scripts/lexer.py");
+    lexer->open(file);
     bool keepGoing = true;
     while (keepGoing)
     {
