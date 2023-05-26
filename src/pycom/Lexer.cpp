@@ -4,9 +4,9 @@
 #include <iostream>
 #define CHARCOUNT 1000
 
-void eraseQueue(tokenQueue_t& q)
+static void eraseQueue(tokenQueue_t &q)
 {
-    while(!q.empty())
+    while (!q.empty())
     {
         q.pop();
     }
@@ -33,14 +33,13 @@ Type Lexer::recognize(const std::string &id) const
         return Type::id;
 }
 
-void Lexer::open(std::istream& stream)
+void Lexer::open(std::istream &stream)
 {
-    buffer1.clear();
+    buffer1.assign(CHARCOUNT + 1, '\0');
     buffer2.clear();
     this->stream = &stream;
     eraseQueue(queue);
 
-    buffer1.append(CHARCOUNT + 1, '\0');
     this->stream->read(&buffer1[0], CHARCOUNT);
     iter = buffer1.cbegin();
     currBuff = &buffer1;
@@ -60,68 +59,48 @@ LexerStateInterface *Lexer::getState()
 
 Token Lexer::getToken()
 {
-    unsigned int position;
-    while (!(position = this->state->recognize(*iter++)) &&
-            iter != currBuff->cend())
-        ;
+    if (queue.size() == 0)
+    {
+        while (!(this->state->recognize(*iter++)) &&
+               iter != currBuff->cend())
+            ;
+    }
 
-    if (type == Type::eof)
+    auto tok = queue.front();
+    queue.pop();
+
+    if (tok.getType() == Type::eof)
     {
         if (iter == currBuff->cend())
         {
-            otherBuff->clear();
-            otherBuff->append(CHARCOUNT + 1, '\0');
+            otherBuff->assign(CHARCOUNT + 1, '\0');
             stream->read(&(*otherBuff)[0], CHARCOUNT);
             iter = otherBuff->cbegin();
             std::swap(currBuff, otherBuff);
             while (!(this->state->recognize(*iter++)) &&
-                    iter != currBuff->cend())
+                   iter != currBuff->cend())
                 ;
-            if (type == Type::eof)
+            tok = queue.front();
+            queue.pop();
+            if (tok.getType() == Type::eof)
             {
-                return Token(Type::eof, row, position);
+                return tok;
             }
         }
         else
         {
-            Token(Type::eof, row, position);
+            return tok;
         }
     }
-    Type retType;
-    std::string retAcc;
-    if (type == Type::id || type == Type::number || type == Type::string)
+    if (tok.getType() == Type::id)
     {
-        retAcc = accum;
-        accum.assign("");
+        Type retType = recognize(tok.getValue());
+        return Token(tok.getValue(), retType, tok.getRow(), tok.getPos());
     }
-    if (type == Type::id)
-    {
-        retType = recognize(retAcc);
-    }
-    else
-        retType = type;
-    type = Type::eof;
-    return Token(retAcc, retType, row, position);
-}
-
-unsigned int& Lexer::getRow()
-{
-    return row;
-}
-
-unsigned int& Lexer::getPos()
-{
-    return pos;
+    return tok;
 }
 
 void Lexer::pushToQueue(Token token)
 {
     queue.push(token);
-}
-
-Token Lexer::popFromQueue(Token token)
-{
-    auto ret = queue.back();
-    queue.pop();
-    return ret;
 }

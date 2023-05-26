@@ -10,6 +10,5 @@ public:
     virtual void setState(LexerStateInterface *state) = 0;
     virtual LexerStateInterface *getState() = 0;
     virtual void pushToQueue(Token token) = 0;
-    virtual Token popFromQueue(Token token) = 0;
     virtual ~LexerInterface() = default;
 };

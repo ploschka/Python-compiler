@@ -3,28 +3,28 @@
 #include <functional>
 #include <unordered_set>
 
-#define impl(name)                                                                                                                                                                              \
+#define impl(name)                                        \
     name::name(LexerInterface *lex) : BaseLexerState(lex) \
-    {                                                                                                                                                                                           \
-    }                                                                                                                                                                                           \
+    {                                                     \
+    }                                                     \
     bool name::recognize(char c)
 #define newstate(name) lexer->setState(new name(lexer))
-#define tablestate                                                              \
-    if (symbols.find(c) != symbols.end())                                       \
-        lexer->setState(table[c](lexer)); \
-    else if (c == '\0')                                                         \
-    {                                                                           \
-        End *endstate = new End(lexer);   \
-        endstate->setState(lexer->getState());                                  \
-        lexer->setState(endstate);                                              \
-        return 0;                                                               \
-    }                                                                           \
-    else                                                                        \
+#define tablestate                             \
+    if (symbols.find(c) != symbols.end())      \
+        lexer->setState(table[c](lexer));      \
+    else if (c == '\0')                        \
+    {                                          \
+        End *endstate = new End(lexer);        \
+        endstate->setState(lexer->getState()); \
+        lexer->setState(endstate);             \
+        return false;                          \
+    }                                          \
+    else                                       \
         newstate(Skip)
-#define fac(state)                                                                                                                                      \
-    inline LexerStateInterface *state##Factory(LexerInterface *a) \
-    {                                                                                                                                                   \
-        return new state(a);                                                                                                          \
+#define fac(state)                                                       \
+    static inline LexerStateInterface *state##Factory(LexerInterface *a) \
+    {                                                                    \
+        return new state(a);                                             \
     }
 #define tab(symbol, state)     \
     {                          \
@@ -91,12 +91,12 @@ static std::unordered_map<char, stateFactory> table = {
 static const std::unordered_set<char> symbols = {
     '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\n'};
 
-inline bool isSuitableForIdBeginning(char c)
+static inline bool isSuitableForIdBeginning(char c)
 {
     return std::isalpha(c) || c == '_';
 }
 
-inline bool isSuitableForId(char c)
+static inline bool isSuitableForId(char c)
 {
     return std::isalnum(c) || c == '_';
 }
@@ -111,9 +111,9 @@ static instack_t stack;
 static std::string accum;
 static IndentType intype;
 
-void eraseStack(instack_t& s)
+static void eraseStack(instack_t &s)
 {
-    while(!s.empty())
+    while (!s.empty())
     {
         s.pop();
     }
@@ -142,7 +142,7 @@ impl(Start)
     {
         tablestate;
     }
-    return 0;
+    return false;
 }
 
 impl(Skip)
@@ -162,7 +162,7 @@ impl(Skip)
     {
         tablestate;
     }
-    return 0;
+    return false;
 }
 
 impl(Id)
@@ -176,9 +176,9 @@ impl(Id)
     {
         tablestate;
         type = Type::id;
-        return initpos;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 impl(String)
@@ -188,12 +188,12 @@ impl(String)
     {
         type = Type::string;
         newstate(Skip);
-        return initpos;
+        return true;
     }
     else
     {
         accum.push_back(c);
-        return 0;
+        return false;
     }
 }
 
@@ -213,7 +213,7 @@ impl(Colon)
         tablestate;
     }
     type = Type::colon;
-    return initpos;
+    return true;
 }
 
 impl(Dot)
@@ -232,7 +232,7 @@ impl(Dot)
     else
         tablestate;
     type = Type::dot;
-    return initpos;
+    return true;
 }
 
 impl(FirstNumPart)
@@ -257,9 +257,9 @@ impl(FirstNumPart)
         else
             tablestate;
         type = Type::number;
-        return initpos;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 impl(SecondNumPart)
@@ -273,9 +273,9 @@ impl(SecondNumPart)
     {
         tablestate;
         type = Type::number;
-        return initpos;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 impl(Plus)
@@ -295,7 +295,7 @@ impl(Plus)
     {
         newstate(Skip);
         type = Type::plusass;
-        return initpos;
+        return true;
     }
     else
     {
@@ -313,7 +313,7 @@ impl(Plus)
             tablestate;
     }
     type = Type::plus;
-    return initpos;
+    return true;
 }
 
 impl(Minus)
@@ -345,7 +345,7 @@ impl(Minus)
             tablestate;
         type = Type::minus;
     }
-    return initpos;
+    return true;
 }
 
 impl(Star)
@@ -372,7 +372,7 @@ impl(Star)
             tablestate;
         type = Type::star;
     }
-    return initpos;
+    return true;
 }
 
 impl(Div)
@@ -386,7 +386,7 @@ impl(Div)
     else if (c == '/')
     {
         newstate(Idiv);
-        return 0;
+        return false;
     }
     else
     {
@@ -404,7 +404,7 @@ impl(Div)
             tablestate;
         type = Type::div;
     }
-    return initpos;
+    return true;
 }
 impl(Mod)
 {
@@ -430,7 +430,7 @@ impl(Mod)
             tablestate;
         type = Type::mod;
     }
-    return initpos;
+    return true;
 }
 
 impl(Matmul)
@@ -457,7 +457,7 @@ impl(Matmul)
             tablestate;
         type = Type::matmul;
     }
-    return initpos;
+    return true;
 }
 
 impl(Greater)
@@ -471,7 +471,7 @@ impl(Greater)
     else if (c == '>')
     {
         newstate(Rshift);
-        return 0;
+        return false;
     }
     else
     {
@@ -489,7 +489,7 @@ impl(Greater)
             tablestate;
         type = Type::greater;
     }
-    return initpos;
+    return true;
 }
 
 impl(Less)
@@ -503,7 +503,7 @@ impl(Less)
     else if (c == '<')
     {
         newstate(Lshift);
-        return 0;
+        return false;
     }
     else
     {
@@ -521,7 +521,7 @@ impl(Less)
             tablestate;
         type = Type::less;
     }
-    return initpos;
+    return true;
 }
 
 impl(Assign)
@@ -548,7 +548,7 @@ impl(Assign)
             tablestate;
         type = Type::assign;
     }
-    return initpos;
+    return true;
 }
 
 impl(Inv)
@@ -567,7 +567,7 @@ impl(Inv)
     else
         tablestate;
     type = Type::inv;
-    return initpos;
+    return true;
 }
 
 impl(Band)
@@ -594,7 +594,7 @@ impl(Band)
             tablestate;
         type = Type::band;
     }
-    return initpos;
+    return true;
 }
 
 impl(Bor)
@@ -621,7 +621,7 @@ impl(Bor)
             tablestate;
         type = Type::bor;
     }
-    return initpos;
+    return true;
 }
 
 impl(Xor)
@@ -648,7 +648,7 @@ impl(Xor)
             tablestate;
         type = Type::xorop;
     }
-    return initpos;
+    return true;
 }
 
 impl(Lpr)
@@ -669,7 +669,7 @@ impl(Lpr)
         tablestate;
     }
     type = Type::lpr;
-    return initpos;
+    return true;
 }
 
 impl(Rpr)
@@ -690,7 +690,7 @@ impl(Rpr)
         tablestate;
     }
     type = Type::rpr;
-    return initpos;
+    return true;
 }
 
 impl(Lsbr)
@@ -711,7 +711,7 @@ impl(Lsbr)
         tablestate;
     }
     type = Type::lsbr;
-    return initpos;
+    return true;
 }
 
 impl(Rsbr)
@@ -732,7 +732,7 @@ impl(Rsbr)
         tablestate;
     }
     type = Type::rsbr;
-    return initpos;
+    return true;
 }
 
 impl(Lbr)
@@ -753,7 +753,7 @@ impl(Lbr)
         tablestate;
     }
     type = Type::lbr;
-    return initpos;
+    return true;
 }
 
 impl(Rbr)
@@ -774,7 +774,7 @@ impl(Rbr)
         tablestate;
     }
     type = Type::rbr;
-    return initpos;
+    return true;
 }
 
 impl(Idiv)
@@ -801,7 +801,7 @@ impl(Idiv)
             tablestate;
         type = Type::idiv;
     }
-    return initpos;
+    return true;
 }
 
 impl(Lshift)
@@ -828,7 +828,7 @@ impl(Lshift)
             tablestate;
         type = Type::lshift;
     }
-    return initpos;
+    return true;
 }
 
 impl(Rshift)
@@ -855,7 +855,7 @@ impl(Rshift)
             tablestate;
         type = Type::rshift;
     }
-    return initpos;
+    return true;
 }
 
 impl(Exclamation)
@@ -882,7 +882,7 @@ impl(Exclamation)
             tablestate;
         type = Type::unexpected;
     }
-    return initpos;
+    return true;
 }
 
 impl(Newline)
@@ -892,15 +892,15 @@ impl(Newline)
     if (c == '\0')
     {
         newstate(End);
-        return 0;
+        return false;
     }
     if (c == '\n')
     {
-        return 0;
+        return false;
     }
     lexer->setState(new Indent(lexer, c));
     type = Type::newline;
-    return initpos;
+    return true;
 }
 
 impl(Comment)
@@ -909,7 +909,7 @@ impl(Comment)
     {
         newstate(Newline);
     }
-    return 0;
+    return false;
 }
 
 impl(Comma)
@@ -928,7 +928,7 @@ impl(Comma)
     else
         tablestate;
     type = Type::comma;
-    return initpos;
+    return true;
 }
 
 Indent::Indent(LexerInterface *lex, char c) : BaseLexerState(lex), prevchar(c) {}
@@ -957,18 +957,18 @@ bool Indent::recognize(char c)
             break;
         case '\t':
             type = Type::tabspacemix;
-            return initpos;
+            return true;
             break;
         }
         switch (c)
         {
         case ' ':
             intcount++;
-            return 0;
+            return false;
             break;
         case '\t':
             type = Type::tabspacemix;
-            return initpos;
+            return true;
             break;
         }
         break;
@@ -981,18 +981,18 @@ bool Indent::recognize(char c)
             break;
         case ' ':
             type = Type::tabspacemix;
-            return initpos;
+            return true;
             break;
         }
         switch (c)
         {
         case '\t':
             intcount++;
-            return 0;
+            return false;
             break;
         case ' ':
             type = Type::tabspacemix;
-            return initpos;
+            return true;
             break;
         }
         break;
@@ -1017,7 +1017,7 @@ bool Indent::recognize(char c)
     {
         stack.push(intcount);
         type = Type::indent;
-        return initpos;
+        return true;
     }
     if (intcount < stack.top())
     {
@@ -1026,9 +1026,9 @@ bool Indent::recognize(char c)
             type = Type::dedent;
         else
             type = Type::indenterror;
-        return initpos;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 impl(End)
@@ -1036,7 +1036,7 @@ impl(End)
     pos++;
     type = Type::eof;
     lexer->setState(state.release());
-    return initpos;
+    return true;
 }
 
 void End::setState(LexerStateInterface *state)

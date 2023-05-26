@@ -2,11 +2,9 @@
 #include <pycom/interface/LexerInterface.hpp>
 #include <pycom/token/Token.hpp>
 #include <memory>
-#include <stack>
 #include <queue>
 
 typedef std::queue<Token> tokenQueue_t;
-
 
 class Lexer: public LexerInterface
 {
@@ -27,5 +25,4 @@ public:
     LexerStateInterface* getState();
     Token getToken();
     void pushToQueue(Token token);
-    Token popFromQueue(Token token);
 };
