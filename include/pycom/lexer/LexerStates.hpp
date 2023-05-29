@@ -2,22 +2,89 @@
 #include <pycom/interface/LexerStateInterface.hpp>
 #include <pycom/interface/LexerInterface.hpp>
 #include <memory>
+#include <stack>
 
-class BaseLexerState: public LexerStateInterface
+#define st(name)                                                                                                                        \
+    class name : public BaseLexerState                                                                                                  \
+    {                                                                                                                                   \
+    public:                                                                                                                             \
+        name(LexerInterface *lex); \
+        bool recognize(char c);                                                                                                 \
+    };
+
+enum class IndentType
+{
+    null,
+    space,
+    tab
+};
+
+typedef std::stack<unsigned int> instack;
+
+class BaseLexerState : public LexerStateInterface
 {
 protected:
-    LexerInterface* lexer;
-    std::string accum;
+    LexerInterface *lexer;
+    unsigned int initpos;
+    Type type;
+    BaseLexerState(LexerInterface *lex);
 };
 
-class SomeLexerState: public BaseLexerState
+st(Start)
+st(Skip)
+st(Id)
+st(FirstNumPart)
+st(SecondNumPart)
+st(String)
+st(Colon)
+st(Dot)
+st(Plus)
+st(Minus)
+st(Star)
+st(Div)
+st(Mod)
+st(Matmul)
+st(Greater)
+st(Less)
+st(Assign)
+st(Inv)
+st(Band)
+st(Bor)
+st(Xor)
+st(Lpr)
+st(Rpr)
+st(Lsbr)
+st(Rsbr)
+st(Lbr)
+st(Rbr)
+st(Idiv)
+st(Exclamation)
+st(Lshift)
+st(Rshift)
+st(Newline)
+st(Comment)
+st(Comma)
+
+class Indent : public BaseLexerState
 {
+private:
+    unsigned int intcount = 0;
+    char prevchar;
+
 public:
-    bool recognize(char ch);
+    Indent(LexerInterface *lex, char c);
+    bool recognize(char c);
 };
 
-class OtherLexerState: public BaseLexerState
+class End : public BaseLexerState
 {
+private:
+    std::unique_ptr<LexerStateInterface> state;
+
 public:
-    bool recognize(char ch);
+    End(LexerInterface *lex);
+    bool recognize(char c);
+    void setState(LexerStateInterface *state);
 };
+
+#undef st

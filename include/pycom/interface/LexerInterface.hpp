@@ -1,12 +1,14 @@
 #pragma once
-#include <pycom/lexeme/Lexeme.hpp>
+#include <pycom/token/Token.hpp>
 #include <pycom/interface/LexerStateInterface.hpp>
 
 class LexerInterface
 {
 public:
-    virtual bool openFile(std::string filename) = 0;
-    virtual Lexeme getLexeme() = 0;
-    virtual void setState(LexerStateInterface* state) = 0;
+    virtual void open(std::istream& stream) = 0;
+    virtual Token getToken() = 0;
+    virtual void setState(LexerStateInterface *state) = 0;
+    virtual LexerStateInterface *getState() = 0;
+    virtual void pushToQueue(Token token) = 0;
     virtual ~LexerInterface() = default;
 };

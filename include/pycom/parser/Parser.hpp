@@ -1,6 +1,6 @@
 #pragma once
 #include <pycom/interface/ParserInterface.hpp>
 
-class Parser: public ParserInterface
+class Parser : public ParserInterface
 {
 };
