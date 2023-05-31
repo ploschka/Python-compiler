@@ -12,13 +12,6 @@
         bool recognize(char c);                                                                                                 \
     };
 
-enum class IndentType
-{
-    null,
-    space,
-    tab
-};
-
 typedef std::stack<unsigned int> instack;
 
 class BaseLexerState : public LexerStateInterface
@@ -74,17 +67,6 @@ private:
 public:
     Indent(LexerInterface *lex, char c);
     bool recognize(char c);
-};
-
-class End : public BaseLexerState
-{
-private:
-    std::unique_ptr<LexerStateInterface> state;
-
-public:
-    End(LexerInterface *lex);
-    bool recognize(char c);
-    void setState(LexerStateInterface *state);
 };
 
 #undef st

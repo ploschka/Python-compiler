@@ -31,7 +31,7 @@ void Token::setType(Type type)
     this->type = type;
 }
 
-Token::Token(Type type, unsigned int row, unsigned int pos) : value(""), type(type), row(row), pos(pos) {}
+Token::Token(Type type, unsigned int row, unsigned int pos) : value(), type(type), row(row), pos(pos) {}
 
 Token::Token(std::string value, Type type, unsigned int row, unsigned int pos) : value(value), type(type), row(row), pos(pos) {}
 

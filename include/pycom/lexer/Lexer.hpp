@@ -22,7 +22,6 @@ private:
 public:
     void open(std::istream& stream);
     void setState(LexerStateInterface* state);
-    LexerStateInterface* getState();
     Token getToken();
     void pushToQueue(Token token);
 };

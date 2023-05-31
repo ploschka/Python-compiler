@@ -11,6 +11,7 @@ static void eraseQueue(tokenQueue_t &q)
         q.pop();
     }
 }
+extern void unwind(LexerInterface *lexer);
 
 Type Lexer::recognize(const std::string &id) const
 {
@@ -52,22 +53,17 @@ void Lexer::setState(LexerStateInterface *state)
     this->state.reset(state);
 }
 
-LexerStateInterface *Lexer::getState()
-{
-    return state.release();
-}
-
 Token Lexer::getToken()
 {
-    if (queue.size() == 0)
+    while (queue.empty() && iter != currBuff->cend())
     {
-        while (!(this->state->recognize(*iter++)) &&
-               iter != currBuff->cend())
-            ;
+        this->state->recognize(*iter++);
     }
 
     auto tok = queue.front();
     queue.pop();
+
+    bool failed = false;
 
     if (tok.getType() == Type::eof)
     {
@@ -77,25 +73,34 @@ Token Lexer::getToken()
             stream->read(&(*otherBuff)[0], CHARCOUNT);
             iter = otherBuff->cbegin();
             std::swap(currBuff, otherBuff);
-            while (!(this->state->recognize(*iter++)) &&
-                   iter != currBuff->cend())
-                ;
+            while (queue.empty() && iter != currBuff->cend())
+            {
+                this->state->recognize(*iter++);
+            }
             tok = queue.front();
             queue.pop();
             if (tok.getType() == Type::eof)
             {
-                return tok;
+                failed = true;
             }
         }
         else
         {
-            return tok;
+            failed = true;
         }
     }
+    if (failed)
+    {
+        unwind(this);
+        queue.push(tok);
+        tok = queue.front();
+        queue.pop();
+        return tok;
+    }
+
     if (tok.getType() == Type::id)
     {
-        Type retType = recognize(tok.getValue());
-        return Token(tok.getValue(), retType, tok.getRow(), tok.getPos());
+        tok.setType(recognize(tok.getValue()));
     }
     return tok;
 }

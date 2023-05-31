@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
+#include <string>
 
 #define impl(name)                                        \
     name::name(LexerInterface *lex) : BaseLexerState(lex) \
@@ -9,23 +10,20 @@
     }                                                     \
     bool name::recognize(char c)
 #define newstate(name) lexer->setState(new name(lexer))
-#define tablestate                             \
-    if (symbols.find(c) != symbols.end())      \
-        lexer->setState(table[c](lexer));      \
-    else if (c == '\0')                        \
-    {                                          \
-        End *endstate = new End(lexer);        \
-        endstate->setState(lexer->getState()); \
-        lexer->setState(endstate);             \
-        return false;                          \
-    }                                          \
-    else                                       \
-        newstate(Skip)
-#define fac(state)                                                       \
-    static inline LexerStateInterface *state##Factory(LexerInterface *a) \
-    {                                                                    \
-        return new state(a);                                             \
+#define tablestate(c)                                       \
+    if (symbols.find(c) != symbols.end())                   \
+        lexer->setState(table[c](lexer));                   \
+    else if (c == '\0')                                     \
+    {                                                       \
+        lexer->pushToQueue(Token(Type::eof, row, initpos)); \
+        return false;                                       \
+    }                                                       \
+    else                                                    \
+    {                                                       \
+        newstate(Skip);                                     \
     }
+#define fac(state) \
+    static inline LexerStateInterface *state##Factory(LexerInterface *a) { return new state(a); }
 #define tab(symbol, state)     \
     {                          \
         symbol, state##Factory \
@@ -101,7 +99,12 @@ static inline bool isSuitableForId(char c)
     return std::isalnum(c) || c == '_';
 }
 
-BaseLexerState::BaseLexerState(LexerInterface *lex) : lexer(lex) {}
+enum class IndentType
+{
+    null,
+    space,
+    tab
+};
 
 typedef std::stack<unsigned int> instack_t;
 
@@ -110,6 +113,24 @@ static unsigned int row = 0;
 static instack_t stack;
 static std::string accum;
 static IndentType intype;
+
+void unwind(LexerInterface *lexer)
+{
+    while (stack.top() != 0)
+    {
+        lexer->pushToQueue(Token(Type::dedent, row, pos));
+        stack.pop();
+    }
+}
+
+static inline std::string getAccum()
+{
+    auto ret = accum;
+    accum.clear();
+    return ret;
+}
+
+BaseLexerState::BaseLexerState(LexerInterface *lex) : lexer(lex), initpos(pos) {}
 
 static void eraseStack(instack_t &s)
 {
@@ -140,7 +161,7 @@ impl(Start)
     }
     else if (c != '\n')
     {
-        tablestate;
+        tablestate(c);
     }
     return false;
 }
@@ -160,7 +181,7 @@ impl(Skip)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
     return false;
 }
@@ -174,9 +195,8 @@ impl(Id)
     }
     else
     {
-        tablestate;
-        type = Type::id;
-        return true;
+        lexer->pushToQueue(Token(getAccum(), Type::id, row, initpos));
+        tablestate(c);
     }
     return false;
 }
@@ -186,39 +206,41 @@ impl(String)
     pos++;
     if (c == '"')
     {
-        type = Type::string;
+        lexer->pushToQueue(Token(getAccum(), Type::string, row, initpos));
         newstate(Skip);
-        return true;
     }
     else
     {
         accum.push_back(c);
-        return false;
     }
+    return false;
 }
 
 impl(Colon)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::colon, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
+        accum.push_back(c);
         newstate(Id);
     }
     else if (std::isdigit(c))
     {
+        accum.push_back(c);
         newstate(FirstNumPart);
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::colon;
-    return true;
+    return false;
 }
 
 impl(Dot)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::dot, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -230,9 +252,10 @@ impl(Dot)
         newstate(FirstNumPart);
     }
     else
-        tablestate;
-    type = Type::dot;
-    return true;
+    {
+        tablestate(c);
+    }
+    return false;
 }
 
 impl(FirstNumPart)
@@ -249,15 +272,16 @@ impl(FirstNumPart)
     }
     else
     {
+        lexer->pushToQueue(Token(getAccum(), Type::number, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
             newstate(Id);
         }
         else
-            tablestate;
-        type = Type::number;
-        return true;
+        {
+            tablestate(c);
+        }
     }
     return false;
 }
@@ -271,9 +295,8 @@ impl(SecondNumPart)
     }
     else
     {
-        tablestate;
-        type = Type::number;
-        return true;
+        lexer->pushToQueue(Token(getAccum(), Type::number, row, initpos));
+        tablestate(c);
     }
     return false;
 }
@@ -281,24 +304,14 @@ impl(SecondNumPart)
 impl(Plus)
 {
     pos++;
-    if (isSuitableForIdBeginning(c))
+    if (c == '=')
     {
-        accum.push_back(c);
-        newstate(Id);
-    }
-    else if (std::isdigit(c))
-    {
-        accum.push_back(c);
-        newstate(FirstNumPart);
-    }
-    else if (c == '=')
-    {
+        lexer->pushToQueue(Token(Type::plusass, row, initpos));
         newstate(Skip);
-        type = Type::plusass;
-        return true;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::plus, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -310,10 +323,11 @@ impl(Plus)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
+        {
+            tablestate(c);
+        }
     }
-    type = Type::plus;
-    return true;
+    return false;
 }
 
 impl(Minus)
@@ -321,16 +335,17 @@ impl(Minus)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::minass, row, initpos));
         newstate(Skip);
-        type = Type::minass;
     }
     else if (c == '>')
     {
+        lexer->pushToQueue(Token(Type::arrow, row, initpos));
         newstate(Skip);
-        type = Type::arrow;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::minus, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -342,10 +357,11 @@ impl(Minus)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::minus;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Star)
@@ -353,11 +369,12 @@ impl(Star)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::mulass, row, initpos));
         newstate(Skip);
-        type = Type::mulass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::star, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -369,10 +386,11 @@ impl(Star)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::star;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Div)
@@ -380,16 +398,16 @@ impl(Div)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::divass, row, initpos));
         newstate(Skip);
-        type = Type::plusass;
     }
     else if (c == '/')
     {
         newstate(Idiv);
-        return false;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::div, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -401,21 +419,23 @@ impl(Div)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::div;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 impl(Mod)
 {
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::modass, row, initpos));
         newstate(Skip);
-        type = Type::modass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::mod, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -427,10 +447,11 @@ impl(Mod)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::mod;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Matmul)
@@ -438,11 +459,12 @@ impl(Matmul)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::matmulass, row, initpos));
         newstate(Skip);
-        type = Type::matmulass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::matmul, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -454,10 +476,11 @@ impl(Matmul)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::matmul;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Greater)
@@ -465,16 +488,16 @@ impl(Greater)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::grequal, row, initpos));
         newstate(Skip);
-        type = Type::grequal;
     }
     else if (c == '>')
     {
         newstate(Rshift);
-        return false;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::greater, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -486,10 +509,11 @@ impl(Greater)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::greater;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Less)
@@ -497,16 +521,16 @@ impl(Less)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::lequal, row, initpos));
         newstate(Skip);
-        type = Type::lequal;
     }
-    else if (c == '<')
+    else if (c == '>')
     {
-        newstate(Lshift);
-        return false;
+        newstate(Rshift);
     }
     else
     {
+        lexer->pushToQueue(Token(Type::less, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -518,10 +542,11 @@ impl(Less)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::less;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Assign)
@@ -529,11 +554,12 @@ impl(Assign)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::equal, row, initpos));
         newstate(Skip);
-        type = Type::equal;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::assign, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -545,15 +571,17 @@ impl(Assign)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::assign;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Inv)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::inv, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -565,9 +593,10 @@ impl(Inv)
         newstate(FirstNumPart);
     }
     else
-        tablestate;
-    type = Type::inv;
-    return true;
+    {
+        tablestate(c);
+    }
+    return false;
 }
 
 impl(Band)
@@ -575,11 +604,12 @@ impl(Band)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::bandass, row, initpos));
         newstate(Skip);
-        type = Type::bandass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::band, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -591,10 +621,11 @@ impl(Band)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::band;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Bor)
@@ -602,11 +633,12 @@ impl(Bor)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::borass, row, initpos));
         newstate(Skip);
-        type = Type::borass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::bor, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -618,10 +650,11 @@ impl(Bor)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::bor;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Xor)
@@ -629,11 +662,12 @@ impl(Xor)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::xorass, row, initpos));
         newstate(Skip);
-        type = Type::xorass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::xorop, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -645,15 +679,18 @@ impl(Xor)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::xorop;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+
+    return false;
 }
 
 impl(Lpr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::lpr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -666,15 +703,15 @@ impl(Lpr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::lpr;
-    return true;
+    return false;
 }
 
 impl(Rpr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::rpr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -687,15 +724,15 @@ impl(Rpr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::rpr;
-    return true;
+    return false;
 }
 
 impl(Lsbr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::lsbr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -708,15 +745,15 @@ impl(Lsbr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::lsbr;
-    return true;
+    return false;
 }
 
 impl(Rsbr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::rsbr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -729,15 +766,15 @@ impl(Rsbr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::rsbr;
-    return true;
+    return false;
 }
 
 impl(Lbr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::lbr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -750,15 +787,15 @@ impl(Lbr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::lbr;
-    return true;
+    return false;
 }
 
 impl(Rbr)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::rbr, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -771,10 +808,9 @@ impl(Rbr)
     }
     else
     {
-        tablestate;
+        tablestate(c);
     }
-    type = Type::rbr;
-    return true;
+    return false;
 }
 
 impl(Idiv)
@@ -782,11 +818,12 @@ impl(Idiv)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::idivass, row, initpos));
         newstate(Skip);
-        type = Type::idivass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::idiv, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -798,10 +835,11 @@ impl(Idiv)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::idiv;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Lshift)
@@ -809,11 +847,12 @@ impl(Lshift)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::lshiftass, row, initpos));
         newstate(Skip);
-        type = Type::lshiftass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::lshift, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -825,10 +864,12 @@ impl(Lshift)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::lshift;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+
+    return false;
 }
 
 impl(Rshift)
@@ -836,11 +877,12 @@ impl(Rshift)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::rshiftass, row, initpos));
         newstate(Skip);
-        type = Type::rshiftass;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::rshift, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -852,10 +894,11 @@ impl(Rshift)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::rshift;
+        {
+            tablestate(c);
+        }
     }
-    return true;
+    return false;
 }
 
 impl(Exclamation)
@@ -863,11 +906,12 @@ impl(Exclamation)
     pos++;
     if (c == '=')
     {
+        lexer->pushToQueue(Token(Type::noteq, row, initpos));
         newstate(Skip);
-        type = Type::noteq;
     }
     else
     {
+        lexer->pushToQueue(Token(Type::unexpected, row, initpos));
         if (isSuitableForIdBeginning(c))
         {
             accum.push_back(c);
@@ -879,28 +923,12 @@ impl(Exclamation)
             newstate(FirstNumPart);
         }
         else
-            tablestate;
-        type = Type::unexpected;
+        {
+            tablestate(c);
+        }
     }
-    return true;
-}
 
-impl(Newline)
-{
-    pos = 1;
-    row++;
-    if (c == '\0')
-    {
-        newstate(End);
-        return false;
-    }
-    if (c == '\n')
-    {
-        return false;
-    }
-    lexer->setState(new Indent(lexer, c));
-    type = Type::newline;
-    return true;
+    return false;
 }
 
 impl(Comment)
@@ -915,6 +943,7 @@ impl(Comment)
 impl(Comma)
 {
     pos++;
+    lexer->pushToQueue(Token(Type::comma, row, initpos));
     if (isSuitableForIdBeginning(c))
     {
         accum.push_back(c);
@@ -926,120 +955,182 @@ impl(Comma)
         newstate(FirstNumPart);
     }
     else
-        tablestate;
-    type = Type::comma;
-    return true;
-}
-
-Indent::Indent(LexerInterface *lex, char c) : BaseLexerState(lex), prevchar(c) {}
-bool Indent::recognize(char c)
-{
-    pos++;
-    if (intype == IndentType::null)
     {
-        switch (prevchar)
-        {
-        case ' ':
-            intype = IndentType::space;
-            break;
-        case '\t':
-            intype = IndentType::tab;
-            break;
-        }
-    }
-    switch (intype)
-    {
-    case (IndentType::space):
-        switch (prevchar)
-        {
-        case ' ':
-            intcount++;
-            break;
-        case '\t':
-            type = Type::tabspacemix;
-            return true;
-            break;
-        }
-        switch (c)
-        {
-        case ' ':
-            intcount++;
-            return false;
-            break;
-        case '\t':
-            type = Type::tabspacemix;
-            return true;
-            break;
-        }
-        break;
-
-    case (IndentType::tab):
-        switch (prevchar)
-        {
-        case '\t':
-            intcount++;
-            break;
-        case ' ':
-            type = Type::tabspacemix;
-            return true;
-            break;
-        }
-        switch (c)
-        {
-        case '\t':
-            intcount++;
-            return false;
-            break;
-        case ' ':
-            type = Type::tabspacemix;
-            return true;
-            break;
-        }
-        break;
-    default:
-        break;
-    }
-    prevchar = 0;
-    if (isSuitableForIdBeginning(c))
-    {
-        accum.push_back(c);
-        newstate(Id);
-    }
-    else if (std::isdigit(c))
-    {
-        accum.push_back(c);
-        newstate(FirstNumPart);
-    }
-    else
-        tablestate;
-
-    if (intcount > stack.top())
-    {
-        stack.push(intcount);
-        type = Type::indent;
-        return true;
-    }
-    if (intcount < stack.top())
-    {
-        stack.pop();
-        if (intcount == stack.top())
-            type = Type::dedent;
-        else
-            type = Type::indenterror;
-        return true;
+        tablestate(c);
     }
     return false;
 }
 
-impl(End)
+impl(Newline)
 {
-    pos++;
-    type = Type::eof;
-    lexer->setState(state.release());
-    return true;
+    if (c == '\n')
+    {
+        return false;
+    }
+    if (c == '\0')
+    {
+        lexer->pushToQueue(Token(Type::eof, row, initpos));
+        return false;
+    }
+    lexer->pushToQueue(Token(Type::newline, row, initpos));
+    pos = 1;
+    row++;
+    if (c == ' ' || c == '\t')
+    {
+        lexer->setState(new Indent(lexer, c));
+    }
+    else
+    {
+        if (stack.top() > 0)
+        {
+            while (stack.top() != 0)
+            {
+                stack.pop();
+                lexer->pushToQueue(Token(Type::dedent, row, initpos));
+            }
+        }
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+        {
+            tablestate(c);
+        }
+    }
+    return false;
 }
 
-void End::setState(LexerStateInterface *state)
+Indent::Indent(LexerInterface *lex, char c) : BaseLexerState(lex), prevchar(c) {}
+
+bool Indent::recognize(char c)
 {
-    this->state.reset(state);
+    // bool indent = false;
+    pos++;
+    if (prevchar > 0)
+    {
+        if (intype == IndentType::null)
+        {
+            switch (prevchar)
+            {
+            case ' ':
+                intype = IndentType::space;
+                break;
+            case '\t':
+                intype = IndentType::tab;
+                break;
+            }
+        }
+
+        switch (intype)
+        {
+        case (IndentType::space):
+            switch (prevchar)
+            {
+            case ' ':
+                intcount++;
+                break;
+            case '\t':
+                lexer->pushToQueue(Token(Type::tabspacemix, row, initpos));
+                return false;
+                break;
+            }
+            break;
+
+        case (IndentType::tab):
+            switch (prevchar)
+            {
+            case '\t':
+                intcount++;
+                break;
+            case ' ':
+                lexer->pushToQueue(Token(Type::tabspacemix, row, initpos));
+                return false;
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+        prevchar = 0;
+    }
+
+    if (c == ' ' || c == ' ')
+    {
+        switch (intype)
+        {
+        case (IndentType::space):
+            switch (c)
+            {
+            case ' ':
+                intcount++;
+                return false;
+                break;
+            case '\t':
+                lexer->pushToQueue(Token(Type::tabspacemix, row, initpos));
+                return false;
+                break;
+            }
+            break;
+
+        case (IndentType::tab):
+            switch (c)
+            {
+            case '\t':
+                intcount++;
+                return false;
+                break;
+            case ' ':
+                lexer->pushToQueue(Token(Type::tabspacemix, row, initpos));
+                return false;
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        if (intcount > stack.top())
+        {
+            stack.push(intcount);
+            lexer->pushToQueue(Token(Type::indent, row, initpos));
+        }
+        else if (intcount < stack.top())
+        {
+            while (!stack.empty() && intcount != stack.top())
+            {
+                stack.pop();
+                lexer->pushToQueue(Token(Type::dedent, row, initpos));
+            }
+            if (stack.empty())
+            {
+                lexer->pushToQueue(Token(Type::indenterror, row, initpos));
+            }
+        }
+
+        if (isSuitableForIdBeginning(c))
+        {
+            accum.push_back(c);
+            newstate(Id);
+        }
+        else if (std::isdigit(c))
+        {
+            accum.push_back(c);
+            newstate(FirstNumPart);
+        }
+        else
+        {
+            tablestate(c);
+        }
+    }
+
+    return false;
 }
