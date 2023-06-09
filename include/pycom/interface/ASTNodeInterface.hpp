@@ -2,4 +2,6 @@
 
 class ASTNodeInterface
 {
+public:
+    virtual ~ASTNodeInterface() = default;
 };

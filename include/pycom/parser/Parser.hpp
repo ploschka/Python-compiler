@@ -3,4 +3,7 @@
 
 class Parser : public ParserInterface
 {
+public:
+    void setLexer(LexerInterface*);
+    AST* getAST();
 };

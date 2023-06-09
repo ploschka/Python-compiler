@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
 
     auto lexer = lexfac.create();
     auto parser = parfac.create();
+    parser->setLexer(lexer.get());
     auto seman = semfac.create();
     auto codegen = cdgfac.create();
     return 0;

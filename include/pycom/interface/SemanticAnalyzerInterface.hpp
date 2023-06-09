@@ -3,4 +3,5 @@
 class SemanticAnalyzerInterface
 {
 public:
+    virtual ~SemanticAnalyzerInterface() = default;
 };

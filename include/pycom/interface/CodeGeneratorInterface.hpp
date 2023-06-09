@@ -3,4 +3,5 @@
 class CodeGeneratorInterface
 {
 public:
+    virtual ~CodeGeneratorInterface() = default;
 };
