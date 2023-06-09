@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(Python_compiler
-    VERSION 0.1.0
+    VERSION 0.1.1
     DESCRIPTION "Python compiler made using LLVM"
     LANGUAGES CXX)
 
@@ -14,7 +14,7 @@ set(testname test_pycom)
 
 set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
-set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp)
+set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
 set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
@@ -32,6 +32,13 @@ set(libs lexer parser codegen semanalyzer)
 
 add_executable(${exename} main.cpp)
 set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)
+
+if(MSVC)
+  target_compile_options(${exename} PRIVATE /W4 /WX)
+else()
+  target_compile_options(${exename} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
 target_link_libraries(${exename} ${libs})
 
 if(PYCOM_BUILD_TESTS)

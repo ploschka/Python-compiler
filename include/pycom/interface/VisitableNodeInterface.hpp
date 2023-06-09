@@ -4,5 +4,5 @@
 class VisitableNodeInterface
 {
 public:
-    virtual void accept(NodeVisitorInterface *visitor) = 0;
+    virtual void accept(NodeVisitorInterface *_visitor) = 0;
 };

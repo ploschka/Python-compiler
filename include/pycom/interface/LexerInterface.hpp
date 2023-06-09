@@ -5,9 +5,8 @@
 class LexerInterface
 {
 public:
-    virtual void open(std::istream& stream) = 0;
+    virtual void open(std::istream& _stream) = 0;
     virtual Token getToken() = 0;
-    virtual void setState(LexerStateInterface *state) = 0;
-    virtual void pushToQueue(Token token) = 0;
+    virtual void setState(LexerStateInterface *_state) = 0;
     virtual ~LexerInterface() = default;
 };

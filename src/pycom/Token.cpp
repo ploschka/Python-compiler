@@ -21,21 +21,19 @@ unsigned int Token::getRow() const
     return row;
 }
 
-void Token::setValue(std::string value)
+void Token::setValue(std::string _value)
 {
-    this->value = value;
+    this->value = _value;
 }
 
-void Token::setType(Type type)
+void Token::setType(Type _type)
 {
-    this->type = type;
+    this->type = _type;
 }
 
-Token::Token(Type type, unsigned int row, unsigned int pos) : value(), type(type), row(row), pos(pos) {}
+Token::Token(std::string _value, Type _type, unsigned int _row, unsigned int _pos) : value(_value), type(_type), row(_row), pos(_pos) {}
 
-Token::Token(std::string value, Type type, unsigned int row, unsigned int pos) : value(value), type(type), row(row), pos(pos) {}
-
-bool Token::operator==(const Token& l)
+bool Token::operator==(const Token& _other) const
 {
-    return this->type == l.getType() && this->value == l.getValue();
+    return this->type == _other.getType() && this->value == _other.getValue();
 }

@@ -87,9 +87,8 @@ public:
     Type getType() const;
     unsigned int getPos() const;
     unsigned int getRow() const;
-    void setValue(std::string value);
-    void setType(Type type);
-    Token(std::string value, Type type, unsigned int row = 0, unsigned int pos = 0);
-    Token(Type type, unsigned int row = 0, unsigned int pos = 0);
-    bool operator==(const Token& l);
+    void setValue(std::string _value);
+    void setType(Type _type);
+    Token(std::string _value, Type _type, unsigned int _row = 0, unsigned int _pos = 0);
+    bool operator==(const Token& _other) const;
 };

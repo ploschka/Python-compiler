@@ -4,16 +4,7 @@
 #include <iostream>
 #define CHARCOUNT 1000
 
-static void eraseQueue(tokenQueue_t &q)
-{
-    while (!q.empty())
-    {
-        q.pop();
-    }
-}
-extern void unwind(LexerInterface *lexer);
-
-Type Lexer::recognize(const std::string &id) const
+Type Lexer::recognize(const std::string &_id) const
 {
     static const std::unordered_map<std::string, Type> map = {
         {"def", Type::defkw},
@@ -28,41 +19,38 @@ Type Lexer::recognize(const std::string &id) const
         {"continue", Type::continuekw},
         {"break", Type::breakkw}};
 
-    if (map.find(id) != map.end())
-        return map.at(id);
+    if (map.find(_id) != map.end())
+        return map.at(_id);
     else
         return Type::id;
 }
 
-void Lexer::open(std::istream &stream)
+void Lexer::open(std::istream &_stream)
 {
-    buffer1.assign(CHARCOUNT + 1, '\0');
-    buffer2.clear();
-    this->stream = &stream;
-    eraseQueue(queue);
+    filedata.reset(new FileData());
+    currBuff.reset(new std::string(CHARCOUNT + 1, '\0'));
+    otherBuff.reset(new std::string());
 
-    this->stream->read(&buffer1[0], CHARCOUNT);
-    iter = buffer1.cbegin();
-    currBuff = &buffer1;
-    otherBuff = &buffer2;
-    setState(new Start(this));
+    this->stream = &_stream;
+
+    this->stream->read(&(*currBuff)[0], CHARCOUNT);
+    iter = currBuff->cbegin();
+    setState(new Start(this, filedata.get()));
 }
 
-void Lexer::setState(LexerStateInterface *state)
+void Lexer::setState(LexerStateInterface *_state)
 {
-    this->state.reset(state);
+    this->state.reset(_state);
 }
 
 Token Lexer::getToken()
 {
-    while (queue.empty() && iter != currBuff->cend())
+    while (filedata->queue.empty() && iter != currBuff->cend())
     {
         this->state->recognize(*iter++);
     }
 
-    auto tok = queue.front();
-    queue.pop();
-
+    Token tok = filedata->get();
     bool failed = false;
 
     if (tok.getType() == Type::eof)
@@ -72,13 +60,12 @@ Token Lexer::getToken()
             otherBuff->assign(CHARCOUNT + 1, '\0');
             stream->read(&(*otherBuff)[0], CHARCOUNT);
             iter = otherBuff->cbegin();
-            std::swap(currBuff, otherBuff);
-            while (queue.empty() && iter != currBuff->cend())
+            currBuff.swap(otherBuff);
+            while (filedata->queue.empty() && iter != currBuff->cend())
             {
                 this->state->recognize(*iter++);
             }
-            tok = queue.front();
-            queue.pop();
+            tok = filedata->get();
             if (tok.getType() == Type::eof)
             {
                 failed = true;
@@ -91,10 +78,9 @@ Token Lexer::getToken()
     }
     if (failed)
     {
-        unwind(this);
-        queue.push(tok);
-        tok = queue.front();
-        queue.pop();
+        filedata->unwind();
+        filedata->queue.push(tok);
+        tok = filedata->get();
         return tok;
     }
 
@@ -103,9 +89,4 @@ Token Lexer::getToken()
         tok.setType(recognize(tok.getValue()));
     }
     return tok;
-}
-
-void Lexer::pushToQueue(Token token)
-{
-    queue.push(token);
 }
