@@ -13,7 +13,7 @@ set(exename pycom)
 set(testname test_pycom)
 
 set(tokenlib src/pycom/Token.cpp)
-set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
+set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp src/pycom/NodePrintVisitor.cpp)
 set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
 set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
@@ -27,6 +27,7 @@ add_library(semanalyzer STATIC ${semanalyzerlib})
 add_library(codegen STATIC ${codegenlib})
 
 target_link_libraries(lexer token)
+target_link_libraries(parser lexer ast token)
 
 set(libs lexer parser codegen semanalyzer)
 
