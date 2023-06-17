@@ -3,3 +3,4 @@ build
 .idea
 temp
 [Tt][Oo][Dd][Oo]\.*
+cmake-build-debug
