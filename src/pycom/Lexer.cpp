@@ -90,3 +90,10 @@ Token Lexer::getToken()
     }
     return tok;
 }
+
+void Lexer::print_all_tokens() {
+    Token token("", Type::id);
+    while ((token = this->getToken()).getType() != Type::eof) {
+        std::cout << type_to_str(token.getType()) << " " << token.getValue() << "\n";
+    }
+}

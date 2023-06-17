@@ -20,4 +20,5 @@ public:
     void open(std::istream& _stream);
     void setState(LexerStateInterface* _state);
     Token getToken();
+    void print_all_tokens();
 };
