@@ -17,7 +17,11 @@ Type Lexer::recognize(const std::string &_id) const
         {"return", Type::returnkw},
         {"yield", Type::yieldkw},
         {"continue", Type::continuekw},
-        {"break", Type::breakkw}};
+        {"break", Type::breakkw},
+        {"and", Type::andop},
+        {"or", Type::orop},
+        {"not", Type::notop},
+    };
 
     if (map.find(_id) != map.end())
         return map.at(_id);
@@ -96,4 +100,5 @@ void Lexer::print_all_tokens() {
     while ((token = this->getToken()).getType() != Type::eof) {
         std::cout << type_to_str(token.getType()) << " " << token.getValue() << "\n";
     }
+    std::cout << type_to_str(token.getType()) << " " << token.getValue() << "\n";
 }
