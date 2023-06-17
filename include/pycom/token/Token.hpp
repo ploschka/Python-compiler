@@ -63,6 +63,7 @@ enum class Type
     yieldkw,    // Ключевое слово yield
     returnkw,   // Ключевое слово return
     continuekw, // Ключевое слово continue
+    passkw,     // Ключевое слово pass
     breakkw,    // Ключевое слово break
     indent,     // Eсли отступ от края больше, чем у предыдущей строки
     dedent,     // Eсли отступ от края меньше, чем у предыдущей строки
