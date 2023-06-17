@@ -1202,14 +1202,14 @@ impl(Newline)
     {
         return false;
     }
+    filedata->put(Type::newline, filedata->row, initpos);
+    filedata->pos = 1;
+    filedata->row++;
     if (_c == '\0')
     {
         filedata->put(Type::eof, filedata->row, initpos);
         return false;
     }
-    filedata->put(Type::newline, filedata->row, initpos);
-    filedata->pos = 1;
-    filedata->row++;
     if (_c == ' ' || _c == '\t')
     {
         lexer->setState(new Indent(lexer, filedata, _c));
