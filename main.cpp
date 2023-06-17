@@ -4,6 +4,7 @@
 #include <pycom/factory/ParserFactory.hpp>
 #include <pycom/factory/SemanticFactory.hpp>
 #include <pycom/factory/CodeGenFactory.hpp>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
@@ -32,9 +33,15 @@ int main(int argc, char *argv[])
     auto semfac = SemanticFactory();
     auto cdgfac = CodeGenFactory();
 
+    std::ifstream file(argv[1]);
+
     auto lexer = lexfac.create();
+    lexer->open(file);
+//    lexer->print_all_tokens();
     auto parser = parfac.create();
     parser->setLexer(lexer.get());
+    parser->getAST()->print();
+
     auto seman = semfac.create();
     auto codegen = cdgfac.create();
     return 0;
