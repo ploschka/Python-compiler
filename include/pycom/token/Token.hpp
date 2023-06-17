@@ -2,8 +2,7 @@
 #include <string>
 
 /// @brief Тип токена
-enum class Type
-{
+enum class Type {
     id,         // Идентификатор
     number,     // Любое число, на последующих этапах трансляции будет распознано как целое или вещественное
     string,     // Строка
@@ -74,6 +73,8 @@ enum class Type
     indenterror,// Ошибка отступов
     tabspacemix // Смесь табов и пробелов в отступах
 };
+
+std::string type_to_str(Type type);
 
 class Token
 {
