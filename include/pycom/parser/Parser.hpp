@@ -2,6 +2,7 @@
 #include <pycom/interface/ParserInterface.hpp>
 #include <vector>
 #include "pycom/AST/ASTNode.hpp"
+#include "pycom/AST/AST.hpp"
 
 class Parser : public ParserInterface
 {
@@ -49,4 +50,5 @@ private:
 public:
     void setLexer(LexerInterface*);
     AST* getAST();
+    Parser();
 };

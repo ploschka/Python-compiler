@@ -2,6 +2,7 @@
 #include <pycom/token/Token.hpp>
 #include <pycom/AST/ASTNode.hpp>
 #include <stdexcept>
+#include <iostream>
 #include <map>
 #include <set>
 
@@ -30,13 +31,16 @@ std::map<std::string, std::set<Type>> FIRSTS = {{"for_stmt",      {Type::forkw}}
                                                 {"simple_stmts",  {Type::plus,   Type::inv,     Type::number, Type::breakkw, Type::minus,  Type::passkw,   Type::string,   Type::dot,    Type::id,      Type::continuekw, Type::lpr,    Type::returnkw}},
                                                 {"assignment",    {Type::id}}};
 
+Parser::Parser(): token(Token("хуй", Type::bandass)) {
+};
+
 void Parser::setLexer(LexerInterface *lexer) {
     this->lexer = lexer;
+    this->next_token();
 }
 
 AST *Parser::getAST() {
-    // TODO: Реализовать
-    return nullptr;
+    return new AST(this->file());
 }
 
 
@@ -56,6 +60,10 @@ bool Parser::token_matches_any(std::vector<Type> types) {
 }
 
 void Parser::error(std::string message) {
+    std::string pos = std::to_string(this->get_token().getPos());
+    std::string row = std::to_string(this->get_token().getRow());
+    message += "pos=" + pos + " row=" + row;
+    std::cout << message << std::endl;
     throw std::runtime_error(message);
 }
 
@@ -124,7 +132,7 @@ void Parser::statement(BlockNode *parent_block) {
     if (this->is_token_in_firsts("compound_stmt")) {
         this->compound_stmt(parent_block);
     } else if (this->is_token_in_firsts("simple_stmts")) {
-        this->simple_stmt(parent_block);
+        this->simple_stmts(parent_block);
     } else {
         this->error("statement");
     }
@@ -362,6 +370,7 @@ Leaf * Parser::atom() {
         return leaf;
     } else {
         this->error("atom");
+        return nullptr;
     }
 };
 
@@ -533,4 +542,4 @@ BlockNode * Parser::block() {
         this->simple_stmts(block);
     }
     return block;
-};
+}
