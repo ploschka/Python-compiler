@@ -1,0 +1,178 @@
+# https://docs.python.org/3/reference/grammar.html
+
+file:
+    | statements EOF
+    | EOF
+
+statements:
+    | statement statements
+    | statement
+
+statement:
+    | compound_stmt
+    | simple_stmts
+
+
+# SIMPLE STATEMENTS
+# =================================================================================
+
+simple_stmts:
+    | simple_stmt NEWLINE simple_stmts
+    | simple_stmt NEWLINE
+
+simple_stmt:
+    | assignment
+    | expression
+    | return_stmt
+    | PASS
+    | BREAKKW
+    | CONTINUEKW
+
+assignment:
+    | ID ASSIGN expression
+
+return_stmt:
+    | RETURNKW
+    | RETURNKW expression
+
+
+# Выражения. Например, 2 + 2 * f(2, 10 % 2)**2
+# =================================================================================
+
+expression:
+    | disjunction
+
+disjunction:
+    | conjunction OR disjunction
+    | conjunction
+
+conjunction:
+    | inversion AND conjunction
+    | inversion
+
+inversion:
+    | NOT inversion
+    | sum
+
+# Арифметические операции
+# =================================================================================
+
+sum:
+    | term PLUS sum
+    | term MINUS sum
+    | term
+
+term:
+    | factor STAR term
+    | factor DIV term
+    | factor IDIV term
+    | factor MOD term
+    | factor
+
+factor:
+    | PLUS factor
+    | MINUS factor
+    | INV factor
+    | primary
+
+
+# primary-элементы. Например, f(), "aboba".print()
+# =================================================================================
+
+primary:
+    | atom primary
+    | atom
+    | DOT ID primary
+    | DOT ID
+    | func_call
+
+func_call:
+    | LPR arguments RPR
+    | LPR RPR
+
+atom:
+    | ID
+    | STRING
+    | NUMBER
+
+arguments:
+    | expression COMMA arguments
+    | expression
+
+
+# COMPOUND STATEMENTS
+# =================================================================================
+
+compound_stmt:
+    | function_def
+    | if_stmt
+    | for_stmt
+    | while_stmt
+
+params:
+    | ID COMMA params
+    | ID
+
+function_def:
+    | DEFKW ID LPR RPR COLON block
+    | DEFKW ID LPR params RPR COLON block
+
+# If statement
+# ------------
+
+if_stmt:
+    | IFKW expression COLON block elif_stmt
+    | IFKW expression COLON block else_block
+    | IFKW expression COLON block
+elif_stmt:
+    | ELIFKW expression COLON block elif_stmt
+    | ELIFKW expression COLON block else_block
+    | ELIFKW expression COLON block
+else_block:
+    | ELSEKW COLON block
+
+# While statement
+# ---------------
+
+while_stmt:
+    | WHILEKW expression COLON block
+
+# For statement
+# -------------
+
+for_stmt:
+    | FORKW ID IN expression COLON block
+
+block:
+    | NEWLINE INDENT statements DEDENT
+    | simple_stmts
+
+
+Все нетерминалы:
+file
+statements
+statement
+simple_stmts
+simple_stmt
+assignment
+return_stmt
+expression
+disjunction
+conjunction
+inversion
+sum
+term
+factor
+primary
+func_call
+atom
+arguments
+compound_stmt
+params
+function_def
+if_stmt
+elif_stmt
+else_block
+while_stmt
+for_stmt
+block
