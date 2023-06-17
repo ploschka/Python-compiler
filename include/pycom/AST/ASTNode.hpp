@@ -52,7 +52,6 @@ public:
     ActualParamsNode* params;
     CallNode(VariableNode* callable, ActualParamsNode* params);
 };
-
 class BinaryNode : public ExpressionNode {
 public:
     ExpressionNode* left;

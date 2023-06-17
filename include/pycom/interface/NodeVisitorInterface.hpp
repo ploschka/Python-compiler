@@ -1,5 +1,5 @@
 #pragma once
-#include <pycom/AST/ASTNode.hpp>
+#include <pycom/AST/ASTNodePublic.hpp>
 
 class NodeVisitorInterface
 {
