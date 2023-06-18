@@ -61,7 +61,7 @@ void PrintVisitor::visitCallNode(CallNode* acceptor) {
 }
 
 void PrintVisitor::visitBinaryNode(BinaryNode* acceptor) {
-    std::string text = "BinaryOp (" + acceptor->op->token.getValue() + ")";
+    std::string text = "BinaryOp (" + type_to_str(acceptor->op->token.getType()) + ")";
     this->print_line(text);
     this->indent++;
     acceptor->left->accept(this);
