@@ -11,7 +11,7 @@ void PrintVisitor::print_line(std::string text) {
 }
 
 void PrintVisitor::visitLeaf(Leaf* acceptor) {
-    std::string text = "<" + type_to_str(acceptor->token.getType()) + ", " + acceptor->token.getValue();
+    std::string text = "<" + type_to_str(acceptor->token.getType()) + ", " + acceptor->token.getValue() + ">";
     this->print_line(text);
 }
 
@@ -49,11 +49,11 @@ void PrintVisitor::visitCallNode(CallNode* acceptor) {
     std::string text = "Call";
     this->print_line(text);
     this->indent++;
-    this->print_line("callable");
+    this->print_line("callable:");
     this->indent++;
     acceptor->callable->accept(this);
     this->indent--;
-    this->print_line("params");
+    this->print_line("params:");
     this->indent++;
     acceptor->params->accept(this);
     this->indent--;
@@ -118,7 +118,7 @@ void PrintVisitor::visitFunctionNode(FunctionNode* acceptor) {
     std::string text = "Function def";
     this->print_line(text);
     this->indent++;
-    this->print_line("id");
+    this->print_line("name:");
     this->indent++;
     acceptor->id->accept(this);
     this->indent--;
@@ -139,7 +139,7 @@ void PrintVisitor::visitElifNode(ElifNode* acceptor) {
     std::string text = "Elif";
     this->print_line(text);
     this->indent++;
-    this->print_line("condition");
+    this->print_line("condition:");
     this->indent++;
     acceptor->condition->accept(this);
     this->indent--;
@@ -151,7 +151,7 @@ void PrintVisitor::visitIfNode(IfNode* acceptor) {
     std::string text = "If";
     this->print_line(text);
     this->indent++;
-    this->print_line("condition");
+    this->print_line("condition:");
     this->indent++;
     acceptor->condition->accept(this);
     this->indent--;
@@ -163,7 +163,7 @@ void PrintVisitor::visitWhileNode(WhileNode* acceptor) {
     std::string text = "While";
     this->print_line(text);
     this->indent++;
-    this->print_line("condition");
+    this->print_line("condition:");
     this->indent++;
     acceptor->condition->accept(this);
     this->indent--;
@@ -175,11 +175,11 @@ void PrintVisitor::visitForNode(ForNode* acceptor) {
     std::string text = "For";
     this->print_line(text);
     this->indent++;
-    this->print_line("iterator");
+    this->print_line("iterator:");
     acceptor->iterator->accept(this);
     this->indent++;
     this->indent--;
-    this->print_line("condition");
+    this->print_line("condition:");
     this->indent++;
     acceptor->condition->accept(this);
     this->indent--;
