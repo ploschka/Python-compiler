@@ -1255,8 +1255,13 @@ Indent::Indent(LexerInterface *_lex, FileData *_filedata, char _c) : BaseLexerSt
 
 bool Indent::recognize(char _c)
 {
-    // bool indent = false;
     filedata->pos++;
+    if (_c == '\n')
+    {
+        prevchar = 0;
+        intcount = 0;
+        return false;
+    }
     if (prevchar > 0)
     {
         if (filedata->intype == IndentType::null)
@@ -1305,7 +1310,7 @@ bool Indent::recognize(char _c)
         prevchar = 0;
     }
 
-    if (_c == ' ' || _c == ' ')
+    if (_c == ' ' || _c == '\t')
     {
         switch (filedata->intype)
         {
@@ -1314,11 +1319,9 @@ bool Indent::recognize(char _c)
             {
             case ' ':
                 intcount++;
-                return false;
                 break;
             case '\t':
                 filedata->put(Type::tabspacemix, filedata->row, initpos);
-                return false;
                 break;
             }
             break;
@@ -1328,17 +1331,16 @@ bool Indent::recognize(char _c)
             {
             case '\t':
                 intcount++;
-                return false;
                 break;
             case ' ':
                 filedata->put(Type::tabspacemix, filedata->row, initpos);
-                return false;
                 break;
             }
             break;
         default:
             break;
         }
+        return false;
     }
     else
     {
