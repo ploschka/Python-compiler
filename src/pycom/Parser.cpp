@@ -25,13 +25,14 @@ std::map<std::string, std::set<Type>> FIRSTS = {{"for_stmt",      {Type::forkw}}
                                                 {"params",        {Type::id}},
                                                 {"expression",    {Type::plus,   Type::inv,     Type::number, Type::minus,   Type::string, Type::dot,      Type::id,       Type::lpr}},
                                                 {"term",          {Type::plus,   Type::inv,     Type::number, Type::minus,   Type::string, Type::dot,      Type::id,       Type::lpr}},
+                                                {"comparison",    {Type::plus,   Type::inv,     Type::number, Type::minus,   Type::string, Type::dot,      Type::id,       Type::lpr}},
                                                 {"else_block",    {Type::elsekw}},
                                                 {"compound_stmt", {Type::forkw,  Type::whilekw, Type::defkw,  Type::ifkw}},
                                                 {"sum",           {Type::plus,   Type::inv,     Type::number, Type::minus,   Type::string, Type::dot,      Type::id,       Type::lpr}},
                                                 {"simple_stmts",  {Type::plus,   Type::inv,     Type::number, Type::breakkw, Type::minus,  Type::passkw,   Type::string,   Type::dot,    Type::id,      Type::continuekw, Type::lpr,    Type::returnkw}},
                                                 {"assignment",    {Type::id}}};
 
-Parser::Parser(): token(Token("хуй", Type::bandass)) {
+Parser::Parser() : token(Token("хуй", Type::bandass)) {
 };
 
 void Parser::setLexer(LexerInterface *lexer) {
@@ -98,13 +99,13 @@ Token Parser::check_get_next(Type type) {
     return tmp;
 }
 
-ProgramNode * Parser::file() {
+ProgramNode *Parser::file() {
     /*
     file:
         | statements EOF
         | EOF
      */
-    ProgramNode* file = new ProgramNode();
+    ProgramNode *file = new ProgramNode();
     if (this->is_token_in_firsts("statements")) {
         this->statements(file);
     }
@@ -174,18 +175,18 @@ void Parser::simple_stmt(BlockNode *parent_block) {
     }
 };
 
-AssignmentNode * Parser::assignment() {
+AssignmentNode *Parser::assignment() {
     /*
     assignment:
         | ID ASSIGN expression
      */
-    Leaf* left = new Leaf(this->check_get_next(Type::id));
+    Leaf *left = new Leaf(this->check_get_next(Type::id));
     this->check_get_next(Type::assign);
-    ExpressionNode* right = this->expression();
+    ExpressionNode *right = this->expression();
     return new AssignmentNode(left, right);
 };
 
-ReturnNode * Parser::return_stmt() {
+ReturnNode *Parser::return_stmt() {
     /*
     return_stmt:
         | RETURNKW
@@ -201,7 +202,7 @@ ReturnNode * Parser::return_stmt() {
 
 };
 
-ExpressionNode * Parser::expression() {
+ExpressionNode *Parser::expression() {
     /*
     expression:
         | disjunction
@@ -209,72 +210,95 @@ ExpressionNode * Parser::expression() {
     return this->disjunction();
 };
 
-ExpressionNode * Parser::disjunction() {
+ExpressionNode *Parser::disjunction() {
     /*
     disjunction:
         | conjunction OR disjunction
         | conjunction
      */
-    ExpressionNode* left = this->conjunction();
+    ExpressionNode *left = this->conjunction();
     if (this->get_token().getType() == Type::orop) {
         Token op = this->check_get_next(Type::orop);
-        ExpressionNode* right = this->disjunction();
+        ExpressionNode *right = this->disjunction();
         return new BinaryNode(left, new Leaf(op), right);
     } else {
         return left;
     }
 };
 
-ExpressionNode * Parser::conjunction() {
+ExpressionNode *Parser::conjunction() {
     /*
     conjunction:
         | inversion AND conjunction
         | inversion
      */
-    ExpressionNode* left = this->inversion();
+    ExpressionNode *left = this->inversion();
     if (this->get_token().getType() == Type::andop) {
         Token op = this->check_get_next(Type::andop);
-        ExpressionNode* right = this->conjunction();
+        ExpressionNode *right = this->conjunction();
         return new BinaryNode(left, new Leaf(op), right);
     } else {
         return left;
     }
 };
 
-ExpressionNode * Parser::inversion() {
+ExpressionNode *Parser::inversion() {
     /*
     inversion:
         | NOT inversion
-        | sum
+        | comparison
      */
     if (this->get_token().getType() == Type::notop) {
         Token op = this->check_get_next(Type::notop);
-        ExpressionNode* operand = this->inversion();
+        ExpressionNode *operand = this->inversion();
         return new UnaryNode(new Leaf(op), operand);
     } else {
-        return this->sum();
+        return this->comparison();
     }
 };
 
-ExpressionNode * Parser::sum() {
+ExpressionNode * Parser::comparison() {
+    /*
+    comparison:
+        | sum greater comparison
+        | sum less comparison
+        | sum equal comparison
+        | sum noteq comparison
+        | sum grequal comparison
+        | sum lequal comparison
+        | sum
+     */
+
+    ExpressionNode *left = this->sum();
+    if (this->token_matches_any({Type::greater, Type::less, Type::equal, Type::noteq, Type::grequal, Type::lequal})) {
+        Token op = this->get_token();
+        this->next_token();
+        ExpressionNode *right = this->comparison();
+        return new BinaryNode(left, new Leaf(op), right);
+    } else {
+        return left;
+    }
+}
+
+ExpressionNode *Parser::sum() {
     /*
     sum:
         | term PLUS sum
         | term MINUS sum
         | term
      */
-    ExpressionNode* left = this->term();
+    ExpressionNode *left = this->term();
     if (this->token_matches_any({Type::plus, Type::minus})) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode * right = this->sum();
+        ExpressionNode *right = this->sum();
         return new BinaryNode(left, new Leaf(op), right);
     } else {
         return left;
     }
 };
 
-ExpressionNode * Parser::term() {
+ExpressionNode *Parser::term() {
     /*
     term:
         | factor STAR term
@@ -283,18 +307,18 @@ ExpressionNode * Parser::term() {
         | factor MOD term
         | factor
      */
-    ExpressionNode* left = this->factor();
+    ExpressionNode *left = this->factor();
     if (this->token_matches_any({Type::star, Type::div, Type::idiv, Type::mod})) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode * right = this->term();
+        ExpressionNode *right = this->term();
         return new BinaryNode(left, new Leaf(op), right);
     } else {
         return left;
     }
 };
 
-ExpressionNode * Parser::factor() {
+ExpressionNode *Parser::factor() {
     /*
     factor:
         | PLUS factor
@@ -305,14 +329,14 @@ ExpressionNode * Parser::factor() {
     if (this->token_matches_any({Type::plus, Type::minus, Type::inv})) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode* operand = this->factor();
+        ExpressionNode *operand = this->factor();
         return new UnaryNode(new Leaf(op), operand);
     } else {
         return this->primary();
     }
 };
 
-ExpressionNode * Parser::primary() {
+ExpressionNode *Parser::primary() {
     /*
     primary:
         | atom primary
@@ -322,7 +346,7 @@ ExpressionNode * Parser::primary() {
         | func_call
      */
     // Парсим цепочки типа ID.ID.ID.ID, пока не дойдём до вызова функции (например ID.func()), либо до конца цепочки
-    VariableNode* variable = new VariableNode({});
+    VariableNode *variable = new VariableNode({});
     while (this->is_token_in_firsts("primary") && !this->is_token_in_firsts("func_call")) {
         if (this->is_token_in_firsts("atom")) {
             variable->add_to_chain(this->atom());
@@ -333,14 +357,14 @@ ExpressionNode * Parser::primary() {
         }
     }
     if (this->is_token_in_firsts("func_call")) {
-        ActualParamsNode* params = this->func_call();
+        ActualParamsNode *params = this->func_call();
         return new CallNode(variable, params);
     } else {
         return variable;
     }
 };
 
-ActualParamsNode * Parser::func_call() {
+ActualParamsNode *Parser::func_call() {
     /*
     func_call:
         | LPR arguments RPR
@@ -348,7 +372,7 @@ ActualParamsNode * Parser::func_call() {
      */
     this->check_get_next(Type::lpr);
     if (this->is_token_in_firsts("arguments")) {
-        ActualParamsNode * params =  this->arguments();
+        ActualParamsNode *params = this->arguments();
         this->check_get_next(Type::rpr);
         return params;
     } else {
@@ -357,7 +381,7 @@ ActualParamsNode * Parser::func_call() {
     }
 };
 
-Leaf * Parser::atom() {
+Leaf *Parser::atom() {
     /*
     atom:
         | ID
@@ -365,7 +389,7 @@ Leaf * Parser::atom() {
         | NUMBER
      */
     if (this->token_matches_any({Type::id, Type::string, Type::number})) {
-        Leaf* leaf = new Leaf(this->get_token());
+        Leaf *leaf = new Leaf(this->get_token());
         this->next_token();
         return leaf;
     } else {
@@ -374,13 +398,13 @@ Leaf * Parser::atom() {
     }
 };
 
-ActualParamsNode * Parser::arguments() {
+ActualParamsNode *Parser::arguments() {
     /*
     arguments:
         | expression COMMA arguments
         | expression
      */
-    ActualParamsNode* params = new ActualParamsNode({});
+    ActualParamsNode *params = new ActualParamsNode({});
     while (this->is_token_in_firsts("arguments")) {
         params->add_child(this->expression());
         if (this->get_token().getType() == Type::comma) {
@@ -411,15 +435,15 @@ void Parser::compound_stmt(BlockNode *parent_block) {
     }
 };
 
-FormalParamsNode * Parser::params() {
+FormalParamsNode *Parser::params() {
     /*
     params:
         | ID COMMA params
         | ID
      */
-    FormalParamsNode* params = new FormalParamsNode({});
+    FormalParamsNode *params = new FormalParamsNode({});
     while (this->is_token_in_firsts("params")) {
-        Leaf* leaf = new Leaf(this->check_get_next(Type::id));
+        Leaf *leaf = new Leaf(this->check_get_next(Type::id));
         params->add_child(leaf);
         if (this->get_token().getType() == Type::comma) {
             this->next_token();
@@ -428,16 +452,16 @@ FormalParamsNode * Parser::params() {
     return params;
 };
 
-FunctionNode * Parser::function_def() {
+FunctionNode *Parser::function_def() {
     /*
     function_def:
         | DEFKW ID LPR params RPR COLON block
         | DEFKW ID LPR RPR COLON block
      */
     this->check_get_next(Type::defkw);
-    Leaf* id = new Leaf(this->check_get_next(Type::id));
+    Leaf *id = new Leaf(this->check_get_next(Type::id));
     this->check_get_next(Type::lpr);
-    FormalParamsNode* params;
+    FormalParamsNode *params;
     if (this->is_token_in_firsts("params")) {
         params = this->params();
     } else {
@@ -445,11 +469,11 @@ FunctionNode * Parser::function_def() {
     }
     this->check_get_next(Type::rpr);
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
+    BlockNode *body = this->block();
     return new FunctionNode(id, params, body);
 };
 
-IfNode * Parser::if_stmt() {
+IfNode *Parser::if_stmt() {
     /*
     if_stmt:
         | IFKW expression COLON block elif_stmt
@@ -457,10 +481,10 @@ IfNode * Parser::if_stmt() {
         | IFKW expression COLON block
      */
     this->check_get_next(Type::ifkw);
-    ExpressionNode* condition = this->expression();
+    ExpressionNode *condition = this->expression();
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
-    IfNode* if_node = new IfNode(condition, body);
+    BlockNode *body = this->block();
+    IfNode *if_node = new IfNode(condition, body);
     if (this->is_token_in_firsts("elif_stmt")) {
         if_node->next_elif = this->elif_stmt();
     } else if (this->is_token_in_firsts("else_block")) {
@@ -469,7 +493,7 @@ IfNode * Parser::if_stmt() {
     return if_node;
 };
 
-ElifNode * Parser::elif_stmt() {
+ElifNode *Parser::elif_stmt() {
     /*
     elif_stmt:
         | ELIFKW expression COLON block elif_stmt
@@ -477,10 +501,10 @@ ElifNode * Parser::elif_stmt() {
         | ELIFKW expression COLON block
      */
     this->check_get_next(Type::elifkw);
-    ExpressionNode* condition = this->expression();
+    ExpressionNode *condition = this->expression();
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
-    ElifNode* elif_node = new ElifNode(condition, body);
+    BlockNode *body = this->block();
+    ElifNode *elif_node = new ElifNode(condition, body);
     if (this->is_token_in_firsts("elif_stmt")) {
         elif_node->next_elif = this->elif_stmt();
     } else if (this->is_token_in_firsts("else_block")) {
@@ -489,30 +513,30 @@ ElifNode * Parser::elif_stmt() {
     return elif_node;
 };
 
-ElseNode * Parser::else_block() {
+ElseNode *Parser::else_block() {
     /*
     else_block:
         | ELSEKW COLON block
      */
     this->check_get_next(Type::elsekw);
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
+    BlockNode *body = this->block();
     return new ElseNode(body);
 };
 
-WhileNode * Parser::while_stmt() {
+WhileNode *Parser::while_stmt() {
     /*
     while_stmt:
         | WHILEKW expression COLON block
      */
     this->check_get_next(Type::whilekw);
-    ExpressionNode* condition = this->expression();
+    ExpressionNode *condition = this->expression();
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
+    BlockNode *body = this->block();
     return new WhileNode(condition, body);
 };
 
-ForNode * Parser::for_stmt() {
+ForNode *Parser::for_stmt() {
     /*
     for_stmt:
         | FORKW ID IN expression COLON block
@@ -520,19 +544,19 @@ ForNode * Parser::for_stmt() {
     this->check_get_next(Type::forkw);
     Token ID = this->check_get_next(Type::id);
     this->check_get_next(Type::in);
-    ExpressionNode* condition = this->expression();
+    ExpressionNode *condition = this->expression();
     this->check_get_next(Type::colon);
-    BlockNode* body = this->block();
+    BlockNode *body = this->block();
     return new ForNode(new Leaf(ID), condition, body);
 };
 
-BlockNode * Parser::block() {
+BlockNode *Parser::block() {
     /*
     block:
         | NEWLINE INDENT statements DEDENT
         | simple_stmts
      */
-    BlockNode* block = new BlockNode();
+    BlockNode *block = new BlockNode();
     if (this->get_token().getType() == Type::newline) {
         this->check_get_next(Type::newline);
         this->check_get_next(Type::indent);

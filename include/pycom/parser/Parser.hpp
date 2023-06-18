@@ -30,6 +30,7 @@ private:
     ExpressionNode * disjunction();
     ExpressionNode * conjunction();
     ExpressionNode * inversion();
+    ExpressionNode * comparison();
     ExpressionNode * sum();
     ExpressionNode * term();
     ExpressionNode * factor();
