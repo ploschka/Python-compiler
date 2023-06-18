@@ -144,6 +144,11 @@ void PrintVisitor::visitElifNode(ElifNode* acceptor) {
     acceptor->condition->accept(this);
     this->indent--;
     acceptor->body->accept(this);
+    if (acceptor->next_elif != nullptr) {
+        acceptor->next_elif->accept(this);
+    } else if (acceptor->next_else != nullptr) {
+        acceptor->next_else->accept(this);
+    }
     this->indent--;
 }
 
@@ -156,6 +161,11 @@ void PrintVisitor::visitIfNode(IfNode* acceptor) {
     acceptor->condition->accept(this);
     this->indent--;
     acceptor->body->accept(this);
+    if (acceptor->next_elif != nullptr) {
+        acceptor->next_elif->accept(this);
+    } else if (acceptor->next_else != nullptr) {
+        acceptor->next_else->accept(this);
+    }
     this->indent--;
 }
 
