@@ -42,9 +42,13 @@ fac(Lbr)
 fac(Rbr)
 fac(Exclamation)
 fac(Newline)
-fac(Comment)
 fac(Comma)
 fac(Skip)
+static inline LexerStateInterface *CommentFactory(LexerInterface *a, FileData *b)
+{
+    b->put(Type::newline, b->row, b->pos);
+    return new Comment(a, b);
+}
 
 static std::unordered_map<char, stateFactory_t> table = {
     tab('+', Plus),
@@ -1161,7 +1165,9 @@ impl(Comment)
 {
     if (_c == '\n')
     {
-        newstate(Newline);
+        filedata->row++;
+        filedata->pos = 0;
+        lexer->setState(new Indent(lexer, filedata, 0));
     }
     return false;
 }
@@ -1260,6 +1266,13 @@ bool Indent::recognize(char _c)
     {
         prevchar = 0;
         intcount = 0;
+        filedata->row++;
+        filedata->pos = 0;
+        return false;
+    }
+    if (_c == '#')
+    {
+        newstate(Comment);
         return false;
     }
     if (prevchar > 0)
