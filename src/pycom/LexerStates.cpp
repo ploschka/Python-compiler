@@ -41,13 +41,17 @@ fac(Rsbr)
 fac(Lbr)
 fac(Rbr)
 fac(Exclamation)
-fac(Newline)
 fac(Comma)
 fac(Skip)
 static inline LexerStateInterface *CommentFactory(LexerInterface *a, FileData *b)
 {
     b->put(Type::newline, b->row, b->pos);
     return new Comment(a, b);
+}
+static inline LexerStateInterface *NewlineFactory(LexerInterface *a, FileData *b)
+{
+    b->put(Type::newline, b->row, b->pos);
+    return new Newline(a, b);
 }
 
 static std::unordered_map<char, stateFactory_t> table = {
@@ -1204,13 +1208,12 @@ impl(Comma)
 
 impl(Newline)
 {
+    filedata->pos = 1;
+    filedata->row++;
     if (_c == '\n')
     {
         return false;
     }
-    filedata->put(Type::newline, filedata->row, initpos);
-    filedata->pos = 1;
-    filedata->row++;
     if (_c == '\0')
     {
         filedata->put(Type::eof, filedata->row, initpos);
