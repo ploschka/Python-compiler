@@ -219,8 +219,14 @@ ExpressionNode *Parser::disjunction() {
     ExpressionNode *left = this->conjunction();
     if (this->get_token().getType() == Type::orop) {
         Token op = this->check_get_next(Type::orop);
-        ExpressionNode *right = this->disjunction();
-        return new BinaryNode(left, new Leaf(op), right);
+        ExpressionNode *right = this->conjunction();
+        BinaryNode* op_node = new BinaryNode(left, new Leaf(op), right);
+        while (this->get_token().getType() == Type::orop) {
+            op = this->check_get_next(Type::orop);
+            right = this->conjunction();
+            op_node = new BinaryNode(op_node, new Leaf(op), right);
+        }
+        return op_node;
     } else {
         return left;
     }
@@ -235,8 +241,14 @@ ExpressionNode *Parser::conjunction() {
     ExpressionNode *left = this->inversion();
     if (this->get_token().getType() == Type::andop) {
         Token op = this->check_get_next(Type::andop);
-        ExpressionNode *right = this->conjunction();
-        return new BinaryNode(left, new Leaf(op), right);
+        ExpressionNode *right = this->inversion();
+        BinaryNode* op_node = new BinaryNode(left, new Leaf(op), right);
+        while (this->get_token().getType() == Type::andop) {
+            op = this->check_get_next(Type::andop);
+            right = this->inversion();
+            op_node = new BinaryNode(op_node, new Leaf(op), right);
+        }
+        return op_node;
     } else {
         return left;
     }
@@ -260,21 +272,28 @@ ExpressionNode *Parser::inversion() {
 ExpressionNode * Parser::comparison() {
     /*
     comparison:
-        | sum greater comparison
-        | sum less comparison
-        | sum equal comparison
-        | sum noteq comparison
-        | sum grequal comparison
-        | sum lequal comparison
+        | sum GREATER comparison
+        | sum LESS comparison
+        | sum EQUAL comparison
+        | sum NOTEQ comparison
+        | sum GREQUAL comparison
+        | sum LEQUAL comparison
         | sum
      */
-
     ExpressionNode *left = this->sum();
-    if (this->token_matches_any({Type::greater, Type::less, Type::equal, Type::noteq, Type::grequal, Type::lequal})) {
+    std::vector<Type> ok_ops = {Type::greater, Type::less, Type::equal, Type::noteq, Type::grequal, Type::lequal};
+    if (this->token_matches_any(ok_ops)) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode *right = this->comparison();
-        return new BinaryNode(left, new Leaf(op), right);
+        ExpressionNode *right = this->sum();
+        BinaryNode* op_node = new BinaryNode(left, new Leaf(op), right);
+        while (this->token_matches_any(ok_ops)) {
+            op = this->get_token();
+            this->next_token();
+            right = this->sum();
+            op_node = new BinaryNode(op_node, new Leaf(op), right);
+        }
+        return op_node;
     } else {
         return left;
     }
@@ -288,11 +307,19 @@ ExpressionNode *Parser::sum() {
         | term
      */
     ExpressionNode *left = this->term();
-    if (this->token_matches_any({Type::plus, Type::minus})) {
+    std::vector<Type> ok_ops = {Type::plus, Type::minus};
+    if (this->token_matches_any(ok_ops)) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode *right = this->sum();
-        return new BinaryNode(left, new Leaf(op), right);
+        ExpressionNode *right = this->term();
+        BinaryNode* op_node = new BinaryNode(left, new Leaf(op), right);
+        while (this->token_matches_any(ok_ops)) {
+            op = this->get_token();
+            this->next_token();
+            right = this->term();
+            op_node = new BinaryNode(op_node, new Leaf(op), right);
+        }
+        return op_node;
     } else {
         return left;
     }
@@ -308,11 +335,19 @@ ExpressionNode *Parser::term() {
         | factor
      */
     ExpressionNode *left = this->factor();
-    if (this->token_matches_any({Type::star, Type::div, Type::idiv, Type::mod})) {
+    std::vector<Type> ok_ops = {Type::star, Type::div, Type::idiv, Type::mod};
+    if (this->token_matches_any(ok_ops)) {
         Token op = this->get_token();
         this->next_token();
-        ExpressionNode *right = this->term();
-        return new BinaryNode(left, new Leaf(op), right);
+        ExpressionNode *right = this->factor();
+        BinaryNode* op_node = new BinaryNode(left, new Leaf(op), right);
+        while (this->token_matches_any(ok_ops)) {
+            op = this->get_token();
+            this->next_token();
+            right = this->factor();
+            op_node = new BinaryNode(op_node, new Leaf(op), right);
+        }
+        return op_node;
     } else {
         return left;
     }
