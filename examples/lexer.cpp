@@ -4,10 +4,10 @@
 #include <unordered_map>
 #include <fstream>
 
-std::string type_to_str(Type type)
+// Переводит enum Type в строку. Лучше функции не придумаешь.
+static inline std::string type_to_str(Type _type)
 {
-    // Переводит enum Type в строку. Лучше функции не придумаешь.
-    switch (type)
+    switch (_type)
     {
     case Type::id:
         return "id";

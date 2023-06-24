@@ -5,7 +5,7 @@
 class ParserInterface
 {
 public:
-    virtual void setLexer(LexerInterface*) = 0;
-    virtual AST* getAST() = 0;
+    virtual void setLexer(LexerInterface *) = 0;
+    virtual AST *getAST() = 0;
     virtual ~ParserInterface() = default;
 };

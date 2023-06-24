@@ -1,10 +1,11 @@
 #include <pycom/AST/AST.hpp>
-#include <pycom/AST/NodePrintVisitor.h>
 
-AST::AST(BaseASTNode *root) {
-    this->root = root;
+AST::AST(BaseASTNode *_root)
+{
+    this->root = _root;
 }
 
-void AST::print() {
-    this->root->accept(new PrintVisitor());
+void AST::accept(NodeVisitorInterface *_visitor)
+{
+    this->root->accept(_visitor);
 }

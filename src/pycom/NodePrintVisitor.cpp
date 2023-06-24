@@ -1,10 +1,10 @@
-#include <pycom/AST/NodePrintVisitor.h>
+#include <pycom/example_dependencies/NodePrintVisitor.h>
 #include <iostream>
 
-std::string type_to_str(Type type)
+// Переводит enum Type в строку. Лучше функции не придумаешь.
+static inline std::string type_to_str(Type _type)
 {
-    // Переводит enum Type в строку. Лучше функции не придумаешь.
-    switch (type)
+    switch (_type)
     {
     case Type::id:
         return "id";
@@ -149,228 +149,228 @@ std::string type_to_str(Type type)
     }
 }
 
-void PrintVisitor::print_line(std::string text)
+void PrintVisitor::print_line(std::string _text)
 {
     // Выводит text в консоль с учётом текущего отступа
     for (int i = 0; i < this->indent; i++)
     {
         std::cout << this->indent_str;
     }
-    std::cout << text;
+    std::cout << _text;
     std::cout << "\n";
 }
 
-void PrintVisitor::visitLeaf(Leaf *acceptor)
+void PrintVisitor::visitLeaf(Leaf *_acceptor)
 {
-    std::string text = "<" + type_to_str(acceptor->token.getType()) + ", " + acceptor->token.getValue() + ">";
+    std::string text = "<" + type_to_str(_acceptor->token.getType()) + ", " + _acceptor->token.getValue() + ">";
     this->print_line(text);
 }
 
-void PrintVisitor::visitFormalParamsNode(FormalParamsNode *acceptor)
+void PrintVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
 {
     std::string text = "FormalParams";
     this->print_line(text);
     this->indent++;
-    for (auto param : acceptor->params)
+    for (auto param : _acceptor->params)
     {
         param->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
+void PrintVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
 {
     std::string text = "ActualParams";
     this->print_line(text);
     this->indent++;
-    for (auto param : acceptor->params)
+    for (auto param : _acceptor->params)
     {
         param->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitVariableNode(VariableNode *acceptor)
+void PrintVisitor::visitVariableNode(VariableNode *_acceptor)
 {
     std::string text = "Variable";
     this->print_line(text);
     this->indent++;
-    for (auto param : acceptor->chain)
+    for (auto param : _acceptor->chain)
     {
         param->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitCallNode(CallNode *acceptor)
+void PrintVisitor::visitCallNode(CallNode *_acceptor)
 {
     std::string text = "Call";
     this->print_line(text);
     this->indent++;
     this->print_line("callable:");
     this->indent++;
-    acceptor->callable->accept(this);
+    _acceptor->callable->accept(this);
     this->indent--;
     this->print_line("params:");
     this->indent++;
-    acceptor->params->accept(this);
+    _acceptor->params->accept(this);
     this->indent--;
     this->indent--;
 }
 
-void PrintVisitor::visitBinaryNode(BinaryNode *acceptor)
+void PrintVisitor::visitBinaryNode(BinaryNode *_acceptor)
 {
-    std::string text = "BinaryOp (" + type_to_str(acceptor->op->token.getType()) + ")";
+    std::string text = "BinaryOp (" + type_to_str(_acceptor->op->token.getType()) + ")";
     this->print_line(text);
     this->indent++;
-    acceptor->left->accept(this);
-    acceptor->right->accept(this);
+    _acceptor->left->accept(this);
+    _acceptor->right->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitUnaryNode(UnaryNode *acceptor)
+void PrintVisitor::visitUnaryNode(UnaryNode *_acceptor)
 {
-    std::string text = "UnaryOp (" + acceptor->op->token.getValue() + ")";
+    std::string text = "UnaryOp (" + _acceptor->op->token.getValue() + ")";
     this->print_line(text);
     this->indent++;
-    acceptor->operand->accept(this);
+    _acceptor->operand->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitAssignmentNode(AssignmentNode *acceptor)
+void PrintVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     std::string text = "Assignment";
     this->print_line(text);
     this->indent++;
-    acceptor->left->accept(this);
-    acceptor->right->accept(this);
+    _acceptor->left->accept(this);
+    _acceptor->right->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitReturnNode(ReturnNode *acceptor)
+void PrintVisitor::visitReturnNode(ReturnNode *_acceptor)
 {
     std::string text = "Return";
     this->print_line(text);
     this->indent++;
-    acceptor->return_value->accept(this);
+    _acceptor->return_value->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitBlockNode(BlockNode *acceptor)
+void PrintVisitor::visitBlockNode(BlockNode *_acceptor)
 {
     std::string text = "Block";
     this->print_line(text);
     this->indent++;
-    for (auto child : acceptor->children)
+    for (auto child : _acceptor->children)
     {
         child->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitProgramNode(ProgramNode *acceptor)
+void PrintVisitor::visitProgramNode(ProgramNode *_acceptor)
 {
     std::string text = "Program";
     this->print_line(text);
     this->indent++;
-    for (auto child : acceptor->children)
+    for (auto child : _acceptor->children)
     {
         child->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitFunctionNode(FunctionNode *acceptor)
+void PrintVisitor::visitFunctionNode(FunctionNode *_acceptor)
 {
     std::string text = "Function def";
     this->print_line(text);
     this->indent++;
     this->print_line("name:");
     this->indent++;
-    acceptor->id->accept(this);
+    _acceptor->id->accept(this);
     this->indent--;
-    acceptor->formal_params->accept(this);
-    acceptor->body->accept(this);
+    _acceptor->formal_params->accept(this);
+    _acceptor->body->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitElseNode(ElseNode *acceptor)
+void PrintVisitor::visitElseNode(ElseNode *_acceptor)
 {
     std::string text = "Else";
     this->print_line(text);
     this->indent++;
-    acceptor->body->accept(this);
+    _acceptor->body->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitElifNode(ElifNode *acceptor)
+void PrintVisitor::visitElifNode(ElifNode *_acceptor)
 {
     std::string text = "Elif";
     this->print_line(text);
     this->indent++;
     this->print_line("condition:");
     this->indent++;
-    acceptor->condition->accept(this);
+    _acceptor->condition->accept(this);
     this->indent--;
-    acceptor->body->accept(this);
-    if (acceptor->next_elif != nullptr)
+    _acceptor->body->accept(this);
+    if (_acceptor->next_elif != nullptr)
     {
-        acceptor->next_elif->accept(this);
+        _acceptor->next_elif->accept(this);
     }
-    else if (acceptor->next_else != nullptr)
+    else if (_acceptor->next_else != nullptr)
     {
-        acceptor->next_else->accept(this);
+        _acceptor->next_else->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitIfNode(IfNode *acceptor)
+void PrintVisitor::visitIfNode(IfNode *_acceptor)
 {
     std::string text = "If";
     this->print_line(text);
     this->indent++;
     this->print_line("condition:");
     this->indent++;
-    acceptor->condition->accept(this);
+    _acceptor->condition->accept(this);
     this->indent--;
-    acceptor->body->accept(this);
-    if (acceptor->next_elif != nullptr)
+    _acceptor->body->accept(this);
+    if (_acceptor->next_elif != nullptr)
     {
-        acceptor->next_elif->accept(this);
+        _acceptor->next_elif->accept(this);
     }
-    else if (acceptor->next_else != nullptr)
+    else if (_acceptor->next_else != nullptr)
     {
-        acceptor->next_else->accept(this);
+        _acceptor->next_else->accept(this);
     }
     this->indent--;
 }
 
-void PrintVisitor::visitWhileNode(WhileNode *acceptor)
+void PrintVisitor::visitWhileNode(WhileNode *_acceptor)
 {
     std::string text = "While";
     this->print_line(text);
     this->indent++;
     this->print_line("condition:");
     this->indent++;
-    acceptor->condition->accept(this);
+    _acceptor->condition->accept(this);
     this->indent--;
-    acceptor->body->accept(this);
+    _acceptor->body->accept(this);
     this->indent--;
 }
 
-void PrintVisitor::visitForNode(ForNode *acceptor)
+void PrintVisitor::visitForNode(ForNode *_acceptor)
 {
     std::string text = "For";
     this->print_line(text);
     this->indent++;
     this->print_line("iterator:");
-    acceptor->iterator->accept(this);
+    _acceptor->iterator->accept(this);
     this->indent++;
     this->indent--;
     this->print_line("condition:");
     this->indent++;
-    acceptor->condition->accept(this);
+    _acceptor->condition->accept(this);
     this->indent--;
-    acceptor->body->accept(this);
+    _acceptor->body->accept(this);
     this->indent--;
 }

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <pycom/factory/LexerFactory.hpp>
 #include <pycom/factory/ParserFactory.hpp>
+#include <pycom/example_dependencies/NodePrintVisitor.h>
 #include <fstream>
+#include <memory>
 
 int main()
 {
@@ -13,7 +15,8 @@ int main()
     lexer->open(file);
     auto parser = parfac.create();
     parser->setLexer(lexer.get());
-    parser->getAST()->print();
+    auto visitor = std::make_unique<PrintVisitor>();
+    parser->getAST()->accept(visitor.get());
 
     return 0;
 }

@@ -13,7 +13,7 @@ set(exename pycom)
 set(testname test_pycom)
 
 set(tokenlib src/pycom/Token.cpp)
-set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp src/pycom/NodePrintVisitor.cpp)
+set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
 set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
 set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
@@ -57,8 +57,12 @@ if(PYCOM_BUILD_EXAMPLES)
     set(examples ${lexex} ${parsex})
     set(example_scripts lexer.py)
 
+    add_library(printast src/pycom/NodePrintVisitor.cpp)
+
     add_executable(${lexex} examples/lexer.cpp)
     add_executable(${parsex} examples/parser.cpp)
+
+    target_link_libraries(${parsex} printast)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
