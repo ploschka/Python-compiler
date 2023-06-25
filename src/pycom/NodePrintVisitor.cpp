@@ -230,7 +230,7 @@ void PrintVisitor::visitBinaryNode(BinaryNode *_acceptor)
 
 void PrintVisitor::visitUnaryNode(UnaryNode *_acceptor)
 {
-    std::string text = "UnaryOp (" + _acceptor->op->token.getValue() + ")";
+    std::string text = "UnaryOp (" + type_to_str(_acceptor->op->token.getType()) + ")";
     this->print_line(text);
     this->indent++;
     _acceptor->operand->accept(this);
