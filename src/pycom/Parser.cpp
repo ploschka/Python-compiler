@@ -6,31 +6,34 @@
 #include <map>
 #include <set>
 
-static const std::map<std::string, std::set<Type>> FIRSTS = {{"for_stmt", {Type::forkw}},
-                                                             {"primary", {Type::lpr, Type::number, Type::id, Type::string, Type::dot}},
-                                                             {"return_stmt", {Type::returnkw}},
-                                                             {"arguments", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
-                                                             {"func_call", {Type::lpr}},
-                                                             {"factor", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
-                                                             {"block", {Type::plus, Type::inv, Type::number, Type::breakkw, Type::minus, Type::passkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::newline, Type::returnkw}},
-                                                             {"atom", {Type::number, Type::string, Type::id}},
-                                                             {"if_stmt", {Type::ifkw}},
-                                                             {"while_stmt", {Type::whilekw}},
-                                                             {"elif_stmt", {Type::elifkw}},
-                                                             {"statement", {Type::plus, Type::inv, Type::minus, Type::passkw, Type::forkw, Type::returnkw, Type::defkw, Type::number, Type::breakkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::ifkw, Type::whilekw}},
-                                                             {"statements", {Type::plus, Type::inv, Type::minus, Type::passkw, Type::forkw, Type::returnkw, Type::defkw, Type::number, Type::breakkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::ifkw, Type::whilekw}},
-                                                             {"file", {Type::eof, Type::plus, Type::inv, Type::minus, Type::passkw, Type::forkw, Type::returnkw, Type::defkw, Type::number, Type::breakkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::ifkw, Type::whilekw}},
-                                                             {"function_def", {Type::defkw}},
-                                                             {"simple_stmt", {Type::plus, Type::inv, Type::number, Type::breakkw, Type::minus, Type::passkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::returnkw}},
+static const std::map<std::string, std::set<Type>> FIRSTS = {{"sum", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"term", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"arguments", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"inversion", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
                                                              {"params", {Type::id}},
-                                                             {"expression", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
-                                                             {"term", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
-                                                             {"comparison", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
+                                                             {"expression", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"statements", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::passkw, Type::inv}},
+                                                             {"elif_stmt", {Type::elifkw}},
+                                                             {"simple_stmt", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::id, Type::returnkw, Type::passkw, Type::inv}},
+                                                             {"block", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::newline, Type::id, Type::returnkw, Type::passkw, Type::inv}},
+                                                             {"for_stmt", {Type::forkw}},
+                                                             {"conjunction", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"while_stmt", {Type::whilekw}},
+                                                             {"comparison", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
                                                              {"else_block", {Type::elsekw}},
-                                                             {"compound_stmt", {Type::forkw, Type::whilekw, Type::defkw, Type::ifkw}},
-                                                             {"sum", {Type::plus, Type::inv, Type::number, Type::minus, Type::string, Type::dot, Type::id, Type::lpr}},
-                                                             {"simple_stmts", {Type::plus, Type::inv, Type::number, Type::breakkw, Type::minus, Type::passkw, Type::string, Type::dot, Type::id, Type::continuekw, Type::lpr, Type::returnkw}},
-                                                             {"assignment", {Type::id}}};
+                                                             {"statement", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::passkw, Type::inv}},
+                                                             {"func_call", {Type::lpr}},
+                                                             {"primary", {Type::number, Type::lpr, Type::dot, Type::string, Type::id}},
+                                                             {"function_def", {Type::defkw}},
+                                                             {"if_stmt", {Type::ifkw}},
+                                                             {"return_stmt", {Type::returnkw}},
+                                                             {"compound_stmt", {Type::ifkw, Type::whilekw, Type::defkw, Type::forkw}},
+                                                             {"assignment", {Type::id}},
+                                                             {"file", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::eof, Type::passkw, Type::inv}},
+                                                             {"disjunction", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"factor", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
+                                                             {"simple_stmts", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::id, Type::returnkw, Type::passkw, Type::inv}},
+                                                             {"atom", {Type::id, Type::number, Type::string}}};
 
 Parser::Parser() : token(Token("хуй", Type::bandass)){};
 
@@ -120,7 +123,7 @@ Token Parser::check_get_next(Type _type)
  */
 ProgramNode *Parser::file()
 {
-    ProgramNode *file = new ProgramNode();
+    ProgramNode *file = new ProgramNode({});
     if (this->is_token_in_firsts("statements"))
     {
         this->statements(file);
