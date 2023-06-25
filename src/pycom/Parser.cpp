@@ -71,7 +71,7 @@ void Parser::error(std::string _message)
 {
     std::string pos = std::to_string(this->get_token().getPos());
     std::string row = std::to_string(this->get_token().getRow());
-    _message += "pos=" + pos + " row=" + row;
+    _message += " pos=" + pos + " row=" + row;
     std::cout << _message << std::endl;
     throw std::runtime_error(_message);
 }
@@ -109,7 +109,7 @@ Token Parser::check_get_next(Type _type)
 {
     if (this->token.getType() != _type)
     {
-        this->error("Неожиданный символ");
+        this->error("Unexpected token");
     }
     Token tmp = this->token;
     this->next_token();
