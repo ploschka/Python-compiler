@@ -63,3 +63,7 @@ void FormalParamsNode::add_child(Leaf *_param)
 {
     this->params.push_back(_param);
 }
+
+ProgramNode::ProgramNode(std::vector<BaseASTNode *> _children) {
+    this->children = _children;
+}

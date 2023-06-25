@@ -110,7 +110,9 @@ public:
 
 class ProgramNode : public BlockNode
 {
+public:
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitProgramNode(this); };
+    ProgramNode(std::vector<BaseASTNode *> _children);
 };
 
 // ============= Compound statements =============
