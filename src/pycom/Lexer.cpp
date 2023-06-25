@@ -21,6 +21,9 @@ Type Lexer::recognize(const std::string &_id) const
         {"and", Type::andop},
         {"or", Type::orop},
         {"not", Type::notop},
+        {"in", Type::in},
+        {"is", Type::is},
+        {"pass", Type::passkw}
     };
 
     if (map.find(_id) != map.end())

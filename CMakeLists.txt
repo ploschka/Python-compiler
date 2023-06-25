@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(Python_compiler
-    VERSION 0.1.1
+    VERSION 0.2.2
     DESCRIPTION "Python compiler made using LLVM"
     LANGUAGES CXX)
 
@@ -43,25 +43,22 @@ endif()
 
 target_link_libraries(${exename} ${libs})
 
+if(PYCOM_BUILD_TESTS OR PYCOM_BUILD_EXAMPLES)
+  set(script_source scripts)
+  file(COPY ${script_source} DESTINATION .)
+endif()
+
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
-    add_executable(${testname} tests/test.cpp)
-
-    add_library(asttovector src/pycom/NodeToVectorVisitor.cpp)
-    add_executable(${parsertestname} tests/parsertests.cpp)
+    add_executable(${testname} tests/test.cpp tests/parsertests.cpp src/pycom/NodeToVectorVisitor.cpp)
 
     target_link_libraries(${testname} gtest gtest_main ${libs})
-    target_link_libraries(${parsertestname} gtest gtest_main asttovector ${libs})
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
-    set(script_source examples/scripts)
-    set(script_output scripts)
-
     set(lexex lexerexample)
     set(parsex parserexample)
     set(examples ${lexex} ${parsex})
-#    set(example_scripts lexer.py)
 
     add_library(printast src/pycom/NodePrintVisitor.cpp)
 
@@ -73,9 +70,4 @@ if(PYCOM_BUILD_EXAMPLES)
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
     endforeach()
-
-    file(COPY ${script_source} DESTINATION .)
-#    foreach(ex ${example_scripts})
-#        configure_file(${script_source}/${ex} ${script_output}/${ex} COPYONLY)
-#    endforeach()
 endif()
