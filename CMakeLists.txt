@@ -4,13 +4,14 @@ project(Python_compiler
     DESCRIPTION "Python compiler made using LLVM"
     LANGUAGES CXX)
 
-option(PYCOM_BUILD_TESTS "Build pycom tests" OFF)
+option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
 
 include_directories(include)
 
 set(exename pycom)
 set(testname test_pycom)
+set(parsertestname test_parser)
 
 set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
@@ -45,7 +46,12 @@ target_link_libraries(${exename} ${libs})
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
     add_executable(${testname} tests/test.cpp)
+
+    add_library(asttovector src/pycom/NodeToVectorVisitor.cpp)
+    add_executable(${parsertestname} tests/parsertests.cpp)
+
     target_link_libraries(${testname} gtest gtest_main ${libs})
+    target_link_libraries(${parsertestname} gtest gtest_main asttovector ${libs})
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
@@ -55,7 +61,7 @@ if(PYCOM_BUILD_EXAMPLES)
     set(lexex lexerexample)
     set(parsex parserexample)
     set(examples ${lexex} ${parsex})
-    set(example_scripts lexer.py)
+#    set(example_scripts lexer.py)
 
     add_library(printast src/pycom/NodePrintVisitor.cpp)
 
@@ -68,7 +74,8 @@ if(PYCOM_BUILD_EXAMPLES)
         target_link_libraries(${ex} ${libs})        
     endforeach()
 
-    foreach(ex ${example_scripts})
-        configure_file(${script_source}/${ex} ${script_output}/${ex} COPYONLY)        
-    endforeach()    
+    file(COPY ${script_source} DESTINATION .)
+#    foreach(ex ${example_scripts})
+#        configure_file(${script_source}/${ex} ${script_output}/${ex} COPYONLY)
+#    endforeach()
 endif()
