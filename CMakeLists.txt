@@ -46,6 +46,7 @@ set(libs lexer parser codegen semanalyzer)
 
 add_executable(${exename} main.cpp)
 set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)
+set_property(TARGET codegen PROPERTY CXX_STANDARD 17)
 
 if(MSVC)
   target_compile_options(${exename} PRIVATE /W4 /WX)
