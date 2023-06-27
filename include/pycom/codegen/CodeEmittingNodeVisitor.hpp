@@ -7,6 +7,9 @@
 #include <pycom/interface/NodeVisitorInterface.hpp>
 
 #include <map>
+#include <queue>
+#include <stack>
+
 typedef std::map<std::string, llvm::Value *> symbtable_t;
 
 class CodeEmittingNodeVisitor : public NodeVisitorInterface
@@ -15,7 +18,13 @@ private:
     llvm::IRBuilder<> *builder;
     llvm::Module *module;
     llvm::LLVMContext *context;
+    
     symbtable_t namedValues;
+    std::queue<llvm::Value*> stored_values;
+    llvm::ArrayRef<llvm::Value*> stored_array;
+    llvm::BasicBlock * main_block;
+    std::stack<llvm::BasicBlock *> break_stack;
+    std::stack<llvm::BasicBlock *> continue_stack;
 
 public:
     void visitLeaf(Leaf *_acceptor);

@@ -8,13 +8,11 @@
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
 
 #include <memory>
-#include <queue>
 
 class CodeGenerator : public CodeGeneratorInterface
 {
 private:
     std::unique_ptr<CodeEmittingNodeVisitor> visitor;
-    std::queue<llvm::Value*> stored_values;
 
 public:
     void generate(AST *_ast);
