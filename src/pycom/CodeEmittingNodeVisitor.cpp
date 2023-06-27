@@ -43,7 +43,7 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
     auto t = _acceptor->token.getType();
     switch (t)
     {
-        case Type::continuekw:
+    case Type::continuekw:
         if (continue_stack.empty())
         {
             // Error
@@ -53,10 +53,10 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
             builder->CreateBr(continue_stack.top());
         }
         break;
-        case Type::passkw:
+    case Type::passkw:
 
         break;
-        case Type::breakkw:
+    case Type::breakkw:
         if (break_stack.empty())
         {
             // Error
@@ -66,10 +66,12 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
             builder->CreateBr(continue_stack.top());
         }
         break;
-        default:
+
+    default:
         // Error как ты сюда попал?
         break;
     }
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
@@ -120,74 +122,84 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     auto right = stored_values.front();
     stored_values.pop();
 
-    llvm::Value* ret;
+    auto flt = llvm::Type::getFloatTy(*context);
+    auto type = llvm::FunctionType::get(flt, {flt}, false);
+    auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__floor", module);
+
+    llvm::Value *ret;
+
+    if (left->getType()->isPointerTy())
+    {
+        left = builder->CreateLoad(flt, left, "left");
+    }
+    if (right->getType()->isPointerTy())
+    {
+        right = builder->CreateLoad(flt, right, "right");
+    }
 
     switch (_acceptor->op->token.getType())
     {
-        case Type::plus:
+    case Type::plus:
         ret = builder->CreateFAdd(left, right);
         break;
-        case Type::minus:
+    case Type::minus:
         ret = builder->CreateFSub(left, right);
         break;
-        case Type::star:
+    case Type::star:
         ret = builder->CreateFMul(left, right);
         break;
-        case Type::div:
+    case Type::div:
         ret = builder->CreateFDiv(left, right);
         break;
-        case Type::mod:
+    case Type::mod:
         ret = builder->CreateFRem(left, right);
         break;
-        case Type::idiv:
-        auto dbl = llvm::Type::getFloatTy(*context);
-        auto type = llvm::FunctionType::get(dbl, {dbl}, false);
-        auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__floor", module);
+    case Type::idiv:
         ret = builder->CreateCall(func, {builder->CreateFDiv(left, right)});
         break;
-        case Type::matmul:
+    case Type::matmul:
         // Error
         break;
-        case Type::greater:
+    case Type::greater:
         ret = builder->CreateFCmpUGT(left, right);
         break;
-        case Type::less:
+    case Type::less:
         ret = builder->CreateFCmpULT(left, right);
         break;
-        case Type::equal:
+    case Type::equal:
         ret = builder->CreateFCmpUEQ(left, right);
         break;
-        case Type::noteq:
+    case Type::noteq:
         ret = builder->CreateFCmpUNE(left, right);
         break;
-        case Type::grequal:
+    case Type::grequal:
         ret = builder->CreateFCmpUGE(left, right);
         break;
-        case Type::lequal:
+    case Type::lequal:
         ret = builder->CreateFCmpULE(left, right);
         break;
-        case Type::andop:
+    case Type::andop:
         ret = builder->CreateLogicalAnd(left, right);
         break;
-        case Type::orop:
+    case Type::orop:
         ret = builder->CreateLogicalOr(left, right);
         break;
-        case Type::lshift:
+    case Type::lshift:
         ret = builder->CreateShl(left, right);
         break;
-        case Type::rshift:
+    case Type::rshift:
         ret = builder->CreateLShr(left, right);
         break;
-        case Type::band:
-        ret = builder->CreateAnd(left, right);        
+    case Type::band:
+        ret = builder->CreateAnd(left, right);
         break;
-        case Type::bor:
+    case Type::bor:
         ret = builder->CreateOr(left, right);
         break;
-        case Type::xorop:
+    case Type::xorop:
         ret = builder->CreateXor(left, right);
         break;
-        default:
+    default:
         // Error
         break;
     }
@@ -200,7 +212,7 @@ void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
-    llvm::Value* left;
+    llvm::Value *left;
     auto name = _acceptor->left->token.getValue();
     if (namedValues.find(name) == namedValues.end())
     {
@@ -216,7 +228,8 @@ void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
     _acceptor->right->accept(this);
     auto right = stored_values.front();
     stored_values.pop();
-    builder->CreateStore(left, right);
+    builder->CreateStore(right, left);
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitReturnNode(ReturnNode *_acceptor)
@@ -225,11 +238,12 @@ void CodeEmittingNodeVisitor::visitReturnNode(ReturnNode *_acceptor)
     auto ret_val = stored_values.front();
     stored_values.pop();
     builder->CreateRet(ret_val);
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
 {
-    for (auto &i: _acceptor->children)
+    for (auto &i : _acceptor->children)
     {
         i->accept(this);
         stored_values.pop();
@@ -238,16 +252,19 @@ void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitProgramNode(ProgramNode *_acceptor)
 {
-    auto type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), false);
+    auto intty = llvm::Type::getInt32Ty(*context);
+    auto type = llvm::FunctionType::get(intty, false);
     auto main = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__pymain", module);
     main_block = llvm::BasicBlock::Create(*context, "__mainbody", main);
     builder->SetInsertPoint(main_block);
     namedValues["__pymain"] = main;
-    for (auto& i: _acceptor->children)
+    for (auto &i : _acceptor->children)
     {
         i->accept(this);
         stored_values.pop();
     }
+    auto ret = llvm::ConstantInt::get(intty, llvm::APInt(32, 0));
+    builder->CreateRet(ret);
 }
 
 void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
@@ -268,6 +285,7 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     builder->SetInsertPoint(BB);
     _acceptor->body->accept(this);
     builder->SetInsertPoint(main_block);
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitElseNode(ElseNode *_acceptor)
@@ -284,11 +302,11 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
     _acceptor->condition->accept(this);
     auto cond = stored_values.front();
     stored_values.pop();
-    llvm::BasicBlock* current_block = builder->GetInsertBlock();
-    llvm::BasicBlock* thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
+    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    llvm::BasicBlock *thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
     std::vector<llvm::BasicBlock *> elif_list;
-    llvm::BasicBlock* elseb = llvm::BasicBlock::Create(*context, "elseblock");
-    llvm::BasicBlock* merge = llvm::BasicBlock::Create(*context, "mergeblock");
+    llvm::BasicBlock *elseb = llvm::BasicBlock::Create(*context, "elseblock");
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(*context, "mergeblock");
     builder->CreateCondBr(cond, thenb, elseb);
 
     break_stack.push(merge);

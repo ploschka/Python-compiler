@@ -17,6 +17,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
 
 #include <pycom/factory/LexerFactory.hpp>
 #include <pycom/factory/ParserFactory.hpp>
@@ -27,13 +28,12 @@ int main(int _argc, char *_argv[])
 {
     if (_argc == 1)
     {
-        std::cerr << 
-            "Usage: pycom <filename>[ <filename>[...]]\n"
-            "Options:\n"
-            "-o <filename>      Set output file name\n"
-            "-c                 Only compile the file, do not link\n"
-            "-emit-llvm         Emit LLVM IR code\n"
-            "-ON                Do optimizations, N can be 0, 1, 2, 3, s, z\n";
+        std::cerr << "Usage: pycom <filename>[ <filename>[...]]\n"
+                     "Options:\n"
+                     "-o <filename>      Set output file name\n"
+                     "-c                 Only compile the file, do not link\n"
+                     "-emit-llvm         Emit LLVM IR code\n"
+                     "-ON                Do optimizations, N can be 0, 1, 2, 3, s, z\n";
         return 0;
     }
 
@@ -108,7 +108,6 @@ int main(int _argc, char *_argv[])
     module->setPIELevel(llvm::PIELevel::Level::Small);
     module->setPICLevel(llvm::PICLevel::Level::SmallPIC);
 
-
     auto output = "output.o";
     std::error_code EC;
     llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::OF_None);
@@ -145,7 +144,10 @@ int main(int _argc, char *_argv[])
     // Optimize the IR!
     MPM.run(*module, MAM);
     module->print(llvm::errs(), nullptr);
-    
+    if (llvm::verifyModule(*module, &llvm::errs()))
+    {
+        exit(-1);
+    }
 
     llvm::legacy::PassManager pass;
     auto FileType = llvm::CGFT_ObjectFile;
