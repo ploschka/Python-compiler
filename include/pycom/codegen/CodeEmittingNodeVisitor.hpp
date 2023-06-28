@@ -9,8 +9,10 @@
 #include <map>
 #include <queue>
 #include <stack>
+#include <utility>
 
 typedef std::map<std::string, llvm::Value *> symbtable_t;
+typedef std::tuple<llvm::Value *, llvm::Value *, llvm::BasicBlock *> phival_t;
 
 class CodeEmittingNodeVisitor : public NodeVisitorInterface
 {
@@ -19,12 +21,13 @@ private:
     llvm::Module *module;
     llvm::LLVMContext *context;
 
-    symbtable_t namedValues;
+    symbtable_t namedValues; // TODO std::stack<std::unique_ptr<symtable_t>>
     std::queue<llvm::Value *> stored_values;
     llvm::ArrayRef<llvm::Value *> stored_array;
     llvm::BasicBlock *main_block;
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
+    std::stack<std::unique_ptr<std::vector<phival_t>>> phi_stack;
 
 public:
     void visitLeaf(Leaf *_acceptor);

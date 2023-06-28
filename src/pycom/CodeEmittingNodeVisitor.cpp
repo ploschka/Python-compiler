@@ -317,19 +317,25 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
     thenb = builder->GetInsertBlock();
 
     parent->insert(parent->end(), elseb);
+    builder->SetInsertPoint(elseb);
     if (_acceptor->next_else)
     {
         _acceptor->next_else->accept(this);
+        stored_values.pop();
     }
     builder->CreateBr(merge);
     elseb = builder->GetInsertBlock();
 
-    auto curr = _acceptor->next_elif;
-    while (curr)
-    {
-        curr = curr->next_elif;
-    }
+    parent->insert(parent->end(), merge);
+    builder->SetInsertPoint(merge);
+
+    // auto curr = _acceptor->next_elif;
+    // while (curr)
+    // {
+    //     curr = curr->next_elif;
+    // }
     // builder->CreatePHI()
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
