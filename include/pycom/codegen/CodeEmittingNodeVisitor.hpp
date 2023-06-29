@@ -23,11 +23,14 @@ private:
 
     symbtable_t namedValues; // TODO std::stack<std::unique_ptr<symtable_t>>
     std::queue<llvm::Value *> stored_values;
-    llvm::ArrayRef<llvm::Value *> stored_array;
+    std::vector<llvm::Value *> stored_array;
     llvm::BasicBlock *main_block;
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
     std::stack<std::unique_ptr<std::vector<phival_t>>> phi_stack;
+
+    llvm::Value *getLeafValue(Leaf *_leaf);
+    void stdinit();
 
 public:
     void visitLeaf(Leaf *_acceptor);

@@ -13,24 +13,43 @@
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
 #include <pycom/AST/ASTNode.hpp>
 
-static inline llvm::Value *getLeafValue(symbtable_t &_table, llvm::IRBuilder<> *_builder, Leaf *_leaf)
+llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
 {
     Type t = _leaf->token.getType();
     std::string val = _leaf->token.getValue();
     if (t == Type::number)
     {
-        auto type = llvm::Type::getFloatTy(_builder->getContext());
+        auto type = llvm::Type::getFloatTy(*context);
         return llvm::ConstantFP::get(type, llvm::StringRef(val));
     }
     if (t == Type::id)
     {
-        if (_table.find(val) == _table.end())
+        if (namedValues.find(val) == namedValues.end())
         {
             return nullptr;
         }
-        return _table[val];
+        return namedValues[val];
+    }
+    if (t == Type::string)
+    {
+        return builder->CreateGlobalStringPtr(val);
     }
     return nullptr;
+}
+
+void CodeEmittingNodeVisitor::stdinit()
+{
+    auto floatty = llvm::Type::getFloatTy(*context);
+    auto voidty = llvm::Type::getVoidTy(*context);
+    auto strty = llvm::Type::getInt8PtrTy(*context);
+
+    auto putfty = llvm::FunctionType::get(voidty, {floatty}, false);
+    auto putsty = llvm::FunctionType::get(voidty, {strty}, false);
+    auto floorty = llvm::FunctionType::get(floatty, {floatty}, false);
+
+    llvm::Function::Create(floorty, llvm::GlobalValue::ExternalLinkage, "__floor", module);
+    llvm::Function::Create(putfty, llvm::GlobalValue::ExternalLinkage, "__putf", module);
+    llvm::Function::Create(putsty, llvm::GlobalValue::ExternalLinkage, "__puts", module);
 }
 
 CodeEmittingNodeVisitor::CodeEmittingNodeVisitor(
@@ -81,19 +100,26 @@ void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
 {
-    std::vector<llvm::Value *> vec;
+    stored_array.clear();
     for (auto &i : _acceptor->params)
     {
         i->accept(this);
-        vec.push_back(stored_values.front());
+        auto val = stored_values.front();
         stored_values.pop();
+        if (val->getType()->isPointerTy())
+        {
+            stored_array.push_back(builder->CreateLoad(llvm::Type::getFloatTy(*context), val));
+        }
+        else
+        {
+            stored_array.push_back(val);
+        }
     }
-    stored_array = vec;
 }
 
 void CodeEmittingNodeVisitor::visitVariableNode(VariableNode *_acceptor)
 {
-    auto val = getLeafValue(namedValues, builder, _acceptor->chain[0]);
+    auto val = getLeafValue(_acceptor->chain[0]);
     if (!val)
     {
         // Error
@@ -104,9 +130,9 @@ void CodeEmittingNodeVisitor::visitVariableNode(VariableNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
 {
-    _acceptor->callable->accept(this);
-    auto callable = module->getFunction(stored_values.front()->getName());
-    stored_values.pop();
+    auto funcname = _acceptor->callable->chain[0]->token.getValue();
+    auto callable = module->getFunction(funcname);
+    auto g = callable->getName();
     _acceptor->params->accept(this);
     auto call = builder->CreateCall(callable, stored_array);
     stored_values.push(call);
@@ -122,19 +148,17 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     auto right = stored_values.front();
     stored_values.pop();
 
-    auto flt = llvm::Type::getFloatTy(*context);
-    auto type = llvm::FunctionType::get(flt, {flt}, false);
-    auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__floor", module);
+    auto floatty = llvm::Type::getFloatTy(*context);
 
     llvm::Value *ret;
 
     if (left->getType()->isPointerTy())
     {
-        left = builder->CreateLoad(flt, left, "left");
+        left = builder->CreateLoad(floatty, left, "left");
     }
     if (right->getType()->isPointerTy())
     {
-        right = builder->CreateLoad(flt, right, "right");
+        right = builder->CreateLoad(floatty, right, "right");
     }
 
     switch (_acceptor->op->token.getType())
@@ -155,7 +179,7 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
         ret = builder->CreateFRem(left, right);
         break;
     case Type::idiv:
-        ret = builder->CreateCall(func, {builder->CreateFDiv(left, right)});
+        ret = builder->CreateCall(module->getFunction("__floor"), {builder->CreateFDiv(left, right)});
         break;
     case Type::matmul:
         // Error
@@ -252,6 +276,8 @@ void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitProgramNode(ProgramNode *_acceptor)
 {
+    stdinit();
+
     auto intty = llvm::Type::getInt32Ty(*context);
     auto type = llvm::FunctionType::get(intty, false);
     auto main = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__pymain", module);
