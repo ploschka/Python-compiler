@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <pycom/parser/Parser.hpp>
 #include <pycom/token/Token.hpp>
 #include <fstream>
@@ -31,7 +31,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> get_node_vectors(
         target_nodes};
 }
 
-TEST(ExpressionTest, Assignment)
+TEST(ParserTest, ExpressionExpressionAssignment)
 {
     std::string test_code_file = "scripts/test_Assign.py";
     ProgramNode *target_root = new ProgramNode(
@@ -46,7 +46,7 @@ TEST(ExpressionTest, Assignment)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, Plus)
+TEST(ParserTest, ExpressionPlus)
 {
     std::string test_code_file = "scripts/test_Plus.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -60,7 +60,7 @@ TEST(ExpressionTest, Plus)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, ManyPlus)
+TEST(ParserTest, ExpressionManyPlus)
 {
     std::string test_code_file = "scripts/test_ManyPlus.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -80,7 +80,7 @@ TEST(ExpressionTest, ManyPlus)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, PlusMinus)
+TEST(ParserTest, ExpressionPlusMinus)
 {
     std::string test_code_file = "scripts/test_PlusMinus.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -103,7 +103,7 @@ TEST(ExpressionTest, PlusMinus)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, Mul)
+TEST(ParserTest, ExpressionMul)
 {
     std::string test_code_file = "scripts/test_Mul.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -117,7 +117,7 @@ TEST(ExpressionTest, Mul)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, MulWithDiv)
+TEST(ParserTest, ExpressionMulWithDiv)
 {
     std::string test_code_file = "scripts/test_MulWithDiv.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -134,7 +134,7 @@ TEST(ExpressionTest, MulWithDiv)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, And)
+TEST(ParserTest, ExpressionAnd)
 {
     std::string test_code_file = "scripts/test_And.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -148,7 +148,7 @@ TEST(ExpressionTest, And)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, Or)
+TEST(ParserTest, ExpressionOr)
 {
     std::string test_code_file = "scripts/test_Or.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -162,7 +162,7 @@ TEST(ExpressionTest, Or)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, Not)
+TEST(ParserTest, ExpressionNot)
 {
     std::string test_code_file = "scripts/test_Not.py";
     ProgramNode *target_root = new ProgramNode({new UnaryNode(
@@ -178,7 +178,7 @@ TEST(ExpressionTest, Not)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, LogicPriority)
+TEST(ParserTest, ExpressionLogicPriority)
 {
     std::string test_code_file = "scripts/test_LogicPriority.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -203,7 +203,7 @@ TEST(ExpressionTest, LogicPriority)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, ComparisonEqualPriority)
+TEST(ParserTest, ExpressionComparisonEqualPriority)
 {
     std::string test_code_file = "scripts/test_ComparisonEqualPriority.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -223,7 +223,7 @@ TEST(ExpressionTest, ComparisonEqualPriority)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, UnaryOp)
+TEST(ParserTest, ExpressionUnaryOp)
 {
     std::string test_code_file = "scripts/test_UnaryOp.py";
     ProgramNode *target_root = new ProgramNode({new UnaryNode(
@@ -236,7 +236,7 @@ TEST(ExpressionTest, UnaryOp)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ExpressionTest, ArithmOpPriority)
+TEST(ParserTest, ExpressionArithmOpPriority)
 {
     std::string test_code_file = "scripts/test_ArithmOpPriority.py";
     ProgramNode *target_root = new ProgramNode({new BinaryNode(
@@ -265,7 +265,7 @@ TEST(ExpressionTest, ArithmOpPriority)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(IfTest, If)
+TEST(ParserTest, If)
 {
     std::string test_code_file = "scripts/test_If.py";
     ProgramNode *target_root = new ProgramNode({new IfNode(
@@ -278,7 +278,7 @@ TEST(IfTest, If)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(IfTest, IfElse)
+TEST(ParserTest, IfIfElse)
 {
     std::string test_code_file = "scripts/test_IfElse.py";
     auto if_node = new IfNode(
@@ -295,7 +295,7 @@ TEST(IfTest, IfElse)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(IfTest, IfElifElse)
+TEST(ParserTest, IfElifElse)
 {
     std::string test_code_file = "scripts/test_IfElifElse.py";
 
@@ -317,7 +317,7 @@ TEST(IfTest, IfElifElse)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(WhileTest, While)
+TEST(ParserTest, While)
 {
     std::string test_code_file = "scripts/test_While.py";
     ProgramNode *target_root = new ProgramNode({new WhileNode(
@@ -330,7 +330,7 @@ TEST(WhileTest, While)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ForTest, For)
+TEST(ParserTest, For)
 {
     std::string test_code_file = "scripts/test_For.py";
     ProgramNode *target_root = new ProgramNode({new ForNode(
@@ -346,7 +346,7 @@ TEST(ForTest, For)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(FunctionDefTest, DefinitionNoParams)
+TEST(ParserTest, FunctionDefinitionNoParams)
 {
     std::string test_code_file = "scripts/test_DefinitionNoParams.py";
     ProgramNode *target_root = new ProgramNode({new FunctionNode(
@@ -360,7 +360,7 @@ TEST(FunctionDefTest, DefinitionNoParams)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(FunctionDefTest, DefinitionWithParams)
+TEST(ParserTest, FunctionDefinitionWithParams)
 {
     std::string test_code_file = "scripts/test_DefinitionWithParams.py";
     ProgramNode *target_root = new ProgramNode({new FunctionNode(
@@ -375,7 +375,7 @@ TEST(FunctionDefTest, DefinitionWithParams)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(FunctionCallTest, CallNoParams)
+TEST(ParserTest, FunctionCallNoParams)
 {
     std::string test_code_file = "scripts/test_CallNoParams.py";
     ProgramNode *target_root = new ProgramNode({new CallNode(
@@ -388,7 +388,7 @@ TEST(FunctionCallTest, CallNoParams)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(FunctionCallTest, CallWithParams)
+TEST(ParserTest, FunctionCallWithParams)
 {
     std::string test_code_file = "scripts/test_CallWithParams.py";
     ProgramNode *target_root = new ProgramNode({new CallNode(
@@ -403,7 +403,7 @@ TEST(FunctionCallTest, CallWithParams)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ReturnTest, ReturnNothing)
+TEST(ParserTest, ReturnNothing)
 {
     std::string test_code_file = "scripts/test_ReturnNothing.py";
     ProgramNode *target_root = new ProgramNode({new FunctionNode(
@@ -418,7 +418,7 @@ TEST(ReturnTest, ReturnNothing)
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
-TEST(ReturnTest, ReturnSomething)
+TEST(ParserTest, ReturnSomething)
 {
     std::string test_code_file = "scripts/test_ReturnSomething.py";
     ProgramNode *target_root = new ProgramNode({new FunctionNode(

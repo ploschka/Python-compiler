@@ -35,5 +35,16 @@ Token::Token(std::string _value, Type _type, unsigned int _row, unsigned int _po
 
 bool Token::operator==(const Token &_other) const
 {
-    return this->type == _other.getType() && this->value == _other.getValue();
+    return this->type == _other.getType() &&
+           this->value == _other.getValue() &&
+           this->row == _other.getRow() &&
+           this->pos == _other.getPos();
+}
+
+bool Token::operator!=(const Token &_other) const
+{
+    return this->type != _other.getType() ||
+           this->value != _other.getValue() ||
+           this->row != _other.getRow() ||
+           this->pos != _other.getPos();
 }

@@ -277,7 +277,7 @@ impl(FirstNumPart)
     else if (_c == '.')
     {
         filedata->accum.push_back(_c);
-        newstate(SecondNumPart);
+        lexer->setState(new SecondNumPart(lexer, filedata, initpos));
     }
     else
     {
@@ -304,7 +304,11 @@ impl(FirstNumPart)
     return false;
 }
 
-impl(SecondNumPart)
+SecondNumPart::SecondNumPart(LexerInterface* _lex, FileData* _filedata, unsigned int _initpos) : BaseLexerState(_lex, _filedata)
+{
+    initpos = _initpos;
+}
+bool SecondNumPart::recognize(char _c)
 {
     filedata->pos++;
     if (std::isdigit(_c))

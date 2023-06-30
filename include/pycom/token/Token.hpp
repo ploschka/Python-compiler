@@ -92,4 +92,5 @@ public:
     void setType(Type _type);
     Token(std::string _value, Type _type, unsigned int _row = 0, unsigned int _pos = 0);
     bool operator==(const Token &_other) const;
+    bool operator!=(const Token &_other) const;
 };

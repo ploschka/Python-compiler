@@ -64,9 +64,9 @@ endif()
 
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
-    add_executable(${testname} tests/test.cpp tests/parsertests.cpp src/pycom/NodeToVectorVisitor.cpp)
+    add_executable(${testname} tests/parsertests.cpp src/pycom/NodeToVectorVisitor.cpp tests/codegentests.cpp tests/lexertests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs})
+    target_link_libraries(${testname} gtest gtest_main ${libs} ${llvm_libraries})
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)

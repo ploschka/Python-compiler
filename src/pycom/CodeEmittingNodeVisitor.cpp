@@ -313,7 +313,7 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     auto size = _acceptor->formal_params->params.size();
     std::vector<llvm::Type *> args(size, floatty);
     auto type = llvm::FunctionType::get(floatty, args, false);
-    auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, name, module);
+    auto func = llvm::Function::Create(type, llvm::GlobalValue::InternalLinkage, name, module);
     namedValues.top().insert({name, func});
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(BB);

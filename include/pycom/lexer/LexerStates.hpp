@@ -29,7 +29,6 @@ st(Start)
 st(Skip)
 st(Id)
 st(FirstNumPart)
-st(SecondNumPart)
 st(String)
 st(Colon)
 st(Dot)
@@ -59,6 +58,13 @@ st(Rshift)
 st(Newline)
 st(Comment)
 st(Comma)
+
+class SecondNumPart : public BaseLexerState
+{
+public:
+    SecondNumPart(LexerInterface *_lex, FileData *_filedata, unsigned int _initpos);
+    bool recognize(char _c);
+};
 
 class Indent : public BaseLexerState
 {
