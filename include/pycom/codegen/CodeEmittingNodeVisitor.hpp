@@ -21,13 +21,13 @@ private:
     llvm::Module *module;
     llvm::LLVMContext *context;
 
-    symbtable_t namedValues; // TODO std::stack<std::unique_ptr<symtable_t>>
+    std::stack<symbtable_t> namedValues;
     std::queue<llvm::Value *> stored_values;
     std::vector<llvm::Value *> stored_array;
     llvm::BasicBlock *main_block;
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
-    std::stack<std::unique_ptr<std::vector<phival_t>>> phi_stack;
+    std::stack<llvm::BasicBlock *> merge_stack;
 
     llvm::Value *getLeafValue(Leaf *_leaf);
     void stdinit();

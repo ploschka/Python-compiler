@@ -24,11 +24,11 @@ llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
     }
     if (t == Type::id)
     {
-        if (namedValues.find(val) == namedValues.end())
+        if (namedValues.top().find(val) == namedValues.top().end())
         {
             return nullptr;
         }
-        return namedValues[val];
+        return namedValues.top().at(val);
     }
     if (t == Type::string)
     {
@@ -238,16 +238,16 @@ void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     llvm::Value *left;
     auto name = _acceptor->left->token.getValue();
-    if (namedValues.find(name) == namedValues.end())
+    if (namedValues.top().find(name) == namedValues.top().end())
     {
         auto type = llvm::Type::getFloatTy(*context);
         auto size = llvm::ConstantInt::get(*context, llvm::APInt(32, 1));
         left = builder->CreateAlloca(llvm::Type::getFloatTy(*context), size, name);
-        namedValues[name] = left;
+        namedValues.top().insert({name, left});
     }
     else
     {
-        left = namedValues[name];
+        left = namedValues.top().at(name);
     }
     _acceptor->right->accept(this);
     auto right = stored_values.front();
@@ -278,12 +278,14 @@ void CodeEmittingNodeVisitor::visitProgramNode(ProgramNode *_acceptor)
 {
     stdinit();
 
+    namedValues.emplace();
+
     auto intty = llvm::Type::getInt32Ty(*context);
     auto type = llvm::FunctionType::get(intty, false);
     auto main = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, "__pymain", module);
     main_block = llvm::BasicBlock::Create(*context, "__mainbody", main);
     builder->SetInsertPoint(main_block);
-    namedValues["__pymain"] = main;
+    namedValues.top().insert({"__pymain", main});
     for (auto &i : _acceptor->children)
     {
         i->accept(this);
@@ -295,21 +297,28 @@ void CodeEmittingNodeVisitor::visitProgramNode(ProgramNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
 {
+    auto floatty = llvm::Type::getFloatTy(*context);
     auto name = _acceptor->id->token.getValue();
-    if (namedValues.find(name) != namedValues.end())
+    auto paramsize = llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*context), llvm::APInt(32, 1));
+    if (namedValues.top().find(name) != namedValues.top().end())
     {
         // Error;
         return;
     }
+    namedValues.emplace(namedValues.top());
+    for (auto &i : _acceptor->formal_params->params)
+    {
+        namedValues.top().insert({i->token.getValue(), builder->CreateAlloca(floatty, paramsize)});
+    }
     auto size = _acceptor->formal_params->params.size();
-    auto floatty = llvm::Type::getFloatTy(*context);
     std::vector<llvm::Type *> args(size, floatty);
     auto type = llvm::FunctionType::get(floatty, args, false);
     auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, name, module);
-    namedValues[name] = func;
+    namedValues.top().insert({name, func});
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(BB);
     _acceptor->body->accept(this);
+    namedValues.pop();
     builder->SetInsertPoint(main_block);
     stored_values.push(nullptr);
 }
@@ -320,22 +329,37 @@ void CodeEmittingNodeVisitor::visitElseNode(ElseNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitElifNode(ElifNode *_acceptor)
 {
-}
-
-void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
-{
     auto parent = builder->GetInsertBlock()->getParent();
     _acceptor->condition->accept(this);
     auto cond = stored_values.front();
     stored_values.pop();
     llvm::BasicBlock *current_block = builder->GetInsertBlock();
     llvm::BasicBlock *thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
-    std::vector<llvm::BasicBlock *> elif_list;
+    llvm::BasicBlock *elseb = llvm::BasicBlock::Create(*context, "elseblock");
+    builder->CreateCondBr(cond, thenb, elseb);
+
+    builder->SetInsertPoint(thenb);
+    _acceptor->body->accept(this);
+    builder->CreateBr(merge_stack.top());
+
+    parent->insert(parent->end(), elseb);
+    builder->SetInsertPoint(elseb);
+}
+
+void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
+{
+    auto currblock = builder->GetInsertBlock();
+    auto parent = builder->GetInsertBlock()->getParent();
+    _acceptor->condition->accept(this);
+    auto cond = stored_values.front();
+    stored_values.pop();
+    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    llvm::BasicBlock *thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
     llvm::BasicBlock *elseb = llvm::BasicBlock::Create(*context, "elseblock");
     llvm::BasicBlock *merge = llvm::BasicBlock::Create(*context, "mergeblock");
     builder->CreateCondBr(cond, thenb, elseb);
 
-    break_stack.push(merge);
+    merge_stack.push(merge);
 
     builder->SetInsertPoint(thenb);
     _acceptor->body->accept(this);
@@ -344,28 +368,79 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
 
     parent->insert(parent->end(), elseb);
     builder->SetInsertPoint(elseb);
+
+    auto curr = _acceptor->next_elif;
+    if (curr)
+    {
+        for(;;)
+        {
+            curr->accept(this);
+            if (curr->next_elif)
+                curr = curr->next_elif;
+            else
+                break;
+        }
+
+        if (curr->next_else)
+        {
+            curr->next_else->body->accept(this);
+        }
+    }
+
     if (_acceptor->next_else)
     {
-        _acceptor->next_else->accept(this);
-        stored_values.pop();
+        _acceptor->next_else->body->accept(this);
     }
+
     builder->CreateBr(merge);
-    elseb = builder->GetInsertBlock();
 
     parent->insert(parent->end(), merge);
     builder->SetInsertPoint(merge);
+    if (currblock == main_block)
+    {
+        main_block = merge;
+    }
+    merge_stack.pop();
 
-    // auto curr = _acceptor->next_elif;
-    // while (curr)
-    // {
-    //     curr = curr->next_elif;
-    // }
-    // builder->CreatePHI()
     stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
 {
+    auto currblock = builder->GetInsertBlock();
+    auto parent = builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    llvm::BasicBlock *condb = llvm::BasicBlock::Create(*context, "condb", parent);
+    llvm::BasicBlock *bodyb = llvm::BasicBlock::Create(*context, "bodyb", parent);
+    llvm::BasicBlock *afterb = llvm::BasicBlock::Create(*context, "afterb");
+
+    builder->CreateBr(condb);
+
+    builder->SetInsertPoint(condb);
+    _acceptor->condition->accept(this);
+    auto cond = stored_values.front();
+    stored_values.pop();
+
+    builder->CreateCondBr(cond, bodyb, afterb);
+    
+    break_stack.push(afterb);
+    continue_stack.push(condb);
+
+    builder->SetInsertPoint(bodyb);
+    _acceptor->body->accept(this);
+    builder->CreateBr(condb);
+
+    parent->insert(parent->end(), afterb);
+    builder->SetInsertPoint(afterb);
+
+    if (currblock == main_block)
+    {
+        main_block = afterb;
+    }
+
+    break_stack.pop();
+    continue_stack.pop();
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)

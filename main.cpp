@@ -142,12 +142,13 @@ int main(int _argc, char *_argv[])
     llvm::ModulePassManager MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
 
     // Optimize the IR!
-    MPM.run(*module, MAM);
     module->print(llvm::errs(), nullptr);
     if (llvm::verifyModule(*module, &llvm::errs()))
     {
+        std::cerr << "Exited\n";
         exit(-1);
     }
+    MPM.run(*module, MAM);
 
     llvm::legacy::PassManager pass;
     auto FileType = llvm::CGFT_ObjectFile;

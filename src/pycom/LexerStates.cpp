@@ -1214,6 +1214,11 @@ impl(Newline)
     {
         return false;
     }
+    if (_c == '#')
+    {
+        newstate(Comment);
+        return false;
+    }
     if (_c == '\0')
     {
         filedata->put(Type::eof, filedata->row, initpos);
