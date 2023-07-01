@@ -6,4 +6,6 @@ class AST {
 public:
     AST(BaseASTNode* root);
     void print();
+    bool isSemanticallyCorrect();
+    BaseASTNode* get_root();
 };
