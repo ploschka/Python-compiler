@@ -1,4 +1,4 @@
-#include <pycom/factory/LexerFactory.hpp>
+#include <pycom/lexer/Lexer.hpp>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -154,8 +154,7 @@ static inline std::string type_to_str(Type _type)
 
 int main()
 {
-    auto lexfac = LexerFactory();
-    auto lexer = lexfac.create();
+    auto lexer = std::make_unique<Lexer>();
     std::ifstream file("scripts/lexer.py");
 
     lexer->open(file);

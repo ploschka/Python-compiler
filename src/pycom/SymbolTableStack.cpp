@@ -16,9 +16,9 @@ void SymbolTableStack::pop() {
 
 bool SymbolTableStack::isSymbolExists(std::string name) {
     for (SymbolTable table : this->data) {
-        if (!table.isSymbolExists(name)) {
-            return false;
+        if (table.isSymbolExists(name)) {
+            return true;
         }
     }
-    return true;
+    return false;
 }

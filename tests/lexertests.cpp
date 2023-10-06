@@ -1,11 +1,10 @@
-#include <pycom/factory/LexerFactory.hpp>
+#include <pycom/lexer/Lexer.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 #include <fstream>
 #include <sstream>
 
-static LexerFactory lexfac = LexerFactory();
-static std::unique_ptr<LexerInterface> lexer = lexfac.create();
+static std::unique_ptr<LexerInterface> lexer = std::make_unique<Lexer>();
 
 static bool compvec(const std::vector<Token>& _v1, const std::vector<Token>& _v2)
 {

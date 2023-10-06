@@ -3,7 +3,7 @@
 #include <pycom/token/Token.hpp>
 #include <fstream>
 #include <pycom/lexer/Lexer.hpp>
-#include <pycom/example_dependencies/NodeToVectorVisitor.h>
+#include <NodeToVectorVisitor.h>
 
 std::pair<std::vector<std::string>, std::vector<std::string>> get_node_vectors(
     std::string test_code_filename, ProgramNode *target_root)

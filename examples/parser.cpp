@@ -1,19 +1,17 @@
 #include <iostream>
-#include <pycom/factory/LexerFactory.hpp>
-#include <pycom/factory/ParserFactory.hpp>
-#include <pycom/example_dependencies/NodePrintVisitor.h>
+#include <pycom/lexer/Lexer.hpp>
+#include <pycom/parser/Parser.hpp>
+#include "NodePrintVisitor.h"
 #include <fstream>
 #include <memory>
 
 int main()
 {
-    auto lexfac = LexerFactory();
-    auto parfac = ParserFactory();
     std::ifstream file("scripts/lexer.py");
 
-    auto lexer = lexfac.create();
+    auto lexer = std::make_unique<Lexer>();
     lexer->open(file);
-    auto parser = parfac.create();
+    auto parser = std::make_unique<Parser>();
     parser->setLexer(lexer.get());
     auto visitor = std::make_unique<PrintVisitor>();
     parser->getAST()->accept(visitor.get());

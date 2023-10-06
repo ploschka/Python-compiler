@@ -1,10 +1,12 @@
+#pragma once
 #include <vector>
 #include "pycom/semanalyzer/SymbolTable.hpp"
 
-
-class SymbolTableStack{
+class SymbolTableStack
+{
 private:
     std::vector<SymbolTable> data;
+
 public:
     SymbolTableStack() = default;
     void addId(std::string name, Symbol value);

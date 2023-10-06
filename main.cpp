@@ -19,10 +19,10 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 
-#include <pycom/factory/LexerFactory.hpp>
-#include <pycom/factory/ParserFactory.hpp>
-#include <pycom/factory/SemanticFactory.hpp>
-#include <pycom/factory/CodeGenFactory.hpp>
+#include <pycom/lexer/Lexer.hpp>
+#include <pycom/parser/Parser.hpp>
+#include <pycom/semanalyzer/SemanticAnalyzer.hpp>
+#include <pycom/codegen/CodeGenerator.hpp>
 
 int main(int _argc, char *_argv[])
 {
@@ -51,27 +51,24 @@ int main(int _argc, char *_argv[])
         }
     }
 
-    auto lexfac = LexerFactory();
-    auto parfac = ParserFactory();
-    auto semfac = SemanticFactory();
-    auto cdgfac = CodeGenFactory();
-
-    std::ifstream file(_argv[1]);
-
-    auto lexer = lexfac.create();
-    lexer->open(file);
-    auto parser = parfac.create();
-    parser->setLexer(lexer.get());
-
-    auto ast = parser->getAST();
-
-    auto seman = semfac.create();
-
     auto context = std::make_unique<llvm::LLVMContext>();
     auto builder = std::make_unique<llvm::IRBuilder<>>(*context);
     auto module = std::make_unique<llvm::Module>("pycom", *context);
 
-    auto codegen = cdgfac.create(builder.get(), module.get(), context.get());
+    std::ifstream file(_argv[1]);
+
+    auto lexer = std::make_unique<Lexer>();
+    auto parser = std::make_unique<Parser>();
+    auto seman = std::make_unique<SemanticAnalyzer>();
+    auto codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
+
+    lexer->open(file);
+    parser->setLexer(lexer.get());
+
+    auto ast = parser->getAST();
+
+
+
     codegen->generate(ast);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

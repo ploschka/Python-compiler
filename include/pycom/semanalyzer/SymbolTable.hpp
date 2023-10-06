@@ -3,15 +3,15 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "pycom/semanalyzer/Symbol.hpp"
-//#include "pycom/AST/ASTNode.hpp"
+#include <pycom/semanalyzer/Symbol.hpp>
 
-
-class SymbolTable{
+class SymbolTable
+{
 private:
-    std::map <std::string, Symbol> data;
+    std::map<std::string, Symbol> data;
+
 public:
-    SymbolTable(std::map <std::string, Symbol> data);
+    SymbolTable(std::map<std::string, Symbol> data);
     void add(std::string name, Symbol value);
     bool isSymbolExists(std::string name);
 };

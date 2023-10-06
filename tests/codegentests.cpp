@@ -1,4 +1,4 @@
-#include <pycom/factory/CodeGenFactory.hpp>
+#include <pycom/codegen/CodeGenerator.hpp>
 #include <gtest/gtest.h>
 #include <fstream>
 #include <string>
@@ -11,8 +11,7 @@
 static auto context = llvm::LLVMContext();
 static auto builder = llvm::IRBuilder<>(context);
 static auto module = llvm::Module("pycom", context);
-static auto cdgfac = CodeGenFactory();
-static auto codegen = cdgfac.create(&builder, &module, &context);
+static auto codegen = std::make_unique<CodeGenerator>(&builder, &module, &context);
 
 TEST(CodeGeneratorTest, VariableConstantAssignment)
 {

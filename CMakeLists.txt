@@ -23,14 +23,13 @@ include_directories(include)
 
 set(exename pycom)
 set(testname test_pycom)
-set(parsertestname test_parser)
 
 set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
-set(lexlib src/pycom/Lexer.cpp src/pycom/LexerFactory.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
-set(parslib src/pycom/Parser.cpp src/pycom/ParserFactory.cpp)
-set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticAnalyzerFactory.cpp)
-set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeGeneratorFactory.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
+set(lexlib src/pycom/Lexer.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
+set(parslib src/pycom/Parser.cpp)
+set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticVisitor.cpp src/pycom/Symbol.cpp src/pycom/SymbolTable.cpp src/pycom/SymbolTableStack.cpp)
+set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 
 add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
@@ -60,13 +59,15 @@ target_link_libraries(${exename} ${libs} ${llvm_libraries} ${targets} ${target_a
 if(PYCOM_BUILD_TESTS OR PYCOM_BUILD_EXAMPLES)
   set(script_source scripts)
   file(COPY ${script_source} DESTINATION .)
+  include_directories(examples)
+  add_library(ex_visitors examples/NodePrintVisitor.cpp examples/NodeToVectorVisitor.cpp)
 endif()
 
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
-    add_executable(${testname} tests/parsertests.cpp src/pycom/NodeToVectorVisitor.cpp tests/codegentests.cpp tests/lexertests.cpp)
+    add_executable(${testname} tests/parsertests.cpp tests/codegentests.cpp tests/lexertests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} ${llvm_libraries})
+    target_link_libraries(${testname} gtest gtest_main ${libs} ${llvm_libraries} ex_visitors)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
@@ -74,12 +75,10 @@ if(PYCOM_BUILD_EXAMPLES)
     set(parsex parserexample)
     set(examples ${lexex} ${parsex})
 
-    add_library(printast src/pycom/NodePrintVisitor.cpp)
-
     add_executable(${lexex} examples/lexer.cpp)
     add_executable(${parsex} examples/parser.cpp)
 
-    target_link_libraries(${parsex} printast)
+    target_link_libraries(${parsex} ex_visitors)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
