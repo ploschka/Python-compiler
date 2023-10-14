@@ -82,9 +82,6 @@ static std::unordered_map<char, stateFactory_t> table = {
     tab('"', String),
     tab('\n', Newline)};
 
-static const std::unordered_set<char> symbols = {
-    '+', '-', '*', '/', '@', '%', '&', '|', '^', '!', '<', '>', '=', '~', '.', ',', '(', ')', '[', ']', '{', '}', '#', ':', '"', '\n'};
-
 static inline bool isSuitableForIdBeginning(char _c)
 {
     return std::isalpha(_c) || _c == '_';
@@ -99,7 +96,7 @@ BaseLexerState::BaseLexerState(LexerInterface *_lex, FileData *_filedata) : lexe
 
 static stateFactory_t tablestate(char _c)
 {
-    if (symbols.find(_c) != symbols.end())
+    if (table.find(_c) != table.end())
         return table[_c];
     else if (_c == '\0')
     {
@@ -618,9 +615,9 @@ impl(Less)
         filedata->put(Type::lequal, filedata->row, initpos);
         newstate(Skip);
     }
-    else if (_c == '>')
+    else if (_c == '<')
     {
-        newstate(Rshift);
+        newstate(Lshift);
     }
     else
     {

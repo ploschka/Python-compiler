@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(Python_compiler
-    VERSION 0.2.2
+    VERSION 0.4.1
     DESCRIPTION "Python compiler made using LLVM"
     LANGUAGES C CXX)
 
