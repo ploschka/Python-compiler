@@ -1,6 +1,8 @@
 #pragma once
+
+#include <pycom/semanalyzer/SymbolTable.hpp>
+
 #include <vector>
-#include "pycom/semanalyzer/SymbolTable.hpp"
 
 class SymbolTableStack
 {

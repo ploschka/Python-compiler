@@ -1,4 +1,5 @@
 #pragma once
+
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/semanalyzer/SymbolTableStack.hpp>
 

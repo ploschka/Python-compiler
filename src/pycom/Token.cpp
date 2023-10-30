@@ -1,5 +1,4 @@
 #include <pycom/token/Token.hpp>
-#include <unordered_set>
 
 std::string Token::getValue() const
 {

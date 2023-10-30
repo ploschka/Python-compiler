@@ -1,7 +1,9 @@
 #pragma once
+
 #include <pycom/interface/LexerInterface.hpp>
 #include <pycom/token/Token.hpp>
-#include <pycom/lexer/FileData.hpp>
+#include <pycom/lexer/LexerData.hpp>
+
 #include <memory>
 #include <queue>
 
@@ -13,7 +15,7 @@ private:
     std::unique_ptr<std::string> otherBuff;
     std::unique_ptr<LexerStateInterface> state;
     std::string::const_iterator iter;
-    std::unique_ptr<FileData> filedata;
+    std::unique_ptr<LexerData> lexerdata;
 
     Type recognize(const std::string &_id) const;
 

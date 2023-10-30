@@ -1,28 +1,25 @@
 #pragma once
+
 #include <pycom/interface/LexerStateInterface.hpp>
 #include <pycom/interface/LexerInterface.hpp>
-#include <pycom/lexer/FileData.hpp>
-#include <memory>
-#include <stack>
+#include <pycom/lexer/LexerData.hpp>
 
 #define st(name)                                         \
     class name : public BaseLexerState                   \
     {                                                    \
     public:                                              \
-        name(LexerInterface *_lex, FileData *_filedata); \
+        name(LexerInterface *_lex, LexerData *_lexerdata); \
         bool recognize(char _c);                         \
     };
-
-typedef std::stack<unsigned int> instack;
 
 class BaseLexerState : public LexerStateInterface
 {
 protected:
     LexerInterface *lexer;
-    FileData *filedata;
+    LexerData *lexerdata;
     unsigned int initpos;
     Type type;
-    BaseLexerState(LexerInterface *_lex, FileData *_filedata);
+    BaseLexerState(LexerInterface *_lex, LexerData *_lexerdata);
 };
 
 st(Start)
@@ -62,7 +59,7 @@ st(Comma)
 class SecondNumPart : public BaseLexerState
 {
 public:
-    SecondNumPart(LexerInterface *_lex, FileData *_filedata, unsigned int _initpos);
+    SecondNumPart(LexerInterface *_lex, LexerData *_lexerdata, unsigned int _initpos);
     bool recognize(char _c);
 };
 
@@ -73,7 +70,7 @@ private:
     char prevchar;
 
 public:
-    Indent(LexerInterface *_lex, FileData *_filedata, char _c);
+    Indent(LexerInterface *_lex, LexerData *_lexerdata, char _c);
     bool recognize(char _c);
 };
 

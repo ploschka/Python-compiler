@@ -1,9 +1,10 @@
 #pragma once
 
+#include <pycom/semanalyzer/Symbol.hpp>
+
 #include <vector>
 #include <string>
 #include <map>
-#include <pycom/semanalyzer/Symbol.hpp>
 
 class SymbolTable
 {

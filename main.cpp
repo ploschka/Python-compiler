@@ -1,7 +1,3 @@
-#include <iostream>
-#include <filesystem>
-#include <fstream>
-
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetSelect.h>
@@ -13,7 +9,6 @@
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Passes/PassBuilder.h>
-
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -23,6 +18,10 @@
 #include <pycom/parser/Parser.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <pycom/codegen/CodeGenerator.hpp>
+
+#include <iostream>
+#include <filesystem>
+#include <fstream>
 
 int main(int _argc, char *_argv[])
 {
@@ -66,10 +65,10 @@ int main(int _argc, char *_argv[])
     parser->setLexer(lexer.get());
 
     auto ast = parser->getAST();
-
-
-
-    codegen->generate(ast);
+    if (seman->checkSemantics(ast))
+    {
+        codegen->generate(ast);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //=====================================================Компиляция=====================================================//

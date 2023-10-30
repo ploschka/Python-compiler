@@ -1,5 +1,4 @@
-#include "pycom/semanalyzer/SymbolTableStack.hpp"
-
+#include <pycom/semanalyzer/SymbolTableStack.hpp>
 
 void SymbolTableStack::addId(std::string name, Symbol value) {
     this->data.back().add(name, value);

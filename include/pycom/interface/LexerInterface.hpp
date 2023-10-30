@@ -1,4 +1,5 @@
 #pragma once
+
 #include <pycom/token/Token.hpp>
 #include <pycom/interface/LexerStateInterface.hpp>
 

@@ -1,6 +1,6 @@
-#include <pycom/lexer/FileData.hpp>
+#include <pycom/lexer/LexerData.hpp>
 
-void FileData::unwind()
+void LexerData::unwind()
 {
     while (stack.top() != 0)
     {
@@ -9,20 +9,20 @@ void FileData::unwind()
     }
 }
 
-FileData::FileData()
+LexerData::LexerData()
 {
     stack.push(0);
     intype = IndentType::null;
 }
 
-Token FileData::get()
+Token LexerData::get()
 {
     Token tok = queue.front();
     queue.pop();
     return tok;
 }
 
-void FileData::put(Type _type, unsigned int _row, unsigned int _pos)
+void LexerData::put(Type _type, unsigned int _row, unsigned int _pos)
 {
     queue.emplace(accum, _type, _row, _pos);
     accum.clear();

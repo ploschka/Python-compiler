@@ -26,7 +26,7 @@ set(testname test_pycom)
 
 set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
-set(lexlib src/pycom/Lexer.cpp src/pycom/LexerStates.cpp src/pycom/FileData.cpp)
+set(lexlib src/pycom/Lexer.cpp src/pycom/LexerStates.cpp src/pycom/LexerData.cpp)
 set(parslib src/pycom/Parser.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticVisitor.cpp src/pycom/Symbol.cpp src/pycom/SymbolTable.cpp src/pycom/SymbolTableStack.cpp)
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp)

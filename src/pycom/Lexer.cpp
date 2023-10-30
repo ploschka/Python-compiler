@@ -1,7 +1,9 @@
 #include <pycom/lexer/Lexer.hpp>
 #include <pycom/lexer/LexerStates.hpp>
+
 #include <unordered_map>
 #include <iostream>
+
 #define CHARCOUNT 1000
 
 Type Lexer::recognize(const std::string &_id) const
@@ -34,15 +36,15 @@ Type Lexer::recognize(const std::string &_id) const
 
 void Lexer::open(std::istream &_stream)
 {
-    filedata.reset(new FileData());
-    currBuff.reset(new std::string(CHARCOUNT + 1, '\0'));
-    otherBuff.reset(new std::string());
+    lexerdata = std::make_unique<LexerData>();
+    currBuff = std::make_unique<std::string>(CHARCOUNT + 1, '\0');
+    otherBuff = std::make_unique<std::string>();
 
     this->stream = &_stream;
 
     this->stream->read(&(*currBuff)[0], CHARCOUNT);
     iter = currBuff->cbegin();
-    setState(new Start(this, filedata.get()));
+    setState(new Start(this, lexerdata.get()));
 }
 
 void Lexer::setState(LexerStateInterface *_state)
@@ -52,12 +54,12 @@ void Lexer::setState(LexerStateInterface *_state)
 
 Token Lexer::getToken()
 {
-    while (filedata->queue.empty() && iter != currBuff->cend())
+    while (lexerdata->queue.empty() && iter != currBuff->cend())
     {
         this->state->recognize(*iter++);
     }
 
-    Token tok = filedata->get();
+    Token tok = lexerdata->get();
     bool failed = false;
 
     if (tok.getType() == Type::eof)
@@ -68,11 +70,11 @@ Token Lexer::getToken()
             stream->read(&(*otherBuff)[0], CHARCOUNT);
             iter = otherBuff->cbegin();
             currBuff.swap(otherBuff);
-            while (filedata->queue.empty() && iter != currBuff->cend())
+            while (lexerdata->queue.empty() && iter != currBuff->cend())
             {
                 this->state->recognize(*iter++);
             }
-            tok = filedata->get();
+            tok = lexerdata->get();
             if (tok.getType() == Type::eof)
             {
                 failed = true;
@@ -85,9 +87,9 @@ Token Lexer::getToken()
     }
     if (failed)
     {
-        filedata->unwind();
-        filedata->queue.push(tok);
-        tok = filedata->get();
+        lexerdata->unwind();
+        lexerdata->queue.push(tok);
+        tok = lexerdata->get();
         return tok;
     }
 

@@ -1,5 +1,4 @@
-#include "pycom/semanalyzer/SymbolTable.hpp"
-
+#include <pycom/semanalyzer/SymbolTable.hpp>
 
 SymbolTable::SymbolTable(std::map <std::string, Symbol> data) {this->data = data;}
 

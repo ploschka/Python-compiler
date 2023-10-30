@@ -1,4 +1,4 @@
-#include "pycom/semanalyzer/Symbol.hpp"
+#include <pycom/semanalyzer/Symbol.hpp>
 
 SymbolInteger::SymbolInteger(std::string name, int value)
 {
