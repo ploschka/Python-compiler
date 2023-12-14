@@ -121,6 +121,14 @@ impl(Start)
         lexerdata->accum.push_back(_c);
         newstate(FirstNumPart);
     }
+    else if (_c == '#')
+    {
+        newstate(Comment);
+    }
+    else if (_c == ' ' || _c == '\t')
+    {
+        lexer->setState(new Indent(lexer, lexerdata, 0));
+    }
     else if (_c != '\n')
     {
         auto p = tablestate(_c);
@@ -1335,6 +1343,19 @@ bool Indent::recognize(char _c)
 
     if (_c == ' ' || _c == '\t')
     {
+        if (lexerdata->intype == IndentType::null)
+        {
+            switch (_c)
+            {
+            case ' ':
+                lexerdata->intype = IndentType::space;
+                break;
+            case '\t':
+                lexerdata->intype = IndentType::tab;
+                break;
+            }
+        }
+
         switch (lexerdata->intype)
         {
         case (IndentType::space):
