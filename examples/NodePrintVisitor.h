@@ -26,4 +26,5 @@ public:
     void visitIfNode(IfNode *_acceptor) override;
     void visitWhileNode(WhileNode *_acceptor) override;
     void visitForNode(ForNode *_acceptor) override;
+    void visitListNode(ListNode *_acceptor) override;
 };

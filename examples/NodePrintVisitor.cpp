@@ -374,3 +374,15 @@ void PrintVisitor::visitForNode(ForNode *_acceptor)
     _acceptor->body->accept(this);
     this->indent--;
 }
+
+void PrintVisitor::visitListNode(ListNode *_acceptor) 
+{
+    std::string text = "List:";
+    this->print_line(text);
+    this->indent++;
+    for (auto node: _acceptor->children) 
+    {
+        node->accept(this);
+    }
+    this->indent--;
+}

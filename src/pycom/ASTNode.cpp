@@ -2,11 +2,11 @@
 
 Leaf::Leaf(Token _token) : token(_token) {}
 
-VariableNode::VariableNode(std::vector<Leaf *> _chain) : chain(_chain) {}
+VariableNode::VariableNode(std::vector<ExpressionNode *> _chain) : chain(_chain) {}
 
-void VariableNode::add_to_chain(Leaf *_leaf)
+void VariableNode::add_to_chain(ExpressionNode *_expr)
 {
-    this->chain.push_back(_leaf);
+    this->chain.push_back(_expr);
 }
 
 ActualParamsNode::ActualParamsNode(std::vector<ExpressionNode *> _params) : params(_params) {}
@@ -66,4 +66,9 @@ void FormalParamsNode::add_child(Leaf *_param)
 
 ProgramNode::ProgramNode(std::vector<BaseASTNode *> _children) {
     this->children = _children;
+}
+
+ListNode::ListNode(std::vector<ExpressionNode *> _values): children(_values) {}
+void ListNode::append(ExpressionNode *_expr) {
+    this->children.push_back(_expr);
 }

@@ -15,6 +15,7 @@ private:
 
     bool is_token_in_firsts(std::string _grammar_node);
     bool token_matches_any(std::vector<Type> _types);
+    bool token_matches(Type _type);
     void error(std::string _message);
     void next_token();
     Token forward(int _k);
@@ -37,6 +38,9 @@ private:
     ExpressionNode *term();
     ExpressionNode *factor();
     ExpressionNode *primary();
+    std::vector<Token> id_dot_chain();
+    ListNode *list();
+    std::vector<ExpressionNode *> list_values();
     ActualParamsNode *func_call();
     Leaf *atom();
     ActualParamsNode *arguments();

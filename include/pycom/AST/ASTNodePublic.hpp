@@ -17,3 +17,4 @@ class ElifNode;
 class IfNode;
 class WhileNode;
 class ForNode;
+class ListNode;

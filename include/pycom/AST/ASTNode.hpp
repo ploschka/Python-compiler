@@ -46,9 +46,9 @@ public:
 class VariableNode : public ExpressionNode
 {
 public:
-    std::vector<Leaf *> chain; // Цепочка обращений. Например: ID.ID.ID, либо ID, либо NUMBER
-    VariableNode(std::vector<Leaf *> _chain);
-    void add_to_chain(Leaf *_leaf);
+    std::vector<ExpressionNode *> chain; // Цепочка обращений. Например: ID.ID.ID, либо ID, либо NUMBER
+    VariableNode(std::vector<ExpressionNode *> _chain);
+    void add_to_chain(ExpressionNode *_expr);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitVariableNode(this); };
 };
 
@@ -175,4 +175,13 @@ public:
     BlockNode *body;
     ForNode(Leaf *_iterator, ExpressionNode *_condition, BlockNode *_body);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitForNode(this); };
+};
+
+class ListNode : public ExpressionNode
+{
+public:
+    std::vector<ExpressionNode *> children;
+    ListNode(std::vector<ExpressionNode *> _values);
+    void append(ExpressionNode *_expr);
+    void accept(NodeVisitorInterface *_visitor) { _visitor->visitListNode(this); };
 };

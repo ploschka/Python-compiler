@@ -24,4 +24,5 @@ public:
     virtual void visitIfNode(IfNode *_acceptor) = 0;
     virtual void visitWhileNode(WhileNode *_acceptor) = 0;
     virtual void visitForNode(ForNode *_acceptor) = 0;
+    virtual void visitListNode(ListNode *_acceptor) = 0;
 };

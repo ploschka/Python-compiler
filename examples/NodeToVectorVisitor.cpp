@@ -316,3 +316,13 @@ void NodeToVectorVisitor::visitForNode(ForNode *_acceptor)
     _acceptor->condition->accept(this);
     _acceptor->body->accept(this);
 }
+
+void NodeToVectorVisitor::visitListNode(ListNode *_acceptor) 
+{
+    std::string text = "List";
+    this->nodes.push_back(text);
+    for (auto node: _acceptor->children) 
+    {
+        node->accept(this);
+    }
+}
