@@ -11,5 +11,6 @@ private:
     std::unique_ptr<SemanticVisitor> visitor;
 
 public:
+    SemanticAnalyzer();
     bool checkSemantics(AST *_tree) override;
 };

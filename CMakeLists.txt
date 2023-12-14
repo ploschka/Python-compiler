@@ -30,6 +30,7 @@ set(lexlib src/pycom/Lexer.cpp src/pycom/LexerStates.cpp src/pycom/LexerData.cpp
 set(parslib src/pycom/Parser.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticVisitor.cpp src/pycom/Symbol.cpp src/pycom/SymbolTable.cpp src/pycom/SymbolTableStack.cpp)
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
+set(utilitylib src/pycom/ErrorManager.cpp)
 
 add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
@@ -37,12 +38,13 @@ add_library(lexer STATIC ${lexlib})
 add_library(parser STATIC ${parslib})
 add_library(semanalyzer STATIC ${semanalyzerlib})
 add_library(codegen STATIC ${codegenlib})
+add_library(utility STATIC ${utilitylib})
 
 target_link_libraries(lexer token)
 target_link_libraries(parser lexer ast token)
 target_link_libraries(codegen ${llvm_libraries})
 
-set(libs lexer parser codegen semanalyzer)
+set(libs lexer parser codegen semanalyzer utility)
 
 add_executable(${exename} main.cpp)
 set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)

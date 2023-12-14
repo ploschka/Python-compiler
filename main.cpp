@@ -18,6 +18,7 @@
 #include <pycom/parser/Parser.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <pycom/codegen/CodeGenerator.hpp>
+#include <pycom/utility/ErrorManager.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -56,6 +57,8 @@ int main(int _argc, char *_argv[])
 
     std::ifstream file(_argv[1]);
 
+    auto errmng = std::make_unique<ErrorManager>(std::cerr);
+
     auto lexer = std::make_unique<Lexer>();
     auto parser = std::make_unique<Parser>();
     auto seman = std::make_unique<SemanticAnalyzer>();
@@ -68,6 +71,10 @@ int main(int _argc, char *_argv[])
     if (seman->checkSemantics(ast))
     {
         codegen->generate(ast);
+    }
+    else
+    {
+        errmng->error("Semantics error");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
