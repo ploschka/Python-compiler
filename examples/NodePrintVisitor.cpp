@@ -171,10 +171,20 @@ void PrintVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
     std::string text = "FormalParams";
     this->print_line(text);
     this->indent++;
+    this->print_line("Params:");
+    this->indent++;
     for (auto param : _acceptor->params)
     {
         param->accept(this);
     }
+    this->indent--;
+    this->print_line("Types:");
+    this->indent++;
+    for (auto type : _acceptor->types)
+    {
+        type->accept(this);
+    }
+    this->indent--;
     this->indent--;
 }
 
@@ -184,18 +194,6 @@ void PrintVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
     this->print_line(text);
     this->indent++;
     for (auto param : _acceptor->params)
-    {
-        param->accept(this);
-    }
-    this->indent--;
-}
-
-void PrintVisitor::visitVariableNode(VariableNode *_acceptor)
-{
-    std::string text = "Variable";
-    this->print_line(text);
-    this->indent++;
-    for (auto param : _acceptor->chain)
     {
         param->accept(this);
     }
@@ -243,6 +241,9 @@ void PrintVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
     this->print_line(text);
     this->indent++;
     _acceptor->left->accept(this);
+    if (_acceptor->type != nullptr) {
+        _acceptor->type->accept(this);        
+    }
     _acceptor->right->accept(this);
     this->indent--;
 }
@@ -385,4 +386,10 @@ void PrintVisitor::visitListNode(ListNode *_acceptor)
         node->accept(this);
     }
     this->indent--;
+}
+
+void PrintVisitor::visitTypeNode(TypeNode *_acceptor)
+{
+    std::string text = "Type: <" + _acceptor->token.getValue() + ">";
+    this->print_line(text);
 }

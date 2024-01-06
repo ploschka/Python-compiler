@@ -8,37 +8,37 @@
 #include <set>
 
 static const std::map<std::string, std::set<Type>> FIRSTS = {
-    {"simple_stmts", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::breakkw, Type::id, Type::minus, Type::returnkw, Type::plus, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"for_stmt", {Type::forkw}},
-    {"term", {Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"expression", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"assignment", {Type::id}},
+    {"comparison", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
     {"if_stmt", {Type::ifkw}},
-    {"conjunction", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"list_values", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"while_stmt", {Type::whilekw}},
-    {"block", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::breakkw, Type::newline, Type::id, Type::minus, Type::returnkw, Type::plus, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"comparison", {Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"elif_stmt", {Type::elifkw}},
-    {"arguments", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"factor", {Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"file", {Type::notop, Type::inv, Type::lsbr, Type::whilekw, Type::forkw, Type::number, Type::ifkw, Type::eof, Type::breakkw, Type::id, Type::minus, Type::returnkw, Type::plus, Type::defkw, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"atom", {Type::string, Type::id, Type::number}},
+    {"block", {Type::string, Type::plus, Type::newline, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"assignment", {Type::id}},
+    {"primary", {Type::string, Type::id, Type::number, Type::lpr, Type::lsbr}},
+    {"disjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
     {"return_stmt", {Type::returnkw}},
-    {"inversion", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"else_block", {Type::elsekw}},
-    {"statement", {Type::notop, Type::inv, Type::lsbr, Type::whilekw, Type::forkw, Type::number, Type::ifkw, Type::breakkw, Type::id, Type::minus, Type::returnkw, Type::plus, Type::defkw, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"statements", {Type::notop, Type::inv, Type::lsbr, Type::whilekw, Type::forkw, Type::number, Type::ifkw, Type::breakkw, Type::id, Type::minus, Type::returnkw, Type::plus, Type::defkw, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"disjunction", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"list", {Type::lsbr}},
-    {"simple_stmt", {Type::notop, Type::inv, Type::lsbr, Type::number, Type::breakkw, Type::id, Type::minus, Type::returnkw, Type::plus, Type::string, Type::passkw, Type::continuekw, Type::lpr}},
-    {"id_dot_chain", {Type::dot}},
+    {"while_stmt", {Type::whilekw}},
+    {"term", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"arguments", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"statements", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
     {"params", {Type::id}},
-    {"primary", {Type::lsbr, Type::number, Type::id, Type::lpr, Type::string}},
-    {"compound_stmt", {Type::defkw, Type::forkw, Type::ifkw, Type::whilekw}},
-    {"sum", {Type::inv, Type::lsbr, Type::number, Type::id, Type::minus, Type::plus, Type::lpr, Type::string}},
-    {"func_call", {Type::lpr}},
-    {"function_def", {Type::defkw}}};
+    {"list", {Type::lsbr}},
+    {"type_hint", {Type::colon}},
+    {"function_def", {Type::defkw}},
+    {"statement", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
+    {"inversion", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"for_stmt", {Type::forkw}},
+    {"simple_stmt", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"list_values", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"factor", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"sum", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"compound_stmt", {Type::whilekw, Type::forkw, Type::defkw, Type::ifkw}},
+    {"expression", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"atom", {Type::string, Type::number, Type::id}},
+    {"else_block", {Type::elsekw}},
+    {"file", {Type::string, Type::eof, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
+    {"simple_stmts", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"elif_stmt", {Type::elifkw}},
+    {"conjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"func_call", {Type::lpr}}};
 
 Parser::Parser() : token(Token("хуй", Type::bandass)){};
 
@@ -202,7 +202,8 @@ void Parser::simple_stmts(BlockNode *_parent_block)
  */
 void Parser::simple_stmt(BlockNode *_parent_block)
 {
-    if (this->is_token_in_firsts("assignment") && this->forward(1).getType() == Type::assign)
+    if (this->is_token_in_firsts("assignment") 
+        && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
     {
         _parent_block->add_child(this->assignment());
     }
@@ -226,15 +227,32 @@ void Parser::simple_stmt(BlockNode *_parent_block)
 };
 
 /**
+ * type_hint:
+ *  | COLON ID
+ */
+TypeNode *Parser::type_hint()
+{
+    this->check_get_next(Type::colon);
+    Token type_token = this->check_get_next(Type::id);
+    return new TypeNode(type_token);
+}
+
+/**
  * assignment:
  *  | ID ASSIGN expression
+ *  | ID type_hint ASSIGN expression
  */
 AssignmentNode *Parser::assignment()
 {
     Leaf *left = new Leaf(this->check_get_next(Type::id));
+    TypeNode *type = nullptr;
+    if (this->is_token_in_firsts("type_hint"))
+    {
+        type = this->type_hint();
+    }
     this->check_get_next(Type::assign);
     ExpressionNode *right = this->expression();
-    return new AssignmentNode(left, right);
+    return new AssignmentNode(left, type, right);
 };
 
 /**
@@ -461,45 +479,42 @@ ExpressionNode *Parser::factor()
 
 /**
  * primary:
- *  | LPR expression RPR [id_dot_chain] [func_call]
- *  | atom [id_dot_chain] [func_call]
- *  | list [id_dot_chain] [func_call]
+ *  | LPR expression RPR
+ *  | LPR expression RPR func_call
+ *  | atom
+ *  | atom func_call
+ *  | list
  */
 ExpressionNode *Parser::primary()
 {
-    VariableNode *variable = new VariableNode({});
     if (this->token_matches(Type::lpr))
     {
         this->check_get_next(Type::lpr);
         auto expr = this->expression();
         this->check_get_next(Type::rpr);
-        variable->add_to_chain(expr);
+
+        if (this->is_token_in_firsts("func_call"))
+        {
+            ActualParamsNode *params = this->func_call();
+            return new CallNode(expr, params);
+        }
+        return expr;
     }
     else if (this->is_token_in_firsts("atom"))
     {
-        variable->add_to_chain(this->atom());
+        auto atom = this->atom();
+        if (this->is_token_in_firsts("func_call"))
+        {
+            ActualParamsNode *params = this->func_call();
+            return new CallNode(atom, params);
+        }
+        return atom;
     }
     else if (this->is_token_in_firsts("list"))
     {
-        variable->add_to_chain(this->list());
+        return this->list();
     }
-
-    if (this->is_token_in_firsts("id_dot_chain"))
-    {
-        auto ids = this->id_dot_chain();
-        for (Token id : ids)
-        {
-            variable->add_to_chain(new Leaf(id));
-        }
-    }
-
-    if (this->is_token_in_firsts("func_call"))
-    {
-        ActualParamsNode *params = this->func_call();
-        return new CallNode(variable, params);
-    }
-
-    return variable;
+    this->error("primary");
 };
 
 /**
@@ -534,23 +549,6 @@ std::vector<ExpressionNode *> Parser::list_values()
     }
     return values;
 };
-
-/**
- * id_dot_chain:
- *  | DOT ID id_dot_chain
- *  | DOT ID
- */
-std::vector<Token> Parser::id_dot_chain()
-{
-    std::vector<Token> ids = {};
-    while (this->token_matches(Type::dot))
-    {
-        this->check_get_next(Type::dot);
-        Token id = this->check_get_next(Type::id);
-        ids.push_back(id);
-    }
-    return ids;
-}
 
 /**
  * func_call:
@@ -646,16 +644,17 @@ void Parser::compound_stmt(BlockNode *_parent_block)
 
 /**
  * params:
- *  | ID COMMA params
- *  | ID
+ *  | ID type_hint COMMA params
+ *  | ID type_hint
  */
 FormalParamsNode *Parser::params()
 {
-    FormalParamsNode *params = new FormalParamsNode({});
+    FormalParamsNode *params = new FormalParamsNode({}, {});
     while (this->is_token_in_firsts("params"))
     {
         Leaf *leaf = new Leaf(this->check_get_next(Type::id));
-        params->add_child(leaf);
+        TypeNode *type = this->type_hint();
+        params->add_child(leaf, type);
         if (this->token_matches(Type::comma))
         {
             this->next_token();
@@ -681,7 +680,7 @@ FunctionNode *Parser::function_def()
     }
     else
     {
-        params = new FormalParamsNode({});
+        params = new FormalParamsNode({}, {});
     }
     this->check_get_next(Type::rpr);
     this->check_get_next(Type::colon);

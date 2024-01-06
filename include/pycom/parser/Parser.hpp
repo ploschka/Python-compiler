@@ -38,11 +38,11 @@ private:
     ExpressionNode *term();
     ExpressionNode *factor();
     ExpressionNode *primary();
-    std::vector<Token> id_dot_chain();
     ListNode *list();
     std::vector<ExpressionNode *> list_values();
     ActualParamsNode *func_call();
     Leaf *atom();
+    TypeNode *type_hint();
     ActualParamsNode *arguments();
     void compound_stmt(BlockNode *_parent_block);
     FormalParamsNode *params();
@@ -53,6 +53,7 @@ private:
     WhileNode *while_stmt();
     ForNode *for_stmt();
     BlockNode *block();
+
 
 public:
     void setLexer(LexerInterface *);

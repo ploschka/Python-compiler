@@ -8,9 +8,9 @@ public:
     virtual ~NodeVisitorInterface() = default;
 
     virtual void visitLeaf(Leaf *_acceptor) = 0;
+    virtual void visitTypeNode(TypeNode *_acceptor) = 0;
     virtual void visitFormalParamsNode(FormalParamsNode *_acceptor) = 0;
     virtual void visitActualParamsNode(ActualParamsNode *_acceptor) = 0;
-    virtual void visitVariableNode(VariableNode *_acceptor) = 0;
     virtual void visitCallNode(CallNode *_acceptor) = 0;
     virtual void visitBinaryNode(BinaryNode *_acceptor) = 0;
     virtual void visitUnaryNode(UnaryNode *_acceptor) = 0;

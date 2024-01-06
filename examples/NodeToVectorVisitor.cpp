@@ -164,6 +164,12 @@ void NodeToVectorVisitor::visitLeaf(Leaf *_acceptor)
     this->nodes.push_back(text);
 }
 
+void NodeToVectorVisitor::visitTypeNode(TypeNode *_acceptor) 
+{
+    std::string text = "Type: " + _acceptor->token.getValue();
+    this->nodes.push_back(text);
+}
+
 void NodeToVectorVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
 {
     std::string text = "FormalParams";
@@ -172,6 +178,10 @@ void NodeToVectorVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
     {
         param->accept(this);
     }
+    for (auto type : _acceptor->types) 
+    {
+        type->accept(this);
+    }
 }
 
 void NodeToVectorVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
@@ -179,16 +189,6 @@ void NodeToVectorVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
     std::string text = "ActualParams";
     this->nodes.push_back(text);
     for (auto param : _acceptor->params)
-    {
-        param->accept(this);
-    }
-}
-
-void NodeToVectorVisitor::visitVariableNode(VariableNode *_acceptor)
-{
-    std::string text = "Variable";
-    this->nodes.push_back(text);
-    for (auto param : _acceptor->chain)
     {
         param->accept(this);
     }
@@ -222,6 +222,9 @@ void NodeToVectorVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
     std::string text = "Assignment";
     this->nodes.push_back(text);
     _acceptor->left->accept(this);
+    if (_acceptor->type != nullptr) {
+        _acceptor->type->accept(this);
+    }
     _acceptor->right->accept(this);
 }
 

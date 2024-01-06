@@ -28,8 +28,12 @@ simple_stmt:
     | BREAKKW
     | CONTINUEKW
 
+type_hint:
+    | COLON ID
+
 assignment:
     | ID ASSIGN expression
+    | ID type_hint ASSIGN expression
 
 return_stmt:
     | RETURNKW
@@ -43,11 +47,11 @@ expression:
     | disjunction
 
 disjunction:
-    | conjunction OR disjunction
+    | conjunction OROP disjunction
     | conjunction
 
 conjunction:
-    | inversion AND conjunction
+    | inversion ANDOP conjunction
     | inversion
 
 inversion:
@@ -84,17 +88,9 @@ factor:
 primary:
     | LPR expression RPR
     | LPR expression RPR func_call
-    | LPR expression RPR id_dot_chain func_call
     | atom
     | atom func_call
-    | atom id_dot_chain func_call
     | list
-    | list func_call
-    | list id_dot_chain func_call
-
-id_dot_chain:
-    | DOT ID id_dot_chain
-    | DOT ID
 
 list:
     | LSBR list_values RSBR
@@ -128,8 +124,8 @@ compound_stmt:
     | while_stmt
 
 params:
-    | ID COMMA params
-    | ID
+    | ID type_hint COMMA params
+    | ID type_hint
 
 function_def:
     | DEFKW ID LPR RPR COLON block
