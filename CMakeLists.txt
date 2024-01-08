@@ -6,7 +6,7 @@ project(Python_compiler
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
-option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" OFF)
+option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" ON)
 
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -15,9 +15,11 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 foreach(target ${LLVM_TARGETS_TO_BUILD})
   list(APPEND targets "LLVM${target}CodeGen")
 endforeach()
-foreach(target ${LLVM_TARGETS_TO_BUILD})
-  list(APPEND target_asmparsers "LLVM${target}AsmParser")
-endforeach()
+# foreach(target ${LLVM_TARGETS_TO_BUILD})
+#   list(APPEND target_asmparsers "LLVM${target}AsmParser")
+# endforeach()
+list(APPEND target_asmparsers LLVMX86AsmParser)
+
 llvm_map_components_to_libnames(llvm_libraries analysis support core object irreader executionengine scalaropts instcombine orcjit runtimedyld)
 
 include_directories(include)
