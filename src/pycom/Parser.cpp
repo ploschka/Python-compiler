@@ -91,7 +91,7 @@ void Parser::next_token()
     }
 }
 
-Token Parser::forward(int _k)
+Token Parser::forward(size_t _k)
 {
     while (this->future_tokens.size() < _k)
     {

@@ -6,82 +6,81 @@
 #include <unordered_set>
 #include <string>
 
-#define impl(name)                                                                         \
+#define IMPL(name)                                                                            \
     name::name(LexerInterface *lex, LexerData *lexerdata) : BaseLexerState(lex, lexerdata) {} \
     bool name::recognize(char _c)
-#define newstate(name) lexer->setState(new name(lexer, lexerdata))
-#define fac(state) \
-    static inline LexerStateInterface *state##Factory(LexerInterface *a, LexerData *b) { return new state(a, b); }
-#define tab(symbol, state)     \
+#define FAC(state) \
+    static inline std::unique_ptr<LexerStateInterface> state##Factory(LexerInterface *a, LexerData *b) { return std::make_unique<state>(a, b); }
+#define TAB(symbol, state)     \
     {                          \
         symbol, state##Factory \
     }
 
-typedef std::function<LexerStateInterface *(LexerInterface *, LexerData *)> stateFactory_t;
+typedef std::function<std::unique_ptr<LexerStateInterface>(LexerInterface *, LexerData *)> stateFactory_t;
 
-fac(String)
-fac(Colon)
-fac(Dot)
-fac(Plus)
-fac(Minus)
-fac(Star)
-fac(Div)
-fac(Mod)
-fac(Matmul)
-fac(Greater)
-fac(Less)
-fac(Assign)
-fac(Inv)
-fac(Band)
-fac(Bor)
-fac(Xor)
-fac(Lpr)
-fac(Rpr)
-fac(Lsbr)
-fac(Rsbr)
-fac(Lbr)
-fac(Rbr)
-fac(Exclamation)
-fac(Comma)
-fac(Skip)
-static inline LexerStateInterface *CommentFactory(LexerInterface *a, LexerData *b)
+FAC(String)
+FAC(Colon)
+FAC(Dot)
+FAC(Plus)
+FAC(Minus)
+FAC(Star)
+FAC(Div)
+FAC(Mod)
+FAC(Matmul)
+FAC(Greater)
+FAC(Less)
+FAC(Assign)
+FAC(Inv)
+FAC(Band)
+FAC(Bor)
+FAC(Xor)
+FAC(Lpr)
+FAC(Rpr)
+FAC(Lsbr)
+FAC(Rsbr)
+FAC(Lbr)
+FAC(Rbr)
+FAC(Exclamation)
+FAC(Comma)
+FAC(Skip)
+static inline std::unique_ptr<LexerStateInterface> CommentFactory(LexerInterface *a, LexerData *b)
 {
     b->put(Type::newline, b->row, b->pos);
-    return new Comment(a, b);
+    return std::make_unique<Comment>(a, b);
 }
-static inline LexerStateInterface *NewlineFactory(LexerInterface *a, LexerData *b)
+static inline std::unique_ptr<LexerStateInterface> NewlineFactory(LexerInterface *a, LexerData *b)
 {
     b->put(Type::newline, b->row, b->pos);
-    return new Newline(a, b);
+    return std::make_unique<Newline>(a, b);
 }
 
 static std::unordered_map<char, stateFactory_t> table = {
-    tab('+', Plus),
-    tab('-', Minus),
-    tab('*', Star),
-    tab('/', Div),
-    tab('@', Matmul),
-    tab('%', Mod),
-    tab('&', Band),
-    tab('|', Bor),
-    tab('^', Xor),
-    tab('!', Exclamation),
-    tab('<', Less),
-    tab('>', Greater),
-    tab('=', Assign),
-    tab('~', Inv),
-    tab('.', Dot),
-    tab(',', Comma),
-    tab('(', Lpr),
-    tab(')', Rpr),
-    tab('[', Lsbr),
-    tab(']', Rsbr),
-    tab('{', Lbr),
-    tab('}', Rbr),
-    tab('#', Comment),
-    tab(':', Colon),
-    tab('"', String),
-    tab('\n', Newline)};
+    TAB('+', Plus),
+    TAB('-', Minus),
+    TAB('*', Star),
+    TAB('/', Div),
+    TAB('@', Matmul),
+    TAB('%', Mod),
+    TAB('&', Band),
+    TAB('|', Bor),
+    TAB('^', Xor),
+    TAB('!', Exclamation),
+    TAB('<', Less),
+    TAB('>', Greater),
+    TAB('=', Assign),
+    TAB('~', Inv),
+    TAB('.', Dot),
+    TAB(',', Comma),
+    TAB('(', Lpr),
+    TAB(')', Rpr),
+    TAB('[', Lsbr),
+    TAB(']', Rsbr),
+    TAB('{', Lbr),
+    TAB('}', Rbr),
+    TAB('#', Comment),
+    TAB(':', Colon),
+    TAB('"', String),
+    TAB('\n', Newline)};
 
 static inline bool isSuitableForIdBeginning(char _c)
 {
@@ -95,11 +94,11 @@ static inline bool isSuitableForId(char _c)
 
 BaseLexerState::BaseLexerState(LexerInterface *_lex, LexerData *_lexerdata) : lexer(_lex), lexerdata(_lexerdata), initpos(_lexerdata->pos) {}
 
-static stateFactory_t tablestate(char _c)
+static stateFactory_t tablestate(char c)
 {
-    if (table.find(_c) != table.end())
-        return table[_c];
-    else if (_c == '\0')
+    if (table.find(c) != table.end())
+        return table[c];
+    else if (c == '\0')
     {
         return nullptr;
     }
@@ -109,30 +108,35 @@ static stateFactory_t tablestate(char _c)
     }
 }
 
-impl(Start)
+template <class T>
+static void newstate(LexerInterface *lexer, LexerData *lexerdata)
+{
+    lexer->setState(std::make_unique<T>(lexer, lexerdata));
+}
+
+IMPL(Start)
 {
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else if (_c == '#')
     {
-        newstate(Comment);
+        newstate<Comment>(lexer, lexerdata);
     }
     else if (_c == ' ' || _c == '\t')
     {
-        lexer->setState(new Indent(lexer, lexerdata, 0));
+        lexer->setState(std::make_unique<Indent>(lexer, lexerdata, 0));
     }
     else if (_c != '\n')
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -145,23 +149,22 @@ impl(Start)
     return false;
 }
 
-impl(Skip)
+IMPL(Skip)
 {
     lexerdata->pos++;
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -174,7 +177,7 @@ impl(Skip)
     return false;
 }
 
-impl(Id)
+IMPL(Id)
 {
     lexerdata->pos++;
     if (isSuitableForId(_c))
@@ -185,7 +188,6 @@ impl(Id)
     {
         lexerdata->put(Type::id, lexerdata->row, initpos);
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -198,13 +200,13 @@ impl(Id)
     return false;
 }
 
-impl(String)
+IMPL(String)
 {
     lexerdata->pos++;
     if (_c == '"')
     {
         lexerdata->put(Type::string, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -213,24 +215,23 @@ impl(String)
     return false;
 }
 
-impl(Colon)
+IMPL(Colon)
 {
     lexerdata->pos++;
     lexerdata->put(Type::colon, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -243,24 +244,23 @@ impl(Colon)
     return false;
 }
 
-impl(Dot)
+IMPL(Dot)
 {
     lexerdata->pos++;
     lexerdata->put(Type::dot, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -273,7 +273,7 @@ impl(Dot)
     return false;
 }
 
-impl(FirstNumPart)
+IMPL(FirstNumPart)
 {
     lexerdata->pos++;
     if (std::isdigit(_c))
@@ -283,7 +283,7 @@ impl(FirstNumPart)
     else if (_c == '.')
     {
         lexerdata->accum.push_back(_c);
-        lexer->setState(new SecondNumPart(lexer, lexerdata, initpos));
+        lexer->setState(std::make_unique<SecondNumPart>(lexer, lexerdata, initpos));
     }
     else
     {
@@ -291,12 +291,11 @@ impl(FirstNumPart)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -310,7 +309,7 @@ impl(FirstNumPart)
     return false;
 }
 
-SecondNumPart::SecondNumPart(LexerInterface* _lex, LexerData* _lexerdata, unsigned int _initpos) : BaseLexerState(_lex, _lexerdata)
+SecondNumPart::SecondNumPart(LexerInterface *_lex, LexerData *_lexerdata, unsigned int _initpos) : BaseLexerState(_lex, _lexerdata)
 {
     initpos = _initpos;
 }
@@ -325,7 +324,6 @@ bool SecondNumPart::recognize(char _c)
     {
         lexerdata->put(Type::number, lexerdata->row, initpos);
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -338,13 +336,13 @@ bool SecondNumPart::recognize(char _c)
     return false;
 }
 
-impl(Plus)
+IMPL(Plus)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::plusass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -352,17 +350,16 @@ impl(Plus)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -376,18 +373,18 @@ impl(Plus)
     return false;
 }
 
-impl(Minus)
+IMPL(Minus)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::minass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else if (_c == '>')
     {
         lexerdata->put(Type::arrow, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -395,17 +392,16 @@ impl(Minus)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -419,13 +415,13 @@ impl(Minus)
     return false;
 }
 
-impl(Star)
+IMPL(Star)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::mulass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -433,17 +429,16 @@ impl(Star)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -457,17 +452,17 @@ impl(Star)
     return false;
 }
 
-impl(Div)
+IMPL(Div)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::divass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else if (_c == '/')
     {
-        newstate(Idiv);
+        newstate<Idiv>(lexer, lexerdata);
     }
     else
     {
@@ -475,17 +470,16 @@ impl(Div)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -498,13 +492,13 @@ impl(Div)
     }
     return false;
 }
-impl(Mod)
+IMPL(Mod)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::modass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -512,17 +506,16 @@ impl(Mod)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -536,13 +529,13 @@ impl(Mod)
     return false;
 }
 
-impl(Matmul)
+IMPL(Matmul)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::matmulass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -550,17 +543,16 @@ impl(Matmul)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -574,17 +566,17 @@ impl(Matmul)
     return false;
 }
 
-impl(Greater)
+IMPL(Greater)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::grequal, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else if (_c == '>')
     {
-        newstate(Rshift);
+        newstate<Rshift>(lexer, lexerdata);
     }
     else
     {
@@ -592,17 +584,16 @@ impl(Greater)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -616,17 +607,17 @@ impl(Greater)
     return false;
 }
 
-impl(Less)
+IMPL(Less)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::lequal, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else if (_c == '<')
     {
-        newstate(Lshift);
+        newstate<Lshift>(lexer, lexerdata);
     }
     else
     {
@@ -634,17 +625,16 @@ impl(Less)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -658,13 +648,13 @@ impl(Less)
     return false;
 }
 
-impl(Assign)
+IMPL(Assign)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::equal, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -672,17 +662,16 @@ impl(Assign)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -696,24 +685,23 @@ impl(Assign)
     return false;
 }
 
-impl(Inv)
+IMPL(Inv)
 {
     lexerdata->pos++;
     lexerdata->put(Type::inv, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -726,13 +714,13 @@ impl(Inv)
     return false;
 }
 
-impl(Band)
+IMPL(Band)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::bandass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -740,17 +728,16 @@ impl(Band)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -764,13 +751,13 @@ impl(Band)
     return false;
 }
 
-impl(Bor)
+IMPL(Bor)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::borass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -778,17 +765,16 @@ impl(Bor)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -802,13 +788,13 @@ impl(Bor)
     return false;
 }
 
-impl(Xor)
+IMPL(Xor)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::xorass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -816,17 +802,16 @@ impl(Xor)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -841,24 +826,23 @@ impl(Xor)
     return false;
 }
 
-impl(Lpr)
+IMPL(Lpr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::lpr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -871,24 +855,23 @@ impl(Lpr)
     return false;
 }
 
-impl(Rpr)
+IMPL(Rpr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::rpr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -901,24 +884,23 @@ impl(Rpr)
     return false;
 }
 
-impl(Lsbr)
+IMPL(Lsbr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::lsbr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -931,24 +913,23 @@ impl(Lsbr)
     return false;
 }
 
-impl(Rsbr)
+IMPL(Rsbr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::rsbr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -961,24 +942,23 @@ impl(Rsbr)
     return false;
 }
 
-impl(Lbr)
+IMPL(Lbr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::lbr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -991,24 +971,23 @@ impl(Lbr)
     return false;
 }
 
-impl(Rbr)
+IMPL(Rbr)
 {
     lexerdata->pos++;
     lexerdata->put(Type::rbr, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -1021,13 +1000,13 @@ impl(Rbr)
     return false;
 }
 
-impl(Idiv)
+IMPL(Idiv)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::idivass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -1035,17 +1014,16 @@ impl(Idiv)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -1059,13 +1037,13 @@ impl(Idiv)
     return false;
 }
 
-impl(Lshift)
+IMPL(Lshift)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::lshiftass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -1073,17 +1051,16 @@ impl(Lshift)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -1098,13 +1075,13 @@ impl(Lshift)
     return false;
 }
 
-impl(Rshift)
+IMPL(Rshift)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::rshiftass, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -1112,17 +1089,16 @@ impl(Rshift)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -1136,13 +1112,13 @@ impl(Rshift)
     return false;
 }
 
-impl(Exclamation)
+IMPL(Exclamation)
 {
     lexerdata->pos++;
     if (_c == '=')
     {
         lexerdata->put(Type::noteq, lexerdata->row, initpos);
-        newstate(Skip);
+        newstate<Skip>(lexer, lexerdata);
     }
     else
     {
@@ -1150,17 +1126,16 @@ impl(Exclamation)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -1175,35 +1150,34 @@ impl(Exclamation)
     return false;
 }
 
-impl(Comment)
+IMPL(Comment)
 {
     if (_c == '\n')
     {
         lexerdata->row++;
         lexerdata->pos = 0;
-        lexer->setState(new Indent(lexer, lexerdata, 0));
+        lexer->setState(std::make_unique<Indent>(lexer, lexerdata, 0));
     }
     return false;
 }
 
-impl(Comma)
+IMPL(Comma)
 {
     lexerdata->pos++;
     lexerdata->put(Type::comma, lexerdata->row, initpos);
     if (isSuitableForIdBeginning(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(Id);
+        newstate<Id>(lexer, lexerdata);
     }
     else if (std::isdigit(_c))
     {
         lexerdata->accum.push_back(_c);
-        newstate(FirstNumPart);
+        newstate<FirstNumPart>(lexer, lexerdata);
     }
     else
     {
         auto p = tablestate(_c);
-        ;
         if (p)
         {
             lexer->setState(p(lexer, lexerdata));
@@ -1216,7 +1190,7 @@ impl(Comma)
     return false;
 }
 
-impl(Newline)
+IMPL(Newline)
 {
     lexerdata->pos = 1;
     lexerdata->row++;
@@ -1226,7 +1200,7 @@ impl(Newline)
     }
     if (_c == '#')
     {
-        newstate(Comment);
+        newstate<Comment>(lexer, lexerdata);
         return false;
     }
     if (_c == '\0')
@@ -1236,7 +1210,7 @@ impl(Newline)
     }
     if (_c == ' ' || _c == '\t')
     {
-        lexer->setState(new Indent(lexer, lexerdata, _c));
+        lexer->setState(std::make_unique<Indent>(lexer, lexerdata, _c));
     }
     else
     {
@@ -1251,17 +1225,16 @@ impl(Newline)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));
@@ -1290,7 +1263,7 @@ bool Indent::recognize(char _c)
     }
     if (_c == '#')
     {
-        newstate(Comment);
+        newstate<Comment>(lexer, lexerdata);
         return false;
     }
     if (prevchar > 0)
@@ -1409,17 +1382,16 @@ bool Indent::recognize(char _c)
         if (isSuitableForIdBeginning(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(Id);
+            newstate<Id>(lexer, lexerdata);
         }
         else if (std::isdigit(_c))
         {
             lexerdata->accum.push_back(_c);
-            newstate(FirstNumPart);
+            newstate<FirstNumPart>(lexer, lexerdata);
         }
         else
         {
             auto p = tablestate(_c);
-            ;
             if (p)
             {
                 lexer->setState(p(lexer, lexerdata));

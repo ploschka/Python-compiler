@@ -17,7 +17,7 @@ private:
     bool token_matches_any(std::vector<Type> _types);
     void error(std::string _message);
     void next_token();
-    Token forward(int _k);
+    Token forward(size_t _k);
     Token get_token();
     Token check_get_next(Type _type);
 

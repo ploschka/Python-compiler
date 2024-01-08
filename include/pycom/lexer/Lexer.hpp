@@ -11,16 +11,16 @@ class Lexer : public LexerInterface
 {
 private:
     std::istream *stream;
-    std::unique_ptr<std::string> currBuff;
-    std::unique_ptr<std::string> otherBuff;
+    std::unique_ptr<char> currBuff;
+    std::unique_ptr<char> otherBuff;
     std::unique_ptr<LexerStateInterface> state;
-    std::string::const_iterator iter;
+    char *iter;
     std::unique_ptr<LexerData> lexerdata;
 
     Type recognize(const std::string &_id) const;
 
 public:
     void open(std::istream &_stream);
-    void setState(LexerStateInterface *_state);
+    void setState(std::unique_ptr<LexerStateInterface> &&_state);
     Token getToken();
 };

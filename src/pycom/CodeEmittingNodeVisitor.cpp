@@ -93,7 +93,7 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor)
+void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *)
 {
     // Error как ты сюда попал?
 }
@@ -132,7 +132,7 @@ void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
 {
     auto funcname = _acceptor->callable->chain[0]->token.getValue();
     auto callable = module->getFunction(funcname);
-    auto g = callable->getName();
+    // auto g = callable->getName();
     _acceptor->params->accept(this);
     auto call = builder->CreateCall(callable, stored_array);
     stored_values.push(call);
@@ -230,7 +230,7 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     stored_values.push(ret);
 }
 
-void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *_acceptor)
+void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *)
 {
 }
 
@@ -240,7 +240,7 @@ void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
     auto name = _acceptor->left->token.getValue();
     if (namedValues.top().find(name) == namedValues.top().end())
     {
-        auto type = llvm::Type::getFloatTy(*context);
+        // auto type = llvm::Type::getFloatTy(*context);
         auto size = llvm::ConstantInt::get(*context, llvm::APInt(32, 1));
         left = builder->CreateAlloca(llvm::Type::getFloatTy(*context), size, name);
         namedValues.top().insert({name, left});
@@ -323,7 +323,7 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitElseNode(ElseNode *_acceptor)
+void CodeEmittingNodeVisitor::visitElseNode(ElseNode *)
 {
 }
 
@@ -333,7 +333,7 @@ void CodeEmittingNodeVisitor::visitElifNode(ElifNode *_acceptor)
     _acceptor->condition->accept(this);
     auto cond = stored_values.front();
     stored_values.pop();
-    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
     llvm::BasicBlock *thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
     llvm::BasicBlock *elseb = llvm::BasicBlock::Create(*context, "elseblock");
     builder->CreateCondBr(cond, thenb, elseb);
@@ -353,7 +353,7 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
     _acceptor->condition->accept(this);
     auto cond = stored_values.front();
     stored_values.pop();
-    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
     llvm::BasicBlock *thenb = llvm::BasicBlock::Create(*context, "thenblock", parent);
     llvm::BasicBlock *elseb = llvm::BasicBlock::Create(*context, "elseblock");
     llvm::BasicBlock *merge = llvm::BasicBlock::Create(*context, "mergeblock");
@@ -372,7 +372,7 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
     auto curr = _acceptor->next_elif;
     if (curr)
     {
-        for(;;)
+        for (;;)
         {
             curr->accept(this);
             if (curr->next_elif)
@@ -409,7 +409,7 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
 {
     auto currblock = builder->GetInsertBlock();
     auto parent = builder->GetInsertBlock()->getParent();
-    llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
     llvm::BasicBlock *condb = llvm::BasicBlock::Create(*context, "condb", parent);
     llvm::BasicBlock *bodyb = llvm::BasicBlock::Create(*context, "bodyb", parent);
     llvm::BasicBlock *afterb = llvm::BasicBlock::Create(*context, "afterb");
@@ -422,7 +422,7 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
     stored_values.pop();
 
     builder->CreateCondBr(cond, bodyb, afterb);
-    
+
     break_stack.push(afterb);
     continue_stack.push(condb);
 
@@ -443,7 +443,7 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
+void CodeEmittingNodeVisitor::visitForNode(ForNode *)
 {
     // Пока генераторы и массивы не реализованы, никаких циклов for
     // Error

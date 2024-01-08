@@ -6,6 +6,7 @@ project(Python_compiler
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
+option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" OFF)
 
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -23,6 +24,7 @@ include_directories(include)
 
 set(exename pycom)
 set(testname test_pycom)
+set(libname pycomlib)
 
 set(tokenlib src/pycom/Token.cpp)
 set(astlib src/pycom/ASTNode.cpp src/pycom/AST.cpp)
@@ -46,17 +48,31 @@ target_link_libraries(codegen ${llvm_libraries})
 
 set(libs lexer parser codegen semanalyzer utility)
 
-add_executable(${exename} main.cpp)
-set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)
+add_library(${libname} src/pycom/Pycom.cpp)
 set_property(TARGET codegen PROPERTY CXX_STANDARD 17)
 
-if(MSVC)
-  target_compile_options(${exename} PRIVATE /W4 /WX)
-else()
-  target_compile_options(${exename} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-endif()
+foreach(l ${libs} ${libname})
+  if(MSVC)
+    target_compile_options(${l} PRIVATE /W4 /WX)
+  else()
+    target_compile_options(${l} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()       
+endforeach()
 
-target_link_libraries(${exename} ${libs} ${llvm_libraries} ${targets} ${target_asmparsers})
+target_link_libraries(${libname} ${libs} ${llvm_libraries} ${targets} ${target_asmparsers})
+
+if(PYCOM_BUILD_EXECUTABLE)
+  add_executable(${exename} main.cpp)
+  set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)
+
+  if(MSVC)
+    target_compile_options(${exename} PRIVATE /W4 /WX)
+  else()
+    target_compile_options(${exename} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
+
+  target_link_libraries(${exename} ${libname})
+endif(PYCOM_BUILD_EXECUTABLE)
 
 if(PYCOM_BUILD_TESTS OR PYCOM_BUILD_EXAMPLES)
   set(script_source scripts)

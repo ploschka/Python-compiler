@@ -7,3 +7,8 @@ bool SemanticAnalyzer::checkSemantics(AST *_tree)
 }
 
 SemanticAnalyzer::SemanticAnalyzer() : visitor(std::make_unique<SemanticVisitor>()) {}
+
+void SemanticAnalyzer::reset()
+{
+    visitor->reset();
+}

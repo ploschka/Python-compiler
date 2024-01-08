@@ -3,8 +3,9 @@
 
 #include <unordered_map>
 #include <iostream>
+#include <cstring>
 
-#define CHARCOUNT 1000
+const size_t CHARCOUNT = 1023;
 
 Type Lexer::recognize(const std::string &_id) const
 {
@@ -25,8 +26,7 @@ Type Lexer::recognize(const std::string &_id) const
         {"not", Type::notop},
         {"in", Type::in},
         {"is", Type::is},
-        {"pass", Type::passkw}
-    };
+        {"pass", Type::passkw}};
 
     if (map.find(_id) != map.end())
         return map.at(_id);
@@ -37,24 +37,28 @@ Type Lexer::recognize(const std::string &_id) const
 void Lexer::open(std::istream &_stream)
 {
     lexerdata = std::make_unique<LexerData>();
-    currBuff = std::make_unique<std::string>(CHARCOUNT + 1, '\0');
-    otherBuff = std::make_unique<std::string>();
+    if (!currBuff && !otherBuff)
+    {
+        currBuff = std::make_unique<char>(CHARCOUNT + 1);
+        otherBuff = std::make_unique<char>(CHARCOUNT + 1);
+    }
+    memset(currBuff.get(), 0, CHARCOUNT + 1);
 
     this->stream = &_stream;
 
-    this->stream->read(&(*currBuff)[0], CHARCOUNT);
-    iter = currBuff->cbegin();
-    setState(new Start(this, lexerdata.get()));
+    this->stream->read(currBuff.get(), CHARCOUNT);
+    iter = currBuff.get();
+    setState(std::make_unique<Start>(this, lexerdata.get()));
 }
 
-void Lexer::setState(LexerStateInterface *_state)
+void Lexer::setState(std::unique_ptr<LexerStateInterface> &&_state)
 {
-    this->state.reset(_state);
+    this->state.reset(_state.release());
 }
 
 Token Lexer::getToken()
 {
-    while (lexerdata->queue.empty() && iter != currBuff->cend())
+    while (lexerdata->queue.empty() && (iter - currBuff.get() != (CHARCOUNT + 1)))
     {
         this->state->recognize(*iter++);
     }
@@ -64,13 +68,13 @@ Token Lexer::getToken()
 
     if (tok.getType() == Type::eof)
     {
-        if (iter == currBuff->cend())
+        if (iter - currBuff.get() == (CHARCOUNT + 1))
         {
-            otherBuff->assign(CHARCOUNT + 1, '\0');
-            stream->read(&(*otherBuff)[0], CHARCOUNT);
-            iter = otherBuff->cbegin();
+            memset(otherBuff.get(), 0, CHARCOUNT + 1);
+            stream->read(otherBuff.get(), CHARCOUNT);
+            iter = otherBuff.get();
             currBuff.swap(otherBuff);
-            while (lexerdata->queue.empty() && iter != currBuff->cend())
+            while (lexerdata->queue.empty() && (iter - currBuff.get() != (CHARCOUNT + 1)))
             {
                 this->state->recognize(*iter++);
             }

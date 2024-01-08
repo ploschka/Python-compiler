@@ -6,12 +6,11 @@
 #include <iostream>
 #include <map>
 
+SemanticVisitor::SemanticVisitor()
+{
+    std::map<std::string, Symbol> builtins_data{
+        {"bool", SymbolFunction("bool", {Symbol()}, SymbolBool())}};
 
-SemanticVisitor::SemanticVisitor() {
-    std::map<std::string, Symbol> builtins_data {
-        {"bool", SymbolFunction("bool", {Symbol()}, SymbolBool())}
-    };
-    
     SymbolTable builtins(builtins_data);
     SymbolTable globals({});
 
@@ -19,14 +18,13 @@ SemanticVisitor::SemanticVisitor() {
     this->tableStack.push(globals);
 };
 
-
 void SemanticVisitor::visitLeaf(Leaf *acceptor)
 {
-    if (acceptor->token.getType() == Type::id) {
+    if (acceptor->token.getType() == Type::id)
+    {
         this->tableStack.addId(acceptor->token.getValue(), Symbol());
     }
 };
-
 
 void SemanticVisitor::visitFormalParamsNode(FormalParamsNode *acceptor)
 {
@@ -36,7 +34,6 @@ void SemanticVisitor::visitFormalParamsNode(FormalParamsNode *acceptor)
     }
 };
 
-
 void SemanticVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
 {
     for (auto param : acceptor->params)
@@ -44,7 +41,6 @@ void SemanticVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
         param->accept(this);
     }
 };
-
 
 void SemanticVisitor::visitVariableNode(VariableNode *acceptor)
 {
@@ -54,14 +50,12 @@ void SemanticVisitor::visitVariableNode(VariableNode *acceptor)
     }
 };
 
-
 // Сделать проверку вызовов функции
 void SemanticVisitor::visitCallNode(CallNode *acceptor)
 {
     acceptor->callable->accept(this);
     acceptor->params->accept(this);
 };
-
 
 // Сделать проверку операндов на соответствие типов
 void SemanticVisitor::visitBinaryNode(BinaryNode *acceptor)
@@ -70,13 +64,11 @@ void SemanticVisitor::visitBinaryNode(BinaryNode *acceptor)
     acceptor->right->accept(this);
 };
 
-
 // Сделать проверку операнда на соответствие типов
 void SemanticVisitor::visitUnaryNode(UnaryNode *acceptor)
 {
     acceptor->operand->accept(this);
 };
-
 
 // Сделать проверку левой части
 void SemanticVisitor::visitAssignmentNode(AssignmentNode *acceptor)
@@ -85,12 +77,10 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *acceptor)
     acceptor->right->accept(this);
 };
 
-
 void SemanticVisitor::visitReturnNode(ReturnNode *acceptor)
 {
     acceptor->return_value->accept(this);
 };
-
 
 void SemanticVisitor::visitBlockNode(BlockNode *acceptor)
 {
@@ -99,7 +89,6 @@ void SemanticVisitor::visitBlockNode(BlockNode *acceptor)
         child->accept(this);
     }
 };
-
 
 // СДЕЛАТЬ СЕЙЧАС! Нужно добавление новой таблицы в стек
 void SemanticVisitor::visitFunctionNode(FunctionNode *acceptor)
@@ -112,12 +101,10 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *acceptor)
     // Здесь будет удаление таблицы в стек
 };
 
-
 void SemanticVisitor::visitElseNode(ElseNode *acceptor)
 {
     acceptor->body->accept(this);
 };
-
 
 void SemanticVisitor::visitElifNode(ElifNode *acceptor)
 {
@@ -133,7 +120,6 @@ void SemanticVisitor::visitElifNode(ElifNode *acceptor)
     }
 };
 
-
 void SemanticVisitor::visitIfNode(IfNode *acceptor)
 {
     acceptor->condition->accept(this);
@@ -148,13 +134,11 @@ void SemanticVisitor::visitIfNode(IfNode *acceptor)
     }
 };
 
-
 void SemanticVisitor::visitWhileNode(WhileNode *acceptor)
 {
     acceptor->condition->accept(this);
     acceptor->body->accept(this);
 };
-
 
 // Сделать добавление итератора в таблицу символов
 void SemanticVisitor::visitForNode(ForNode *acceptor)
@@ -165,8 +149,7 @@ void SemanticVisitor::visitForNode(ForNode *acceptor)
     acceptor->body->accept(this);
 };
 
-
-void SemanticVisitor::visitProgramNode(ProgramNode* acceptor)
+void SemanticVisitor::visitProgramNode(ProgramNode *acceptor)
 {
     for (auto child : acceptor->children)
     {
@@ -177,4 +160,9 @@ void SemanticVisitor::visitProgramNode(ProgramNode* acceptor)
 bool SemanticVisitor::getResult() const
 {
     return result;
+}
+
+void SemanticVisitor::reset()
+{
+    // Раскрутить стек
 }

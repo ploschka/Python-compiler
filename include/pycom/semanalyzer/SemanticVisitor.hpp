@@ -29,4 +29,5 @@ public:
     void visitForNode(ForNode *acceptor) override;
     void visitProgramNode(ProgramNode *acceptor) override;
     bool getResult() const;
+    void reset();
 };

@@ -13,4 +13,5 @@ private:
 public:
     SemanticAnalyzer();
     bool checkSemantics(AST *_tree) override;
+    void reset() override;
 };
