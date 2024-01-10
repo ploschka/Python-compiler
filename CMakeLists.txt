@@ -50,7 +50,7 @@ target_link_libraries(codegen ${llvm_libraries})
 
 set(libs lexer parser codegen semanalyzer utility)
 
-add_library(${libname} src/pycom/Pycom.cpp)
+add_library(${libname} SHARED src/pycom/Pycom.cpp)
 set_property(TARGET codegen PROPERTY CXX_STANDARD 17)
 
 foreach(l ${libs} ${libname})
