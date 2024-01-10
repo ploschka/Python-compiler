@@ -23,13 +23,22 @@ public:
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitLeaf(this); };
 };
 
+class TypeNode : public BaseASTNode
+{
+public:
+    Token token;
+    TypeNode(Token _type_token);
+    void accept(NodeVisitorInterface *_visitor) { _visitor->visitTypeNode(this); };
+};
+
 // ============= Params =============
 class FormalParamsNode : public BaseASTNode
 {
 public:
     std::vector<Leaf *> params;
-    FormalParamsNode(std::vector<Leaf *> _params);
-    void add_child(Leaf *_param);
+    std::vector<TypeNode *> types;
+    FormalParamsNode(std::vector<Leaf *> _params, std::vector<TypeNode* > _types);
+    void add_child(Leaf *_param, TypeNode *_type);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitFormalParamsNode(this); };
 };
 
@@ -43,21 +52,12 @@ public:
 };
 
 // ============= Expressions =============
-class VariableNode : public ExpressionNode
-{
-public:
-    std::vector<Leaf *> chain; // Цепочка обращений. Например: ID.ID.ID, либо ID, либо NUMBER
-    VariableNode(std::vector<Leaf *> _chain);
-    void add_to_chain(Leaf *_leaf);
-    void accept(NodeVisitorInterface *_visitor) { _visitor->visitVariableNode(this); };
-};
-
 class CallNode : public ExpressionNode
 {
 public:
-    VariableNode *callable;
+    ExpressionNode *callable;
     ActualParamsNode *params;
-    CallNode(VariableNode *_callable, ActualParamsNode *_params);
+    CallNode(ExpressionNode *_callable, ActualParamsNode *_params);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitCallNode(this); };
 };
 class BinaryNode : public ExpressionNode
@@ -83,8 +83,10 @@ class AssignmentNode : public BaseASTNode
 {
 public:
     Leaf *left;
+    TypeNode *type;
     ExpressionNode *right;
     AssignmentNode(Leaf *_left, ExpressionNode *_right);
+    AssignmentNode(Leaf *_left, TypeNode *_type, ExpressionNode *_right);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitAssignmentNode(this); };
 };
 
@@ -175,4 +177,13 @@ public:
     BlockNode *body;
     ForNode(Leaf *_iterator, ExpressionNode *_condition, BlockNode *_body);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitForNode(this); };
+};
+
+class ListNode : public ExpressionNode
+{
+public:
+    std::vector<ExpressionNode *> children;
+    ListNode(std::vector<ExpressionNode *> _values);
+    void append(ExpressionNode *_expr);
+    void accept(NodeVisitorInterface *_visitor) { _visitor->visitListNode(this); };
 };

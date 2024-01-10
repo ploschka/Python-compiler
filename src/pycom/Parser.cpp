@@ -7,34 +7,38 @@
 #include <map>
 #include <set>
 
-static const std::map<std::string, std::set<Type>> FIRSTS = {{"sum", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"term", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"arguments", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"inversion", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"params", {Type::id}},
-                                                             {"expression", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"statements", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::passkw, Type::inv}},
-                                                             {"elif_stmt", {Type::elifkw}},
-                                                             {"simple_stmt", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::id, Type::returnkw, Type::passkw, Type::inv}},
-                                                             {"block", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::newline, Type::id, Type::returnkw, Type::passkw, Type::inv}},
-                                                             {"for_stmt", {Type::forkw}},
-                                                             {"conjunction", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"while_stmt", {Type::whilekw}},
-                                                             {"comparison", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"else_block", {Type::elsekw}},
-                                                             {"statement", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::passkw, Type::inv}},
-                                                             {"func_call", {Type::lpr}},
-                                                             {"primary", {Type::number, Type::lpr, Type::dot, Type::string, Type::id}},
-                                                             {"function_def", {Type::defkw}},
-                                                             {"if_stmt", {Type::ifkw}},
-                                                             {"return_stmt", {Type::returnkw}},
-                                                             {"compound_stmt", {Type::ifkw, Type::whilekw, Type::defkw, Type::forkw}},
-                                                             {"assignment", {Type::id}},
-                                                             {"file", {Type::whilekw, Type::number, Type::plus, Type::lpr, Type::ifkw, Type::dot, Type::notop, Type::forkw, Type::continuekw, Type::string, Type::id, Type::breakkw, Type::minus, Type::defkw, Type::returnkw, Type::eof, Type::passkw, Type::inv}},
-                                                             {"disjunction", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"factor", {Type::number, Type::plus, Type::lpr, Type::dot, Type::string, Type::minus, Type::id, Type::inv}},
-                                                             {"simple_stmts", {Type::number, Type::plus, Type::lpr, Type::dot, Type::notop, Type::string, Type::continuekw, Type::breakkw, Type::minus, Type::id, Type::returnkw, Type::passkw, Type::inv}},
-                                                             {"atom", {Type::id, Type::number, Type::string}}};
+static const std::map<std::string, std::set<Type>> FIRSTS = {
+    {"comparison", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"if_stmt", {Type::ifkw}},
+    {"block", {Type::string, Type::plus, Type::newline, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"assignment", {Type::id}},
+    {"primary", {Type::string, Type::id, Type::number, Type::lpr, Type::lsbr}},
+    {"disjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"return_stmt", {Type::returnkw}},
+    {"while_stmt", {Type::whilekw}},
+    {"term", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"arguments", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"statements", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
+    {"params", {Type::id}},
+    {"list", {Type::lsbr}},
+    {"type_hint", {Type::colon}},
+    {"function_def", {Type::defkw}},
+    {"statement", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
+    {"inversion", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"for_stmt", {Type::forkw}},
+    {"simple_stmt", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"list_values", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"factor", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"sum", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
+    {"compound_stmt", {Type::whilekw, Type::forkw, Type::defkw, Type::ifkw}},
+    {"expression", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"atom", {Type::string, Type::number, Type::id}},
+    {"else_block", {Type::elsekw}},
+    {"file", {Type::string, Type::eof, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
+    {"simple_stmts", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"elif_stmt", {Type::elifkw}},
+    {"conjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
+    {"func_call", {Type::lpr}}};
 
 Parser::Parser() : token(Token("хуй", Type::bandass)){};
 
@@ -53,6 +57,12 @@ AST *Parser::getAST()
 bool Parser::is_token_in_firsts(std::string _grammar_node)
 {
     return FIRSTS.at(_grammar_node).find(this->token.getType()) != FIRSTS.at(_grammar_node).end();
+}
+
+// Возвращает True, если текущий токен кода имеет тип _type
+bool Parser::token_matches(Type _type)
+{
+    return this->get_token().getType() == _type;
 }
 
 // Возвращает True, если текущий токен кода имеет тип, имеющийся в types
@@ -192,7 +202,8 @@ void Parser::simple_stmts(BlockNode *_parent_block)
  */
 void Parser::simple_stmt(BlockNode *_parent_block)
 {
-    if (this->is_token_in_firsts("assignment") && this->forward(1).getType() == Type::assign)
+    if (this->is_token_in_firsts("assignment") 
+        && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
     {
         _parent_block->add_child(this->assignment());
     }
@@ -216,15 +227,32 @@ void Parser::simple_stmt(BlockNode *_parent_block)
 };
 
 /**
+ * type_hint:
+ *  | COLON ID
+ */
+TypeNode *Parser::type_hint()
+{
+    this->check_get_next(Type::colon);
+    Token type_token = this->check_get_next(Type::id);
+    return new TypeNode(type_token);
+}
+
+/**
  * assignment:
  *  | ID ASSIGN expression
+ *  | ID type_hint ASSIGN expression
  */
 AssignmentNode *Parser::assignment()
 {
     Leaf *left = new Leaf(this->check_get_next(Type::id));
+    TypeNode *type = nullptr;
+    if (this->is_token_in_firsts("type_hint"))
+    {
+        type = this->type_hint();
+    }
     this->check_get_next(Type::assign);
     ExpressionNode *right = this->expression();
-    return new AssignmentNode(left, right);
+    return new AssignmentNode(left, type, right);
 };
 
 /**
@@ -263,12 +291,12 @@ ExpressionNode *Parser::expression()
 ExpressionNode *Parser::disjunction()
 {
     ExpressionNode *left = this->conjunction();
-    if (this->get_token().getType() == Type::orop)
+    if (this->token_matches(Type::orop))
     {
         Token op = this->check_get_next(Type::orop);
         ExpressionNode *right = this->conjunction();
         BinaryNode *op_node = new BinaryNode(left, new Leaf(op), right);
-        while (this->get_token().getType() == Type::orop)
+        while (this->token_matches(Type::orop))
         {
             op = this->check_get_next(Type::orop);
             right = this->conjunction();
@@ -290,12 +318,12 @@ ExpressionNode *Parser::disjunction()
 ExpressionNode *Parser::conjunction()
 {
     ExpressionNode *left = this->inversion();
-    if (this->get_token().getType() == Type::andop)
+    if (this->token_matches(Type::andop))
     {
         Token op = this->check_get_next(Type::andop);
         ExpressionNode *right = this->inversion();
         BinaryNode *op_node = new BinaryNode(left, new Leaf(op), right);
-        while (this->get_token().getType() == Type::andop)
+        while (this->token_matches(Type::andop))
         {
             op = this->check_get_next(Type::andop);
             right = this->inversion();
@@ -316,7 +344,7 @@ ExpressionNode *Parser::conjunction()
  */
 ExpressionNode *Parser::inversion()
 {
-    if (this->get_token().getType() == Type::notop)
+    if (this->token_matches(Type::notop))
     {
         Token op = this->check_get_next(Type::notop);
         ExpressionNode *operand = this->inversion();
@@ -451,38 +479,75 @@ ExpressionNode *Parser::factor()
 
 /**
  * primary:
- *  | atom primary
+ *  | LPR expression RPR
+ *  | LPR expression RPR func_call
  *  | atom
- *  | DOT ID primary
- *  | DOT ID
- *  | func_call
+ *  | atom func_call
+ *  | list
  */
 ExpressionNode *Parser::primary()
 {
-    // Парсим цепочки типа ID.ID.ID.ID, пока не дойдём до вызова функции (например ID.func()), либо до конца цепочки
-    VariableNode *variable = new VariableNode({});
-    while (this->is_token_in_firsts("primary") && !this->is_token_in_firsts("func_call"))
+    if (this->token_matches(Type::lpr))
     {
-        if (this->is_token_in_firsts("atom"))
+        this->check_get_next(Type::lpr);
+        auto expr = this->expression();
+        this->check_get_next(Type::rpr);
+
+        if (this->is_token_in_firsts("func_call"))
         {
-            variable->add_to_chain(this->atom());
+            ActualParamsNode *params = this->func_call();
+            return new CallNode(expr, params);
         }
-        else
+        return expr;
+    }
+    else if (this->is_token_in_firsts("atom"))
+    {
+        auto atom = this->atom();
+        if (this->is_token_in_firsts("func_call"))
         {
-            this->check_get_next(Type::dot);
-            Token tk = this->check_get_next(Type::id);
-            variable->add_to_chain(new Leaf(tk));
+            ActualParamsNode *params = this->func_call();
+            return new CallNode(atom, params);
+        }
+        return atom;
+    }
+    else if (this->is_token_in_firsts("list"))
+    {
+        return this->list();
+    }
+    this->error("primary");
+};
+
+/**
+ * list:
+ *  | LSBR list_values RSBR
+ *  | LSBR RSBR
+ */
+ListNode *Parser::list()
+{
+    this->check_get_next(Type::lsbr);
+    auto node = new ListNode(this->list_values());
+    this->check_get_next(Type::rsbr);
+    return node;
+}
+
+/**
+ * list_values:
+ *  | expression COMMA arguments
+ *  | expression
+ */
+std::vector<ExpressionNode *> Parser::list_values()
+{
+    std::vector<ExpressionNode *> values = {};
+
+    while (this->is_token_in_firsts("expression"))
+    {
+        values.push_back(this->expression());
+        if (this->token_matches(Type::comma))
+        {
+            this->next_token();
         }
     }
-    if (this->is_token_in_firsts("func_call"))
-    {
-        ActualParamsNode *params = this->func_call();
-        return new CallNode(variable, params);
-    }
-    else
-    {
-        return variable;
-    }
+    return values;
 };
 
 /**
@@ -538,7 +603,7 @@ ActualParamsNode *Parser::arguments()
     while (this->is_token_in_firsts("arguments"))
     {
         params->add_child(this->expression());
-        if (this->get_token().getType() == Type::comma)
+        if (this->token_matches(Type::comma))
         {
             this->next_token();
         }
@@ -579,17 +644,18 @@ void Parser::compound_stmt(BlockNode *_parent_block)
 
 /**
  * params:
- *  | ID COMMA params
- *  | ID
+ *  | ID type_hint COMMA params
+ *  | ID type_hint
  */
 FormalParamsNode *Parser::params()
 {
-    FormalParamsNode *params = new FormalParamsNode({});
+    FormalParamsNode *params = new FormalParamsNode({}, {});
     while (this->is_token_in_firsts("params"))
     {
         Leaf *leaf = new Leaf(this->check_get_next(Type::id));
-        params->add_child(leaf);
-        if (this->get_token().getType() == Type::comma)
+        TypeNode *type = this->type_hint();
+        params->add_child(leaf, type);
+        if (this->token_matches(Type::comma))
         {
             this->next_token();
         }
@@ -614,7 +680,7 @@ FunctionNode *Parser::function_def()
     }
     else
     {
-        params = new FormalParamsNode({});
+        params = new FormalParamsNode({}, {});
     }
     this->check_get_next(Type::rpr);
     this->check_get_next(Type::colon);
@@ -718,7 +784,7 @@ ForNode *Parser::for_stmt()
 BlockNode *Parser::block()
 {
     BlockNode *block = new BlockNode();
-    if (this->get_token().getType() == Type::newline)
+    if (this->token_matches(Type::newline))
     {
         this->check_get_next(Type::newline);
         this->check_get_next(Type::indent);

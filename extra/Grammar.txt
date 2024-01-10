@@ -1,0 +1,162 @@
+# https://docs.python.org/3/reference/grammar.html
+
+file:
+    | statements EOF
+    | EOF
+
+statements:
+    | statement statements
+    | statement
+
+statement:
+    | compound_stmt
+    | simple_stmts
+
+
+# SIMPLE STATEMENTS
+# =================================================================================
+
+simple_stmts:
+    | simple_stmt NEWLINE simple_stmts
+    | simple_stmt NEWLINE
+
+simple_stmt:
+    | assignment
+    | expression
+    | return_stmt
+    | PASSKW
+    | BREAKKW
+    | CONTINUEKW
+
+type_hint:
+    | COLON ID
+
+assignment:
+    | ID ASSIGN expression
+    | ID type_hint ASSIGN expression
+
+return_stmt:
+    | RETURNKW
+    | RETURNKW expression
+
+
+# EXPRESSION
+# =================================================================================
+
+expression:
+    | disjunction
+
+disjunction:
+    | conjunction OROP disjunction
+    | conjunction
+
+conjunction:
+    | inversion ANDOP conjunction
+    | inversion
+
+inversion:
+    | NOTOP inversion
+    | comparison
+
+comparison:
+    | sum GREATER comparison
+    | sum LESS comparison
+    | sum EQUAL comparison
+    | sum NOTEQ comparison
+    | sum GREQUAL comparison
+    | sum LEQUAL comparison
+    | sum
+
+sum:
+    | term PLUS sum
+    | term MINUS sum
+    | term
+
+term:
+    | factor STAR term
+    | factor DIV term
+    | factor IDIV term
+    | factor MOD term
+    | factor
+
+factor:
+    | PLUS factor
+    | MINUS factor
+    | INV factor
+    | primary
+
+primary:
+    | LPR expression RPR
+    | LPR expression RPR func_call
+    | atom
+    | atom func_call
+    | list
+
+list:
+    | LSBR list_values RSBR
+    | LSBR RSBR
+
+list_values:
+    | expression COMMA arguments
+    | expression
+
+func_call:
+    | LPR arguments RPR
+    | LPR RPR
+
+atom:
+    | ID
+    | STRING
+    | NUMBER
+
+arguments:
+    | expression COMMA arguments
+    | expression
+
+
+# COMPOUND STATEMENTS
+# =================================================================================
+
+compound_stmt:
+    | function_def
+    | if_stmt
+    | for_stmt
+    | while_stmt
+
+params:
+    | ID type_hint COMMA params
+    | ID type_hint
+
+function_def:
+    | DEFKW ID LPR RPR COLON block
+    | DEFKW ID LPR params RPR COLON block
+
+# If statement
+# ------------
+
+if_stmt:
+    | IFKW expression COLON block elif_stmt
+    | IFKW expression COLON block else_block
+    | IFKW expression COLON block
+elif_stmt:
+    | ELIFKW expression COLON block elif_stmt
+    | ELIFKW expression COLON block else_block
+    | ELIFKW expression COLON block
+else_block:
+    | ELSEKW COLON block
+
+# While statement
+# ---------------
+
+while_stmt:
+    | WHILEKW expression COLON block
+
+# For statement
+# -------------
+
+for_stmt:
+    | FORKW ID IN expression COLON block
+
+block:
+    | NEWLINE INDENT statements DEDENT
+    | simple_stmts

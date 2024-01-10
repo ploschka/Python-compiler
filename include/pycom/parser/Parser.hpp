@@ -15,6 +15,7 @@ private:
 
     bool is_token_in_firsts(std::string _grammar_node);
     bool token_matches_any(std::vector<Type> _types);
+    bool token_matches(Type _type);
     void error(std::string _message);
     void next_token();
     Token forward(size_t _k);
@@ -37,8 +38,11 @@ private:
     ExpressionNode *term();
     ExpressionNode *factor();
     ExpressionNode *primary();
+    ListNode *list();
+    std::vector<ExpressionNode *> list_values();
     ActualParamsNode *func_call();
     Leaf *atom();
+    TypeNode *type_hint();
     ActualParamsNode *arguments();
     void compound_stmt(BlockNode *_parent_block);
     FormalParamsNode *params();
@@ -49,6 +53,7 @@ private:
     WhileNode *while_stmt();
     ForNode *for_stmt();
     BlockNode *block();
+
 
 public:
     void setLexer(LexerInterface *);

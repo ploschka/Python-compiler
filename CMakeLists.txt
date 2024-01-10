@@ -85,9 +85,14 @@ endif()
 
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
-    add_executable(${testname} tests/parsertests.cpp tests/codegentests.cpp tests/lexertests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} ${llvm_libraries} ex_visitors)
+    set(lexmocklib tests/LexerMock.cpp)
+    add_library(lexermock STATIC ${lexmocklib})
+    target_link_libraries(lexermock token)
+
+    add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp)
+
+    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)

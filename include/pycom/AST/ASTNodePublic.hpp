@@ -1,9 +1,9 @@
 #pragma once
 
 class Leaf;
+class TypeNode;
 class FormalParamsNode;
 class ActualParamsNode;
-class VariableNode;
 class CallNode;
 class BinaryNode;
 class UnaryNode;
@@ -17,3 +17,4 @@ class ElifNode;
 class IfNode;
 class WhileNode;
 class ForNode;
+class ListNode;

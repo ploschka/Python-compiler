@@ -4,18 +4,18 @@
 #include <fstream>
 #include <pycom/lexer/Lexer.hpp>
 #include <NodeToVectorVisitor.h>
+#include <pycom/lexer/LexerMock.hpp>
 
-std::pair<std::vector<std::string>, std::vector<std::string>> get_node_vectors(
-    std::string test_code_filename, ProgramNode *target_root)
+std::pair<std::vector<std::string>, std::vector<std::string>> convert(
+    std::vector<Token> test_tokens, ProgramNode *target_root)
 {
     /*
-     * Синтаксические деревья, полученные из файла test_code_filename и корня target_root
-     * превращает в вектор строк
+     * Тестовый набор токенов test_tokens подаётся в парсер
+     * Парсер выдаёт синтаксическое дерево
+     * Дерево, выданное парсером и контрольное дерево target_root преобразуются в векторы строк и возвращаются
      */
-    std::ifstream input(test_code_filename);
-    auto lexer = new Lexer;
+    auto lexer = new LexerMock(test_tokens);
     auto parser = new Parser;
-    lexer->open(input);
     parser->setLexer(lexer);
     auto test_root = parser->getAST();
 
@@ -31,406 +31,898 @@ std::pair<std::vector<std::string>, std::vector<std::string>> get_node_vectors(
         target_nodes};
 }
 
+/*
+a = 3
+*/
 TEST(ParserTest, ExpressionExpressionAssignment)
 {
-    std::string test_code_file = "scripts/test_Assign.py";
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token("", Type::assign),
+        Token("3", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
     ProgramNode *target_root = new ProgramNode(
         {new AssignmentNode(
              new Leaf(Token("a", Type::id)),
-             new VariableNode({new Leaf(Token("3",
-                                              Type::number))})),
+             new Leaf(Token("3", Type::number))),
          new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+a + 10
+*/
 TEST(ParserTest, ExpressionPlus)
 {
-    std::string test_code_file = "scripts/test_Plus.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new VariableNode({new Leaf(Token("a", Type::id))}),
-                                                    new Leaf(Token("", Type::plus)),
-                                                    new VariableNode({new Leaf(Token("10", Type::number))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token("", Type::plus),
+        Token("10", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new Leaf(Token("a", Type::id)),
+             new Leaf(Token("", Type::plus)),
+             new Leaf(Token("10", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+1 + 2 + 3 + g
+*/
 TEST(ParserTest, ExpressionManyPlus)
 {
-    std::string test_code_file = "scripts/test_ManyPlus.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new BinaryNode(
-                                                            new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                            new Leaf(Token("", Type::plus)),
-                                                            new VariableNode({new Leaf(Token("2", Type::number))})),
-                                                        new Leaf(Token("", Type::plus)),
-                                                        new VariableNode({new Leaf(Token("3", Type::number))})),
-                                                    new Leaf(Token("", Type::plus)),
-                                                    new VariableNode({new Leaf(Token("g", Type::id))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("1", Type::number),
+        Token("", Type::plus),
+        Token("2", Type::number),
+        Token("", Type::plus),
+        Token("3", Type::number),
+        Token("", Type::plus),
+        Token("g", Type::id),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new BinaryNode(
+                     new Leaf(Token("1", Type::number)),
+                     new Leaf(Token("", Type::plus)),
+                     new Leaf(Token("2", Type::number))),
+                 new Leaf(Token("", Type::plus)),
+                 new Leaf(Token("3", Type::number))),
+             new Leaf(Token("", Type::plus)),
+             new Leaf(Token("g", Type::id))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+1 + 2 - 3 + 4 - 5
+*/
 TEST(ParserTest, ExpressionPlusMinus)
 {
-    std::string test_code_file = "scripts/test_PlusMinus.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new BinaryNode(
-                                                            new BinaryNode(
-                                                                new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                                new Leaf(Token("", Type::plus)),
-                                                                new VariableNode({new Leaf(Token("2", Type::number))})),
-                                                            new Leaf(Token("", Type::minus)),
-                                                            new VariableNode({new Leaf(Token("3", Type::number))})),
-                                                        new Leaf(Token("", Type::plus)),
-                                                        new VariableNode({new Leaf(Token("4", Type::number))})),
-                                                    new Leaf(Token("", Type::minus)),
-                                                    new VariableNode({new Leaf(Token("5", Type::number))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("1", Type::number),
+        Token("", Type::plus),
+        Token("2", Type::number),
+        Token("", Type::minus),
+        Token("3", Type::number),
+        Token("", Type::plus),
+        Token("4", Type::number),
+        Token("", Type::minus),
+        Token("5", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new BinaryNode(
+                     new BinaryNode(
+                         new Leaf(Token("1", Type::number)),
+                         new Leaf(Token("", Type::plus)),
+                         new Leaf(Token("2", Type::number))),
+                     new Leaf(Token("", Type::minus)),
+                     new Leaf(Token("3", Type::number))),
+                 new Leaf(Token("", Type::plus)),
+                 new Leaf(Token("4", Type::number))),
+             new Leaf(Token("", Type::minus)),
+             new Leaf(Token("5", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+a * b
+*/
 TEST(ParserTest, ExpressionMul)
 {
-    std::string test_code_file = "scripts/test_Mul.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new VariableNode({new Leaf(Token("a", Type::id))}),
-                                                    new Leaf(Token("", Type::star)),
-                                                    new VariableNode({new Leaf(Token("b", Type::id))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token("", Type::star),
+        Token("b", Type::id),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new Leaf(Token("a", Type::id)),
+             new Leaf(Token("", Type::star)),
+             new Leaf(Token("b", Type::id))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+a * b / 100
+*/
 TEST(ParserTest, ExpressionMulWithDiv)
 {
-    std::string test_code_file = "scripts/test_MulWithDiv.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new VariableNode({new Leaf(Token("a", Type::id))}),
-                                                        new Leaf(Token("", Type::star)),
-                                                        new VariableNode({new Leaf(Token("b", Type::id))})),
-                                                    new Leaf(Token("", Type::div)),
-                                                    new VariableNode({new Leaf(Token("100", Type::number))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token("", Type::star),
+        Token("b", Type::id),
+        Token("", Type::div),
+        Token("100", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new Leaf(Token("a", Type::id)),
+                 new Leaf(Token("", Type::star)),
+                 new Leaf(Token("b", Type::id))),
+             new Leaf(Token("", Type::div)),
+             new Leaf(Token("100", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+a and b
+*/
 TEST(ParserTest, ExpressionAnd)
 {
-    std::string test_code_file = "scripts/test_And.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new VariableNode({new Leaf(Token("a", Type::id))}),
-                                                    new Leaf(Token("", Type::andop)),
-                                                    new VariableNode({new Leaf(Token("b", Type::id))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token("", Type::andop),
+        Token("b", Type::id),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new Leaf(Token("a", Type::id)),
+             new Leaf(Token("", Type::andop)),
+             new Leaf(Token("b", Type::id))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+True or False
+*/
 TEST(ParserTest, ExpressionOr)
 {
-    std::string test_code_file = "scripts/test_Or.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new VariableNode({new Leaf(Token("True", Type::id))}),
-                                                    new Leaf(Token("", Type::orop)),
-                                                    new VariableNode({new Leaf(Token("False", Type::id))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("True", Type::id),
+        Token("", Type::orop),
+        Token("False", Type::id),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new Leaf(Token("True", Type::id)),
+             new Leaf(Token("", Type::orop)),
+             new Leaf(Token("False", Type::id))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+not 1 + 2
+*/
 TEST(ParserTest, ExpressionNot)
 {
-    std::string test_code_file = "scripts/test_Not.py";
-    ProgramNode *target_root = new ProgramNode({new UnaryNode(
-                                                    new Leaf(Token("", Type::notop)),
-                                                    new BinaryNode(
-                                                        new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                        new Leaf(Token("", Type::plus)),
-                                                        new VariableNode({new Leaf(Token("2", Type::number))}))),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("", Type::notop),
+        Token("1", Type::number),
+        Token("", Type::plus),
+        Token("2", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new UnaryNode(
+             new Leaf(Token("", Type::notop)),
+             new BinaryNode(
+                 new Leaf(Token("1", Type::number)),
+                 new Leaf(Token("", Type::plus)),
+                 new Leaf(Token("2", Type::number)))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+A and B or C or not D and F
+*/
 TEST(ParserTest, ExpressionLogicPriority)
 {
-    std::string test_code_file = "scripts/test_LogicPriority.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new BinaryNode(
-                                                            new VariableNode({new Leaf(Token("A", Type::id))}),
-                                                            new Leaf(Token("", Type::andop)),
-                                                            new VariableNode({new Leaf(Token("B", Type::id))})),
-                                                        new Leaf(Token("", Type::orop)),
-                                                        new VariableNode({new Leaf(Token("C", Type::id))})),
-                                                    new Leaf(Token("", Type::orop)),
-                                                    new BinaryNode(
-                                                        new UnaryNode(
-                                                            new Leaf(Token("", Type::notop)),
-                                                            new VariableNode({new Leaf(Token("D", Type::id))})),
-                                                        new Leaf(Token("", Type::andop)),
-                                                        new VariableNode({new Leaf(Token("F", Type::id))}))),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("A", Type::id),
+        Token("", Type::andop),
+        Token("B", Type::id),
+        Token("", Type::orop),
+        Token("C", Type::id),
+        Token("", Type::orop),
+        Token("", Type::notop),
+        Token("D", Type::id),
+        Token("", Type::andop),
+        Token("F", Type::id),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new BinaryNode(
+                     new Leaf(Token("A", Type::id)),
+                     new Leaf(Token("", Type::andop)),
+                     new Leaf(Token("B", Type::id))),
+                 new Leaf(Token("", Type::orop)),
+                 new Leaf(Token("C", Type::id))),
+             new Leaf(Token("", Type::orop)),
+             new BinaryNode(
+                 new UnaryNode(
+                     new Leaf(Token("", Type::notop)),
+                     new Leaf(Token("D", Type::id))),
+                 new Leaf(Token("", Type::andop)),
+                 new Leaf(Token("F", Type::id)))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+1 < x == 10 >= 100
+*/
 TEST(ParserTest, ExpressionComparisonEqualPriority)
 {
-    std::string test_code_file = "scripts/test_ComparisonEqualPriority.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new BinaryNode(
-                                                            new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                            new Leaf(Token("", Type::less)),
-                                                            new VariableNode({new Leaf(Token("x", Type::id))})),
-                                                        new Leaf(Token("", Type::equal)),
-                                                        new VariableNode({new Leaf(Token("10", Type::number))})),
-                                                    new Leaf(Token("", Type::grequal)),
-                                                    new VariableNode({new Leaf(Token("100", Type::number))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("1", Type::number),
+        Token("", Type::less),
+        Token("x", Type::id),
+        Token("", Type::equal),
+        Token("10", Type::number),
+        Token("", Type::grequal),
+        Token("100", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new BinaryNode(
+                     new Leaf(Token("1", Type::number)),
+                     new Leaf(Token("", Type::less)),
+                     new Leaf(Token("x", Type::id))),
+                 new Leaf(Token("", Type::equal)),
+                 new Leaf(Token("10", Type::number))),
+             new Leaf(Token("", Type::grequal)),
+             new Leaf(Token("100", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+-10
+*/
 TEST(ParserTest, ExpressionUnaryOp)
 {
-    std::string test_code_file = "scripts/test_UnaryOp.py";
-    ProgramNode *target_root = new ProgramNode({new UnaryNode(
-                                                    new Leaf(Token("", Type::minus)),
-                                                    new VariableNode({new Leaf(Token("10", Type::number))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("", Type::minus),
+        Token("10", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new UnaryNode(
+             new Leaf(Token("", Type::minus)),
+             new Leaf(Token("10", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+-10 / 0 + +x - -5 * 10
+*/
 TEST(ParserTest, ExpressionArithmOpPriority)
 {
-    std::string test_code_file = "scripts/test_ArithmOpPriority.py";
-    ProgramNode *target_root = new ProgramNode({new BinaryNode(
-                                                    new BinaryNode(
-                                                        new BinaryNode(
-                                                            new UnaryNode(
-                                                                new Leaf(Token("", Type::minus)),
-                                                                new VariableNode({new Leaf(Token("10", Type::number))})),
-                                                            new Leaf(Token("", Type::div)),
-                                                            new VariableNode({new Leaf(Token("0", Type::number))})),
-                                                        new Leaf(Token("", Type::plus)),
-                                                        new UnaryNode(
-                                                            new Leaf(Token("", Type::plus)),
-                                                            new VariableNode({new Leaf(Token("x", Type::id))}))),
-                                                    new Leaf(Token("", Type::minus)),
-                                                    new BinaryNode(
-                                                        new UnaryNode(
-                                                            new Leaf(Token("", Type::minus)),
-                                                            new VariableNode({new Leaf(Token("5", Type::number))})),
-                                                        new Leaf(Token("", Type::star)),
-                                                        new VariableNode({new Leaf(Token("10", Type::number))}))),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("-", Type::minus),
+        Token("10", Type::number),
+        Token("/", Type::div),
+        Token("0", Type::number),
+        Token("+", Type::plus),
+        Token("+", Type::plus),
+        Token("x", Type::id),
+        Token("-", Type::minus),
+        Token("-", Type::minus),
+        Token("5", Type::number),
+        Token("*", Type::star),
+        Token("10", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new BinaryNode(
+                     new UnaryNode(
+                         new Leaf(Token("", Type::minus)),
+                         new Leaf(Token("10", Type::number))),
+                     new Leaf(Token("", Type::div)),
+                     new Leaf(Token("0", Type::number))),
+                 new Leaf(Token("", Type::plus)),
+                 new UnaryNode(
+                     new Leaf(Token("", Type::plus)),
+                     new Leaf(Token("x", Type::id)))),
+             new Leaf(Token("", Type::minus)),
+             new BinaryNode(
+                 new UnaryNode(
+                     new Leaf(Token("", Type::minus)),
+                     new Leaf(Token("5", Type::number))),
+                 new Leaf(Token("", Type::star)),
+                 new Leaf(Token("10", Type::number)))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+if True:
+    break
+*/
 TEST(ParserTest, If)
 {
-    std::string test_code_file = "scripts/test_If.py";
-    ProgramNode *target_root = new ProgramNode({new IfNode(
-                                                    new VariableNode({new Leaf(Token("True", Type::id))}),
-                                                    new BlockNode({new Leaf(Token("", Type::breakkw))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("if", Type::ifkw),
+        Token("True", Type::id),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new IfNode(
+             new Leaf(Token("True", Type::id)),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+if True:
+    break
+else:
+    break
+*/
 TEST(ParserTest, IfIfElse)
 {
-    std::string test_code_file = "scripts/test_IfElse.py";
+    std::vector<Token> tokens = {
+        Token("if", Type::ifkw),
+        Token("True", Type::id),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("else", Type::elsekw),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
     auto if_node = new IfNode(
-        new VariableNode({new Leaf(Token("True", Type::id))}),
+        new Leaf(Token("True", Type::id)),
         new BlockNode({new Leaf(Token("", Type::breakkw))}));
     auto else_node = new ElseNode(
         new BlockNode({new Leaf(Token("", Type::breakkw))}));
     if_node->next_else = else_node;
     ProgramNode *target_root = new ProgramNode({if_node,
                                                 new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+if True:
+    break
+elif True:
+    break
+else:
+    break
+*/
 TEST(ParserTest, IfElifElse)
 {
-    std::string test_code_file = "scripts/test_IfElifElse.py";
+    std::vector<Token> tokens = {
+        Token("if", Type::ifkw),
+        Token("True", Type::id),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("elif", Type::elifkw),
+        Token("True", Type::id),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("else", Type::elsekw),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
 
     auto if_node = new IfNode(
-        new VariableNode({new Leaf(Token("True", Type::id))}),
+        new Leaf(Token("True", Type::id)),
         new BlockNode({new Leaf(Token("", Type::breakkw))}));
     auto elif_node = new ElifNode(
-        new VariableNode({new Leaf(Token("True", Type::id))}),
+        new Leaf(Token("True", Type::id)),
         new BlockNode({new Leaf(Token("", Type::breakkw))}));
     auto else_node = new ElseNode(
         new BlockNode({new Leaf(Token("", Type::breakkw))}));
     if_node->next_elif = elif_node;
     elif_node->next_else = else_node;
-    ProgramNode *target_root = new ProgramNode({if_node,
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    ProgramNode *target_root = new ProgramNode(
+        {if_node,
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+while True:
+    break
+*/
 TEST(ParserTest, While)
 {
-    std::string test_code_file = "scripts/test_While.py";
-    ProgramNode *target_root = new ProgramNode({new WhileNode(
-                                                    new VariableNode({new Leaf(Token("True", Type::id))}),
-                                                    new BlockNode({new Leaf(Token("", Type::breakkw))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("while", Type::whilekw),
+        Token("True", Type::id),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new WhileNode(
+             new Leaf(Token("True", Type::id)),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+for i in range(100):
+    break
+*/
 TEST(ParserTest, For)
 {
-    std::string test_code_file = "scripts/test_For.py";
-    ProgramNode *target_root = new ProgramNode({new ForNode(
-                                                    new Leaf(Token("i", Type::id)),
-                                                    new CallNode(
-                                                        new VariableNode({new Leaf(Token("range", Type::id))}),
-                                                        new ActualParamsNode({new VariableNode({new Leaf(Token("100", Type::number))})})),
-                                                    new BlockNode({new Leaf(Token("", Type::breakkw))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("for", Type::forkw),
+        Token("i", Type::id),
+        Token("in", Type::in),
+        Token("range", Type::id),
+        Token("(", Type::lpr),
+        Token("100", Type::number),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new ForNode(
+             new Leaf(Token("i", Type::id)),
+             new CallNode(
+                 new Leaf(Token("range", Type::id)),
+                 new ActualParamsNode({new Leaf(Token("100", Type::number))})),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+def func():
+    break
+*/
 TEST(ParserTest, FunctionDefinitionNoParams)
 {
-    std::string test_code_file = "scripts/test_DefinitionNoParams.py";
-    ProgramNode *target_root = new ProgramNode({new FunctionNode(
-                                                    new Leaf(Token("func", Type::id)),
-                                                    new FormalParamsNode({}),
-                                                    new BlockNode({new Leaf(Token("", Type::breakkw))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("def", Type::defkw),
+        Token("func", Type::id),
+        Token("(", Type::lpr),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new FunctionNode(
+             new Leaf(Token("func", Type::id)),
+             new FormalParamsNode({}, {}),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+def func(a: int, b: int):
+    break
+*/
 TEST(ParserTest, FunctionDefinitionWithParams)
 {
-    std::string test_code_file = "scripts/test_DefinitionWithParams.py";
-    ProgramNode *target_root = new ProgramNode({new FunctionNode(
-                                                    new Leaf(Token("func", Type::id)),
-                                                    new FormalParamsNode({new Leaf(Token("a", Type::id)),
-                                                                          new Leaf(Token("b", Type::id))}),
-                                                    new BlockNode({new Leaf(Token("", Type::breakkw))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("def", Type::defkw),
+        Token("func", Type::id),
+        Token("(", Type::lpr),
+        Token("a", Type::id),
+        Token(":", Type::colon),
+        Token("int", Type::id),
+        Token(",", Type::comma),
+        Token("b", Type::id),
+        Token(":", Type::colon),
+        Token("int", Type::id),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new FunctionNode(
+             new Leaf(Token("func", Type::id)),
+             new FormalParamsNode(
+                 {new Leaf(Token("a", Type::id)),
+                  new Leaf(Token("b", Type::id))},
+                 {new TypeNode(Token("int", Type::id)),
+                  new TypeNode(Token("int", Type::id))}),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+print()
+*/
 TEST(ParserTest, FunctionCallNoParams)
 {
-    std::string test_code_file = "scripts/test_CallNoParams.py";
-    ProgramNode *target_root = new ProgramNode({new CallNode(
-                                                    new VariableNode({new Leaf(Token("print", Type::id))}),
-                                                    new ActualParamsNode({})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("print", Type::id),
+        Token("(", Type::lpr),
+        Token(")", Type::rpr),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new CallNode(
+             new Leaf(Token("print", Type::id)),
+             new ActualParamsNode({})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+print(1, 2, 3)
+*/
 TEST(ParserTest, FunctionCallWithParams)
 {
-    std::string test_code_file = "scripts/test_CallWithParams.py";
-    ProgramNode *target_root = new ProgramNode({new CallNode(
-                                                    new VariableNode({new Leaf(Token("print", Type::id))}),
-                                                    new ActualParamsNode({new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                                          new VariableNode({new Leaf(Token("2", Type::number))}),
-                                                                          new VariableNode({new Leaf(Token("3", Type::number))})})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("print", Type::id),
+        Token("(", Type::lpr),
+        Token("1", Type::number),
+        Token(",", Type::comma),
+        Token("2", Type::number),
+        Token(",", Type::comma),
+        Token("3", Type::number),
+        Token(")", Type::rpr),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new CallNode(
+             new Leaf(Token("print", Type::id)),
+             new ActualParamsNode({new Leaf(Token("1", Type::number)),
+                                   new Leaf(Token("2", Type::number)),
+                                   new Leaf(Token("3", Type::number))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+def func():
+    return
+*/
 TEST(ParserTest, ReturnNothing)
 {
-    std::string test_code_file = "scripts/test_ReturnNothing.py";
-    ProgramNode *target_root = new ProgramNode({new FunctionNode(
-                                                    new Leaf(Token("func", Type::id)),
-                                                    new FormalParamsNode({}),
-                                                    new BlockNode({new ReturnNode(
-                                                        new Leaf(Token("None", Type::id)))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("def", Type::defkw),
+        Token("func", Type::id),
+        Token("(", Type::lpr),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("return", Type::returnkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new FunctionNode(
+             new Leaf(Token("func", Type::id)),
+             new FormalParamsNode({}, {}),
+             new BlockNode({new ReturnNode(
+                 new Leaf(Token("None", Type::id)))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);
 }
 
+/*
+def func():
+    return 1 + 2
+*/
 TEST(ParserTest, ReturnSomething)
 {
-    std::string test_code_file = "scripts/test_ReturnSomething.py";
-    ProgramNode *target_root = new ProgramNode({new FunctionNode(
-                                                    new Leaf(Token("func", Type::id)),
-                                                    new FormalParamsNode({}),
-                                                    new BlockNode({new ReturnNode(
-                                                        new BinaryNode(
-                                                            new VariableNode({new Leaf(Token("1", Type::number))}),
-                                                            new Leaf(Token("", Type::plus)),
-                                                            new VariableNode({new Leaf(Token("2", Type::number))})))})),
-                                                new Leaf(Token("", Type::eof))});
-    auto nodes = get_node_vectors(test_code_file, target_root);
+    std::vector<Token> tokens = {
+        Token("def", Type::defkw),
+        Token("func", Type::id),
+        Token("(", Type::lpr),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("return", Type::returnkw),
+        Token("1", Type::number),
+        Token("+", Type::plus),
+        Token("2", Type::number),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new FunctionNode(
+             new Leaf(Token("func", Type::id)),
+             new FormalParamsNode({}, {}),
+             new BlockNode({new ReturnNode(
+                 new BinaryNode(
+                     new Leaf(Token("1", Type::number)),
+                     new Leaf(Token("", Type::plus)),
+                     new Leaf(Token("2", Type::number))))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+[1 + 2, a, print()]
+*/
+TEST(ParserTest, List)
+{
+    std::vector<Token> tokens = {
+        Token("[", Type::lsbr),
+        Token("1", Type::number),
+        Token("+", Type::plus),
+        Token("2", Type::number),
+        Token(",", Type::comma),
+        Token("a", Type::id),
+        Token(",", Type::comma),
+        Token("print", Type::id),
+        Token("(", Type::lpr),
+        Token(")", Type::rpr),
+        Token("]", Type::rsbr),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new ListNode({
+             new BinaryNode(
+                 new Leaf(Token("1", Type::number)),
+                 new Leaf(Token("+", Type::plus)),
+                 new Leaf(Token("2", Type::number))),
+             new Leaf(Token("a", Type::id)),
+             new CallNode(
+                 new Leaf(Token("print", Type::id)),
+                 new ActualParamsNode({})),
+         }),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+[]
+*/
+TEST(ParserTest, EmptyList)
+{
+    std::vector<Token> tokens = {
+        Token("[", Type::lsbr),
+        Token("]", Type::rsbr),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new ListNode({}),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+(1 + 2) * 3
+*/
+TEST(ParserTest, ExpressionWithParenthesis)
+{
+    std::vector<Token> tokens = {
+        Token("(", Type::lpr),
+        Token("1", Type::number),
+        Token("+", Type::plus),
+        Token("2", Type::number),
+        Token(")", Type::rpr),
+        Token("*", Type::star),
+        Token("3", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new BinaryNode(
+             new BinaryNode(
+                 new Leaf(Token("1", Type::number)),
+                 new Leaf(Token("+", Type::plus)),
+                 new Leaf(Token("2", Type::number))),
+             new Leaf(Token("*", Type::star)),
+             new Leaf(Token("3", Type::number))),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+if (True):
+    break
+*/
+TEST(ParserTest, ConditionWithParenthesis)
+{
+    std::vector<Token> tokens = {
+        Token("if", Type::ifkw),
+        Token("(", Type::lpr),
+        Token("True", Type::id),
+        Token(")", Type::rpr),
+        Token(":", Type::colon),
+        Token("", Type::newline),
+        Token("", Type::indent),
+        Token("break", Type::breakkw),
+        Token("", Type::newline),
+        Token("", Type::dedent),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {new IfNode(
+             new Leaf(Token("True", Type::id)),
+             new BlockNode({new Leaf(Token("", Type::breakkw))})),
+         new Leaf(Token("", Type::eof))});
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+a: int = 5
+*/
+TEST(ParserTest, AssignWithType)
+{
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token(":", Type::colon),
+        Token("int", Type::id),
+        Token("=", Type::assign),
+        Token("5", Type::number),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {
+            new AssignmentNode(
+                new Leaf(Token("a", Type::id)),
+                new TypeNode(Token("int", Type::id)),
+                new Leaf(Token("5", Type::number))
+            ),
+            new Leaf(Token("", Type::eof))
+        });
+    auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
     ASSERT_EQ(test_nodes, target_nodes);

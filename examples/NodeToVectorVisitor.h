@@ -10,9 +10,9 @@ public:
     std::vector<std::string> nodes;
 
     void visitLeaf(Leaf *_acceptor) override;
+    void visitTypeNode(TypeNode *_acceptor) override;
     void visitFormalParamsNode(FormalParamsNode *_acceptor) override;
     void visitActualParamsNode(ActualParamsNode *_acceptor) override;
-    void visitVariableNode(VariableNode *_acceptor) override;
     void visitCallNode(CallNode *_acceptor) override;
     void visitBinaryNode(BinaryNode *_acceptor) override;
     void visitUnaryNode(UnaryNode *_acceptor) override;
@@ -26,4 +26,5 @@ public:
     void visitIfNode(IfNode *_acceptor) override;
     void visitWhileNode(WhileNode *_acceptor) override;
     void visitForNode(ForNode *_acceptor) override;
+    void visitListNode(ListNode *_acceptor) override;
 };
