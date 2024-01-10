@@ -10,6 +10,7 @@ private:
     std::ostream &stream;
 
 public:
-    void error(const char *_str, int _code = -1);
-    ErrorManager(std::ostream& _stream);
+    void error(const char *_str);
+    void error_exit(const char *_str, int _code);
+    ErrorManager(std::ostream &_stream);
 };

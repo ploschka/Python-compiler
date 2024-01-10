@@ -1,24 +1,6 @@
-#include <llvm/MC/TargetRegistry.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Target/TargetMachine.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/TargetParser/Host.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Analysis/LoopAnalysisManager.h>
-#include <llvm/Analysis/CGSCCPassManager.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Verifier.h>
+#include <pycom/lib/Pycom.hpp>
 
-#include <pycom/lexer/Lexer.hpp>
-#include <pycom/parser/Parser.hpp>
-#include <pycom/semanalyzer/SemanticAnalyzer.hpp>
-#include <pycom/codegen/CodeGenerator.hpp>
-#include <pycom/utility/ErrorManager.hpp>
+#include <llvm/Support/FileSystem.h>
 
 #include <iostream>
 #include <filesystem>
@@ -51,118 +33,20 @@ int main(int _argc, char *_argv[])
         }
     }
 
-    auto context = std::make_unique<llvm::LLVMContext>();
-    auto builder = std::make_unique<llvm::IRBuilder<>>(*context);
-    auto module = std::make_unique<llvm::Module>("pycom", *context);
+    auto errmng = std::make_unique<ErrorManager>(std::cerr);
+    Pycom pycom(errmng.get());
 
     std::ifstream file(_argv[1]);
 
-    auto errmng = std::make_unique<ErrorManager>(std::cerr);
-
-    auto lexer = std::make_unique<Lexer>();
-    auto parser = std::make_unique<Parser>();
-    auto seman = std::make_unique<SemanticAnalyzer>();
-    auto codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
-
-    lexer->open(file);
-    parser->setLexer(lexer.get());
-
-    auto ast = parser->getAST();
-    if (seman->checkSemantics(ast))
-    {
-        codegen->generate(ast);
-    }
-    else
-    {
-        errmng->error("Semantics error");
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //=====================================================Компиляция=====================================================//
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeAllTargetMCs();
-    std::string Error;
-    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
-
-    // Print an error and exit if we couldn't find the requested target.
-    // This generally occurs if we've forgotten to initialise the
-    // TargetRegistry or we have a bogus target triple.
-    if (!Target)
-    {
-        llvm::errs() << Error;
-        return 1;
-    }
-
-    auto CPU = "generic";
-    auto Features = "";
-
-    llvm::TargetOptions opt;
-    llvm::Reloc::Model RM(llvm::Reloc::PIC_);
-    auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-
-    module->setDataLayout(TargetMachine->createDataLayout());
-    module->setTargetTriple(TargetTriple);
-    module->setPIELevel(llvm::PIELevel::Level::Small);
-    module->setPICLevel(llvm::PICLevel::Level::SmallPIC);
-
-    auto output = "output.o";
     std::error_code EC;
-    llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream output("output.o", EC, llvm::sys::fs::OF_None);
 
-    if (EC)
+    pycom.open(file);
+    if (pycom.checkSemantics())
     {
-        llvm::errs() << "Could not open file: " << EC.message();
-        return 1;
+        pycom.generate();
+        pycom.compile(output, llvm::OptimizationLevel::O0, llvm::PIELevel::Default, llvm::PICLevel::NotPIC);
     }
-
-    // Create the analysis managers.
-    llvm::LoopAnalysisManager LAM;
-    llvm::FunctionAnalysisManager FAM;
-    llvm::CGSCCAnalysisManager CGAM;
-    llvm::ModuleAnalysisManager MAM;
-
-    // Create the new pass manager builder.
-    // Take a look at the PassBuilder constructor parameters for more
-    // customization, e.g. specifying a TargetMachine or various debugging
-    // options.
-    llvm::PassBuilder PB;
-
-    // Register all the basic analyses with the managers.
-    PB.registerModuleAnalyses(MAM);
-    PB.registerCGSCCAnalyses(CGAM);
-    PB.registerFunctionAnalyses(FAM);
-    PB.registerLoopAnalyses(LAM);
-    PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
-
-    // Create the pass manager.
-    // This one corresponds to a typical -O2 optimization pipeline.
-    llvm::ModulePassManager MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
-
-    // Optimize the IR!
-    module->print(llvm::errs(), nullptr);
-    if (llvm::verifyModule(*module, &llvm::errs()))
-    {
-        std::cerr << "Exited\n";
-        exit(-1);
-    }
-    MPM.run(*module, MAM);
-
-    llvm::legacy::PassManager pass;
-    auto FileType = llvm::CGFT_ObjectFile;
-
-    if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType))
-    {
-        llvm::errs() << "TargetMachine can't emit a file of this type";
-        return 1;
-    }
-    pass.run(*module);
-    dest.flush();
 
     return 0;
 }

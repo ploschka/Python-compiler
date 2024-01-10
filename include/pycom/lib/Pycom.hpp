@@ -11,8 +11,8 @@
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/IR/LegacyPassManager.h>
-
 #include <llvm/Passes/PassBuilder.h>
+#include <llvm/Target/TargetMachine.h>
 
 #include <iostream>
 #include <memory>
@@ -46,14 +46,16 @@ private:
     std::unique_ptr<SemanticAnalyzerInterface> seman;
     std::unique_ptr<CodeGeneratorInterface> codegen;
     std::unique_ptr<AST> ast;
-    std::unique_ptr<ErrorManagerInterface> errmng;
+    ErrorManagerInterface *errmng;
 
     CompilerState state;
 
 public:
-    Pycom();
+    Pycom(ErrorManagerInterface *_errmng);
     void open(std::istream &_stream);
     AST *getAST() const;
-    void checkSemantics();
-    void compile();
+    bool checkSemantics();
+    void generate();
+    void compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olevel, llvm::PIELevel::Level _PIE, llvm::PICLevel::Level _PIC);
+    void emitLLVM(llvm::raw_ostream &_stream);
 };
