@@ -202,8 +202,7 @@ void Parser::simple_stmts(BlockNode *_parent_block)
  */
 void Parser::simple_stmt(BlockNode *_parent_block)
 {
-    if (this->is_token_in_firsts("assignment") 
-        && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
+    if (this->is_token_in_firsts("assignment") && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
     {
         _parent_block->add_child(this->assignment());
     }
@@ -515,6 +514,7 @@ ExpressionNode *Parser::primary()
         return this->list();
     }
     this->error("primary");
+    return nullptr;
 };
 
 /**

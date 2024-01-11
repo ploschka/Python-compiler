@@ -117,20 +117,10 @@ void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
     }
 }
 
-void CodeEmittingNodeVisitor::visitVariableNode(VariableNode *_acceptor)
-{
-    auto val = getLeafValue(_acceptor->chain[0]);
-    if (!val)
-    {
-        // Error
-        return;
-    }
-    stored_values.push(val);
-}
-
 void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
 {
-    auto funcname = _acceptor->callable->chain[0]->token.getValue();
+    // auto funcname = _acceptor->callable->accept(this);
+    auto funcname = "printf";
     auto callable = module->getFunction(funcname);
     // auto g = callable->getName();
     _acceptor->params->accept(this);
@@ -447,4 +437,12 @@ void CodeEmittingNodeVisitor::visitForNode(ForNode *)
 {
     // Пока генераторы и массивы не реализованы, никаких циклов for
     // Error
+}
+
+void CodeEmittingNodeVisitor::visitListNode(ListNode *)
+{
+}
+
+void CodeEmittingNodeVisitor::visitTypeNode(TypeNode *)
+{
 }

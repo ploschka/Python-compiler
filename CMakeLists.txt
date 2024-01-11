@@ -8,6 +8,8 @@ option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
 option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" ON)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})

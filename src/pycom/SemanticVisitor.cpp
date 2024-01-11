@@ -16,7 +16,7 @@ SemanticVisitor::SemanticVisitor()
 
     this->tableStack.push(builtins);
     this->tableStack.push(globals);
-};
+}
 
 void SemanticVisitor::visitLeaf(Leaf *acceptor)
 {
@@ -24,7 +24,7 @@ void SemanticVisitor::visitLeaf(Leaf *acceptor)
     {
         this->tableStack.addId(acceptor->token.getValue(), Symbol());
     }
-};
+}
 
 void SemanticVisitor::visitFormalParamsNode(FormalParamsNode *acceptor)
 {
@@ -32,7 +32,7 @@ void SemanticVisitor::visitFormalParamsNode(FormalParamsNode *acceptor)
     {
         param->accept(this);
     }
-};
+}
 
 void SemanticVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
 {
@@ -40,47 +40,39 @@ void SemanticVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
     {
         param->accept(this);
     }
-};
-
-void SemanticVisitor::visitVariableNode(VariableNode *acceptor)
-{
-    for (auto param : acceptor->chain)
-    {
-        param->accept(this);
-    }
-};
+}
 
 // Сделать проверку вызовов функции
 void SemanticVisitor::visitCallNode(CallNode *acceptor)
 {
     acceptor->callable->accept(this);
     acceptor->params->accept(this);
-};
+}
 
 // Сделать проверку операндов на соответствие типов
 void SemanticVisitor::visitBinaryNode(BinaryNode *acceptor)
 {
     acceptor->left->accept(this);
     acceptor->right->accept(this);
-};
+}
 
 // Сделать проверку операнда на соответствие типов
 void SemanticVisitor::visitUnaryNode(UnaryNode *acceptor)
 {
     acceptor->operand->accept(this);
-};
+}
 
 // Сделать проверку левой части
 void SemanticVisitor::visitAssignmentNode(AssignmentNode *acceptor)
 {
     acceptor->left->accept(this);
     acceptor->right->accept(this);
-};
+}
 
 void SemanticVisitor::visitReturnNode(ReturnNode *acceptor)
 {
     acceptor->return_value->accept(this);
-};
+}
 
 void SemanticVisitor::visitBlockNode(BlockNode *acceptor)
 {
@@ -88,7 +80,7 @@ void SemanticVisitor::visitBlockNode(BlockNode *acceptor)
     {
         child->accept(this);
     }
-};
+}
 
 // СДЕЛАТЬ СЕЙЧАС! Нужно добавление новой таблицы в стек
 void SemanticVisitor::visitFunctionNode(FunctionNode *acceptor)
@@ -99,12 +91,12 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *acceptor)
     // Здесь будет добавление новой таблицы в стек
     acceptor->body->accept(this);
     // Здесь будет удаление таблицы в стек
-};
+}
 
 void SemanticVisitor::visitElseNode(ElseNode *acceptor)
 {
     acceptor->body->accept(this);
-};
+}
 
 void SemanticVisitor::visitElifNode(ElifNode *acceptor)
 {
@@ -118,7 +110,7 @@ void SemanticVisitor::visitElifNode(ElifNode *acceptor)
     {
         acceptor->next_else->accept(this);
     }
-};
+}
 
 void SemanticVisitor::visitIfNode(IfNode *acceptor)
 {
@@ -132,13 +124,13 @@ void SemanticVisitor::visitIfNode(IfNode *acceptor)
     {
         acceptor->next_else->accept(this);
     }
-};
+}
 
 void SemanticVisitor::visitWhileNode(WhileNode *acceptor)
 {
     acceptor->condition->accept(this);
     acceptor->body->accept(this);
-};
+}
 
 // Сделать добавление итератора в таблицу символов
 void SemanticVisitor::visitForNode(ForNode *acceptor)
@@ -147,7 +139,7 @@ void SemanticVisitor::visitForNode(ForNode *acceptor)
     // Здесь будет добавление итератора в таблицу
     acceptor->condition->accept(this);
     acceptor->body->accept(this);
-};
+}
 
 void SemanticVisitor::visitProgramNode(ProgramNode *acceptor)
 {
@@ -155,7 +147,15 @@ void SemanticVisitor::visitProgramNode(ProgramNode *acceptor)
     {
         child->accept(this);
     }
-};
+}
+
+void SemanticVisitor::visitTypeNode(TypeNode *)
+{
+}
+
+void SemanticVisitor::visitListNode(ListNode *)
+{
+}
 
 bool SemanticVisitor::getResult() const
 {

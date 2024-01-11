@@ -34,9 +34,9 @@ private:
 
 public:
     void visitLeaf(Leaf *_acceptor);
+    void visitTypeNode(TypeNode *_acceptor);
     void visitFormalParamsNode(FormalParamsNode *_acceptor);
     void visitActualParamsNode(ActualParamsNode *_acceptor);
-    void visitVariableNode(VariableNode *_acceptor);
     void visitCallNode(CallNode *_acceptor);
     void visitBinaryNode(BinaryNode *_acceptor);
     void visitUnaryNode(UnaryNode *_acceptor);
@@ -50,5 +50,6 @@ public:
     void visitIfNode(IfNode *_acceptor);
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
+    void visitListNode(ListNode *_acceptor);
     CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder, llvm::Module *_module, llvm::LLVMContext *_context);
 };
