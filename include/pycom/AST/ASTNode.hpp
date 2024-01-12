@@ -55,9 +55,9 @@ public:
 class CallNode : public ExpressionNode
 {
 public:
-    ExpressionNode *callable;
+    Token callable;
     ActualParamsNode *params;
-    CallNode(ExpressionNode *_callable, ActualParamsNode *_params);
+    CallNode(Token _callable, ActualParamsNode *_params);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitCallNode(this); };
 };
 class BinaryNode : public ExpressionNode

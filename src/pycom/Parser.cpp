@@ -479,7 +479,7 @@ ExpressionNode *Parser::factor()
 /**
  * primary:
  *  | LPR expression RPR
- *  | LPR expression RPR func_call
+ *  | LPR expression RPR
  *  | atom
  *  | atom func_call
  *  | list
@@ -491,21 +491,15 @@ ExpressionNode *Parser::primary()
         this->check_get_next(Type::lpr);
         auto expr = this->expression();
         this->check_get_next(Type::rpr);
-
-        if (this->is_token_in_firsts("func_call"))
-        {
-            ActualParamsNode *params = this->func_call();
-            return new CallNode(expr, params);
-        }
         return expr;
     }
     else if (this->is_token_in_firsts("atom"))
     {
-        auto atom = this->atom();
+        Leaf* atom = this->atom();
         if (this->is_token_in_firsts("func_call"))
         {
             ActualParamsNode *params = this->func_call();
-            return new CallNode(atom, params);
+            return new CallNode(atom->token, params);
         }
         return atom;
     }

@@ -87,7 +87,7 @@ factor:
 
 primary:
     | LPR expression RPR
-    | LPR expression RPR func_call
+    | LPR expression RPR
     | atom
     | atom func_call
     | list

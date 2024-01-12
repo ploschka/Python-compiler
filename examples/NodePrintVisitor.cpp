@@ -207,7 +207,7 @@ void PrintVisitor::visitCallNode(CallNode *_acceptor)
     this->indent++;
     this->print_line("callable:");
     this->indent++;
-    _acceptor->callable->accept(this);
+    this->print_line("<" + type_to_str(_acceptor->callable.getType()) + ", " + _acceptor->callable.getValue() + ">");
     this->indent--;
     this->print_line("params:");
     this->indent++;

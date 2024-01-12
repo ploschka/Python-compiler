@@ -198,7 +198,7 @@ void NodeToVectorVisitor::visitCallNode(CallNode *_acceptor)
 {
     std::string text = "Call";
     this->nodes.push_back(text);
-    _acceptor->callable->accept(this);
+    this->nodes.push_back("<" + type_to_str(_acceptor->callable.getType()) + ", " + _acceptor->callable.getValue() + ">");
     _acceptor->params->accept(this);
 }
 

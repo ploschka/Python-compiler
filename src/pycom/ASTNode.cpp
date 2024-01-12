@@ -11,7 +11,7 @@ void ActualParamsNode::add_child(ExpressionNode *_param)
     this->params.push_back(_param);
 }
 
-CallNode::CallNode(ExpressionNode *_callable, ActualParamsNode *_params) : callable(_callable), params(_params) {}
+CallNode::CallNode(Token _callable, ActualParamsNode *_params) : callable(_callable), params(_params) {}
 
 BinaryNode::BinaryNode(ExpressionNode *_left, Leaf *_op, ExpressionNode *_right) : left(_left), op(_op), right(_right) {}
 
