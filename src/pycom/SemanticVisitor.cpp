@@ -45,7 +45,7 @@ void SemanticVisitor::visitActualParamsNode(ActualParamsNode *acceptor)
 // Сделать проверку вызовов функции
 void SemanticVisitor::visitCallNode(CallNode *acceptor)
 {
-    acceptor->callable->accept(this);
+    // acceptor->callable->accept(this);
     acceptor->params->accept(this);
 }
 

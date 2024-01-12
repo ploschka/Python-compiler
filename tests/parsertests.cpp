@@ -4,7 +4,7 @@
 #include <fstream>
 #include <pycom/lexer/Lexer.hpp>
 #include <NodeToVectorVisitor.h>
-#include <pycom/lexer/LexerMock.hpp>
+#include "LexerMock.hpp"
 
 std::pair<std::vector<std::string>, std::vector<std::string>> convert(
     std::vector<Token> test_tokens, ProgramNode *target_root)
