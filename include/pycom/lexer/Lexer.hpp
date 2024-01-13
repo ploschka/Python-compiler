@@ -11,8 +11,8 @@ class Lexer : public LexerInterface
 {
 private:
     std::istream *stream;
-    std::unique_ptr<char> currBuff;
-    std::unique_ptr<char> otherBuff;
+    std::unique_ptr<char[]> currBuff;
+    std::unique_ptr<char[]> otherBuff;
     std::unique_ptr<LexerStateInterface> state;
     char *iter;
     std::unique_ptr<LexerData> lexerdata;

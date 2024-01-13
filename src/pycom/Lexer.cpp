@@ -39,8 +39,8 @@ void Lexer::open(std::istream &_stream)
     lexerdata = std::make_unique<LexerData>();
     if (!currBuff || !otherBuff)
     {
-        currBuff.reset(new char[CHARCOUNT + 1]);
-        otherBuff.reset(new char[CHARCOUNT + 1]);
+        currBuff = std::make_unique<char[]>(CHARCOUNT + 1);
+        otherBuff = std::make_unique<char[]>(CHARCOUNT + 1);
     }
     memset(currBuff.get(), 0, CHARCOUNT + 1);
 
