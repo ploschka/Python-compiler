@@ -1,12 +1,14 @@
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 
-bool SemanticAnalyzer::checkSemantics(AST *_tree)
+void SemanticAnalyzer::checkSemantics(AST *_tree)
 {
     _tree->accept(visitor.get());
-    return visitor->getResult();
 }
 
-SemanticAnalyzer::SemanticAnalyzer() : visitor(std::make_unique<SemanticVisitor>()) {}
+SemanticAnalyzer::SemanticAnalyzer() : visitor(std::make_unique<SemanticVisitor>())
+{
+    visitor->stdinit();
+}
 
 void SemanticAnalyzer::reset()
 {

@@ -74,8 +74,9 @@ bool Pycom::checkSemantics()
 {
     if (state >= CompilerState::file_opened)
     {
-        bool res = seman->checkSemantics(ast.get());
+        seman->checkSemantics(ast.get());
         state = CompilerState::semantics_checked;
+        bool res = true;
         return res;
     }
     errmng->error_exit("Can't check semantics, file was not opened", -1);
