@@ -4,6 +4,7 @@
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <pycom/codegen/CodeGenerator.hpp>
 #include <pycom/utility/ErrorManager.hpp>
+#include <pycom/utility/BlockTable.hpp>
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -47,6 +48,7 @@ private:
     std::unique_ptr<CodeGeneratorInterface> codegen;
     std::unique_ptr<AST> ast;
     ErrorManagerInterface *errmng;
+    std::unique_ptr<block_map_t> blockmap;
 
     CompilerState state;
 

@@ -3,6 +3,7 @@
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/token/Token.hpp>
 #include <pycom/semanalyzer/Symbol.hpp>
+#include <pycom/utility/BlockTable.hpp>
 
 #include <memory>
 #include <stack>
@@ -11,7 +12,6 @@
 #include <map>
 #include <vector>
 #include <set>
-
 
 class SemanticVisitor : public NodeVisitorInterface
 {
@@ -28,8 +28,10 @@ private:
     type_t evaluated_type;
     unsigned int lastpos;
     unsigned int lastrow;
+    block_map_t *blockmap;
 
 public:
+    SemanticVisitor(block_map_t *_map);
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
     void visitFormalParamsNode(FormalParamsNode *_acceptor);
@@ -48,7 +50,6 @@ public:
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
     void visitListNode(ListNode *_acceptor);
-
 
     void reset();
     void stdinit();

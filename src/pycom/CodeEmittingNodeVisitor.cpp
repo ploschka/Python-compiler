@@ -55,7 +55,11 @@ void CodeEmittingNodeVisitor::stdinit()
 CodeEmittingNodeVisitor::CodeEmittingNodeVisitor(
     llvm::IRBuilder<> *_builder,
     llvm::Module *_module,
-    llvm::LLVMContext *_context) : builder(_builder), module(_module), context(_context) {}
+    llvm::LLVMContext *_context,
+    block_map_t *_map) : builder(_builder),
+                         module(_module),
+                         context(_context),
+                         blockmap(_map) {}
 
 void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
 {

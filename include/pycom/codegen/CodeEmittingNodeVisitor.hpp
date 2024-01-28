@@ -5,18 +5,19 @@
 #include <llvm/IR/Module.h>
 
 #include <pycom/interface/NodeVisitorInterface.hpp>
+#include <pycom/utility/BlockTable.hpp>
 
 #include <map>
 #include <queue>
 #include <stack>
 #include <utility>
 
-typedef std::map<std::string, llvm::Value *> symbtable_t;
-typedef std::tuple<llvm::Value *, llvm::Value *, llvm::BasicBlock *> phival_t;
-
 class CodeEmittingNodeVisitor : public NodeVisitorInterface
 {
 private:
+    typedef std::map<std::string, llvm::Value *> symbtable_t;
+    typedef std::tuple<llvm::Value *, llvm::Value *, llvm::BasicBlock *> phival_t;
+
     llvm::IRBuilder<> *builder;
     llvm::Module *module;
     llvm::LLVMContext *context;
@@ -28,6 +29,8 @@ private:
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
     std::stack<llvm::BasicBlock *> merge_stack;
+
+    block_map_t *blockmap;
 
     llvm::Value *getLeafValue(Leaf *_leaf);
     void stdinit();
@@ -51,5 +54,8 @@ public:
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
     void visitListNode(ListNode *_acceptor);
-    CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder, llvm::Module *_module, llvm::LLVMContext *_context);
+    CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder,
+                            llvm::Module *_module,
+                            llvm::LLVMContext *_context,
+                            block_map_t *_map);
 };

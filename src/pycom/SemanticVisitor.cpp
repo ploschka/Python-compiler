@@ -10,6 +10,8 @@ void SemanticVisitor::visitFormalParamsNode(FormalParamsNode *) {}
 void SemanticVisitor::visitActualParamsNode(ActualParamsNode *) {}
 void SemanticVisitor::visitTypeNode(TypeNode *) {}
 
+SemanticVisitor::SemanticVisitor(block_map_t *_map) : blockmap(_map) {}
+
 void SemanticVisitor::visitLeaf(Leaf *_acceptor)
 {
     auto &token = _acceptor->token;
@@ -342,8 +344,8 @@ void SemanticVisitor::stdinit()
 {
     symtable.push(std::make_unique<localtable_t>());
 
-    Symbol tr = {{"true", Type::id}, set.insert("bool").first};
-    Symbol fl = {{"false", Type::id}, set.insert("bool").first};
+    Symbol tr = {{"True", Type::id}, set.insert("bool").first};
+    Symbol fl = {{"False", Type::id}, set.insert("bool").first};
     Symbol wr = {{"Put_Line", Type::id}, set.insert("Put_Line").first};
 
     funcs.insert({"Put_Line", {set.insert("void").first, {set.insert("String").first}}});
@@ -355,5 +357,11 @@ void SemanticVisitor::stdinit()
 
 void SemanticVisitor::reset()
 {
-    // Раскрутить стек
+    set.clear();
+    funcs.clear();
+    while (!symtable.empty())
+    {
+        symtable.pop();
+    }
+    this->stdinit();
 }

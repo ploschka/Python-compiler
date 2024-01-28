@@ -34,7 +34,8 @@ Pycom::Pycom(ErrorManagerInterface *_errmng) : Target(nullptr),
 
     lexer = std::make_unique<Lexer>();
     parser = std::make_unique<Parser>();
-    seman = std::make_unique<SemanticAnalyzer>();
+    blockmap = std::make_unique<block_map_t>();
+    seman = std::make_unique<SemanticAnalyzer>(blockmap.get());
 
     parser->setLexer(lexer.get());
 
@@ -65,7 +66,7 @@ void Pycom::open(std::istream &_stream)
     module->setDataLayout(TargetMachine->createDataLayout());
     module->setTargetTriple(TargetTriple);
 
-    codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
+    codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get(), blockmap.get());
     ast.reset(parser->getAST());
     state = CompilerState::file_opened;
 }
