@@ -29,7 +29,11 @@ simple_stmt:
     | CONTINUEKW
 
 type_hint:
-    | COLON ID
+    | COLON type
+
+type:
+    | ID
+    | ID LSBR ID RSBR
 
 assignment:
     | ID ASSIGN expression
@@ -128,8 +132,8 @@ params:
     | ID type_hint
 
 function_def:
-    | DEFKW ID LPR RPR COLON block
-    | DEFKW ID LPR params RPR COLON block
+    | DEFKW ID LPR RPR ARROW type COLON block
+    | DEFKW ID LPR params RPR ARROW type COLON block
 
 # If statement
 # ------------

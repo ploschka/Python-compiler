@@ -2,7 +2,7 @@
 
 Leaf::Leaf(Token _token) : token(_token) {}
 
-TypeNode::TypeNode(Token _type_token) : token(_type_token) {}
+TypeNode::TypeNode(Token _type_token, bool is_list) : token(_type_token), is_list(is_list) {}
 
 ActualParamsNode::ActualParamsNode(std::vector<ExpressionNode *> _params) : params(_params) {}
 
@@ -25,9 +25,8 @@ ReturnNode::ReturnNode(ExpressionNode *_return_value) : return_value(_return_val
 BlockNode::BlockNode(std::vector<BaseASTNode *> _children) : children(_children) {}
 BlockNode::BlockNode() : children({}) {}
 
-FunctionNode::FunctionNode(Leaf *_id, FormalParamsNode *_formal_params, BlockNode *_body) : id(_id),
-                                                                                            formal_params(_formal_params),
-                                                                                            body(_body) {}
+FunctionNode::FunctionNode(Leaf *_id, TypeNode *return_type, FormalParamsNode *_formal_params, BlockNode *_body) : 
+    id(_id), return_type(return_type), formal_params(_formal_params), body(_body) {}
 
 IfNode::IfNode(ExpressionNode *_condition, BlockNode *_body) : condition(_condition), body(_body)
 {

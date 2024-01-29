@@ -167,6 +167,9 @@ void NodeToVectorVisitor::visitLeaf(Leaf *_acceptor)
 void NodeToVectorVisitor::visitTypeNode(TypeNode *_acceptor) 
 {
     std::string text = "Type: " + _acceptor->token.getValue();
+    if (_acceptor->is_list) {
+        text += "[]";
+    }
     this->nodes.push_back(text);
 }
 

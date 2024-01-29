@@ -27,7 +27,8 @@ class TypeNode : public BaseASTNode
 {
 public:
     Token token;
-    TypeNode(Token _type_token);
+    bool is_list;
+    TypeNode(Token _type_token, bool is_list = false);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitTypeNode(this); };
 };
 
@@ -124,9 +125,10 @@ class FunctionNode : public BaseASTNode
 {
 public:
     Leaf *id;
+    TypeNode *return_type;
     FormalParamsNode *formal_params;
     BlockNode *body;
-    FunctionNode(Leaf *_id, FormalParamsNode *_formal_params, BlockNode *_body);
+    FunctionNode(Leaf *_id, TypeNode *return_type, FormalParamsNode *_formal_params, BlockNode *_body);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitFunctionNode(this); };
 };
 

@@ -585,7 +585,7 @@ TEST(ParserTest, For)
         {new ForNode(
              new Leaf(Token("i", Type::id)),
              new CallNode(
-                 new Leaf(Token("range", Type::id)),
+                 Token("range", Type::id),
                  new ActualParamsNode({new Leaf(Token("100", Type::number))})),
              new BlockNode({new Leaf(Token("", Type::breakkw))})),
          new Leaf(Token("", Type::eof))});
@@ -596,7 +596,7 @@ TEST(ParserTest, For)
 }
 
 /*
-def func():
+def func() -> None:
     break
 */
 TEST(ParserTest, FunctionDefinitionNoParams)
@@ -606,6 +606,8 @@ TEST(ParserTest, FunctionDefinitionNoParams)
         Token("func", Type::id),
         Token("(", Type::lpr),
         Token(")", Type::rpr),
+        Token("->", Type::arrow),
+        Token("None", Type::id),
         Token(":", Type::colon),
         Token("", Type::newline),
         Token("", Type::indent),
@@ -616,6 +618,7 @@ TEST(ParserTest, FunctionDefinitionNoParams)
     ProgramNode *target_root = new ProgramNode(
         {new FunctionNode(
              new Leaf(Token("func", Type::id)),
+             new TypeNode(Token("None", Type::id)),
              new FormalParamsNode({}, {}),
              new BlockNode({new Leaf(Token("", Type::breakkw))})),
          new Leaf(Token("", Type::eof))});
@@ -626,7 +629,7 @@ TEST(ParserTest, FunctionDefinitionNoParams)
 }
 
 /*
-def func(a: int, b: int):
+def func(a: int, b: int) -> int:
     break
 */
 TEST(ParserTest, FunctionDefinitionWithParams)
@@ -643,6 +646,8 @@ TEST(ParserTest, FunctionDefinitionWithParams)
         Token(":", Type::colon),
         Token("int", Type::id),
         Token(")", Type::rpr),
+        Token("->", Type::arrow),
+        Token("int", Type::id),
         Token(":", Type::colon),
         Token("", Type::newline),
         Token("", Type::indent),
@@ -653,6 +658,7 @@ TEST(ParserTest, FunctionDefinitionWithParams)
     ProgramNode *target_root = new ProgramNode(
         {new FunctionNode(
              new Leaf(Token("func", Type::id)),
+             new TypeNode(Token("int", Type::id)),
              new FormalParamsNode(
                  {new Leaf(Token("a", Type::id)),
                   new Leaf(Token("b", Type::id))},
@@ -679,7 +685,7 @@ TEST(ParserTest, FunctionCallNoParams)
         Token("", Type::eof)};
     ProgramNode *target_root = new ProgramNode(
         {new CallNode(
-             new Leaf(Token("print", Type::id)),
+             Token("print", Type::id),
              new ActualParamsNode({})),
          new Leaf(Token("", Type::eof))});
     auto nodes = convert(tokens, target_root);
@@ -706,7 +712,7 @@ TEST(ParserTest, FunctionCallWithParams)
         Token("", Type::eof)};
     ProgramNode *target_root = new ProgramNode(
         {new CallNode(
-             new Leaf(Token("print", Type::id)),
+             Token("print", Type::id),
              new ActualParamsNode({new Leaf(Token("1", Type::number)),
                                    new Leaf(Token("2", Type::number)),
                                    new Leaf(Token("3", Type::number))})),
@@ -718,7 +724,7 @@ TEST(ParserTest, FunctionCallWithParams)
 }
 
 /*
-def func():
+def func() -> list[int]:
     return
 */
 TEST(ParserTest, ReturnNothing)
@@ -728,6 +734,11 @@ TEST(ParserTest, ReturnNothing)
         Token("func", Type::id),
         Token("(", Type::lpr),
         Token(")", Type::rpr),
+        Token("->", Type::arrow),
+        Token("list", Type::id),
+        Token("[", Type::lsbr),
+        Token("int", Type::id),
+        Token("]", Type::rsbr),
         Token(":", Type::colon),
         Token("", Type::newline),
         Token("", Type::indent),
@@ -738,6 +749,7 @@ TEST(ParserTest, ReturnNothing)
     ProgramNode *target_root = new ProgramNode(
         {new FunctionNode(
              new Leaf(Token("func", Type::id)),
+             new TypeNode(Token("int", Type::id), true),
              new FormalParamsNode({}, {}),
              new BlockNode({new ReturnNode(
                  new Leaf(Token("None", Type::id)))})),
@@ -749,7 +761,7 @@ TEST(ParserTest, ReturnNothing)
 }
 
 /*
-def func():
+def func() -> None:
     return 1 + 2
 */
 TEST(ParserTest, ReturnSomething)
@@ -759,6 +771,8 @@ TEST(ParserTest, ReturnSomething)
         Token("func", Type::id),
         Token("(", Type::lpr),
         Token(")", Type::rpr),
+        Token("->", Type::arrow),
+        Token("None", Type::id),
         Token(":", Type::colon),
         Token("", Type::newline),
         Token("", Type::indent),
@@ -772,6 +786,7 @@ TEST(ParserTest, ReturnSomething)
     ProgramNode *target_root = new ProgramNode(
         {new FunctionNode(
              new Leaf(Token("func", Type::id)),
+             new TypeNode(Token("None", Type::id)),
              new FormalParamsNode({}, {}),
              new BlockNode({new ReturnNode(
                  new BinaryNode(
@@ -812,7 +827,7 @@ TEST(ParserTest, List)
                  new Leaf(Token("2", Type::number))),
              new Leaf(Token("a", Type::id)),
              new CallNode(
-                 new Leaf(Token("print", Type::id)),
+                 Token("print", Type::id),
                  new ActualParamsNode({})),
          }),
          new Leaf(Token("", Type::eof))});
@@ -919,6 +934,47 @@ TEST(ParserTest, AssignWithType)
                 new Leaf(Token("a", Type::id)),
                 new TypeNode(Token("int", Type::id)),
                 new Leaf(Token("5", Type::number))
+            ),
+            new Leaf(Token("", Type::eof))
+        });
+    auto nodes = convert(tokens, target_root);
+    auto test_nodes = nodes.first;
+    auto target_nodes = nodes.second;
+    ASSERT_EQ(test_nodes, target_nodes);
+}
+
+/*
+a: list[int] = [1, 2, 3]
+*/
+TEST(ParserTest, AssignWithTypeList)
+{
+    std::vector<Token> tokens = {
+        Token("a", Type::id),
+        Token(":", Type::colon),
+        Token("list", Type::id),
+        Token("[", Type::lsbr),
+        Token("int", Type::id),
+        Token("]", Type::rsbr),
+        Token("=", Type::assign),
+        Token("[", Type::lsbr),
+        Token("1", Type::number),
+        Token(",", Type::comma),
+        Token("2", Type::number),
+        Token(",", Type::comma),
+        Token("3", Type::number),
+        Token("]", Type::rsbr),
+        Token("", Type::newline),
+        Token("", Type::eof)};
+    ProgramNode *target_root = new ProgramNode(
+        {
+            new AssignmentNode(
+                new Leaf(Token("a", Type::id)),
+                new TypeNode(Token("int", Type::id), true),
+                new ListNode({
+                    new Leaf(Token("1", Type::number)),
+                    new Leaf(Token("2", Type::number)),
+                    new Leaf(Token("3", Type::number)),
+                })
             ),
             new Leaf(Token("", Type::eof))
         });

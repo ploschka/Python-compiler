@@ -390,6 +390,9 @@ void PrintVisitor::visitListNode(ListNode *_acceptor)
 
 void PrintVisitor::visitTypeNode(TypeNode *_acceptor)
 {
-    std::string text = "Type: <" + _acceptor->token.getValue() + ">";
+    std::string text = "Type: " + _acceptor->token.getValue();
+    if (_acceptor->is_list) {
+        text += "[]";
+    }
     this->print_line(text);
 }
