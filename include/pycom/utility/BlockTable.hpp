@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include <pycom/AST/ASTNodePublic.hpp>
+#include <pycom/semanalyzer/SemanticVisitor.hpp>
 
 typedef std::tuple<llvm::BasicBlock *, BlockNode *> block_pair_t;
 typedef std::map<unsigned int, block_pair_t> block_map_t;

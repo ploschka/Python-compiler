@@ -15,22 +15,8 @@
 
 class SemanticVisitor : public NodeVisitorInterface
 {
-private:
-    typedef std::map<std::string, Symbol> localtable_t;
-    typedef std::set<std::string> typeset_t;
-    typedef typeset_t::const_iterator type_t;
-    typedef std::pair<type_t, std::vector<type_t>> func_pair_t;
-    typedef std::map<std::string, func_pair_t> func_map_t;
-
-    std::stack<std::unique_ptr<localtable_t>> symtable;
-    typeset_t set;
-    func_map_t funcs;
-    type_t evaluated_type;
-    unsigned int lastpos;
-    unsigned int lastrow;
-    block_map_t *blockmap;
-
 public:
+    typedef std::map<std::string, Symbol> localtable_t;
     SemanticVisitor(block_map_t *_map);
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
@@ -53,4 +39,18 @@ public:
 
     void reset();
     void stdinit();
+
+private:
+    typedef std::set<std::string> typeset_t;
+    typedef typeset_t::const_iterator type_t;
+    typedef std::pair<type_t, std::vector<type_t>> func_pair_t;
+    typedef std::map<std::string, func_pair_t> func_map_t;
+
+    std::stack<std::unique_ptr<localtable_t>> symtable;
+    typeset_t set;
+    func_map_t funcs;
+    type_t evaluated_type;
+    unsigned int lastpos;
+    unsigned int lastrow;
+    block_map_t *blockmap;
 };

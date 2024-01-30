@@ -261,6 +261,7 @@ void CodeEmittingNodeVisitor::visitReturnNode(ReturnNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
 {
+    blockmap->insert({1, {nullptr, nullptr}});
     for (auto &i : _acceptor->children)
     {
         i->accept(this);

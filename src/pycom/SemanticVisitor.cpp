@@ -51,10 +51,9 @@ void SemanticVisitor::visitLeaf(Leaf *_acceptor)
     }
 }
 
-// Сделать проверку вызовов функции
 void SemanticVisitor::visitCallNode(CallNode *_acceptor)
 {
-    auto token = _acceptor->callable;
+    auto &token = _acceptor->callable;
     auto symbol = symtable.top()->find(token.getValue());
     if (symbol == symtable.top()->end())
     {
@@ -89,7 +88,7 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
     for (auto &par : _acceptor->params->params)
     {
         par->accept(this);
-        if (evaluated_type != *arg_iter)
+        if (evaluated_type != *arg_iter++)
         {
             throw std::runtime_error(
                 "Parameter type mismatch occured at row: " +
@@ -101,7 +100,6 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
     lastrow = token.getRow();
 }
 
-// Сделать проверку операндов на соответствие типов
 void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
 {
     _acceptor->left->accept(this);
@@ -126,21 +124,27 @@ void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
     }
 }
 
-// Сделать проверку операнда на соответствие типов
 void SemanticVisitor::visitUnaryNode(UnaryNode *_acceptor)
 {
     _acceptor->operand->accept(this);
 }
 
-// Сделать проверку левой части
 void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     auto token = _acceptor->left->token;
     type_t symtype;
     if (!_acceptor->type)
     {
-        auto typtok = _acceptor->type->token;
-        symtype = set.insert(typtok.getValue()).first;
+        auto& typtok = _acceptor->type->token;
+        if (_acceptor->type->is_list)
+        {
+            symtype = set.insert("list " + typtok.getValue()).first;
+            set.insert(typtok.getValue());
+        }
+        else
+        {
+            symtype = set.insert(typtok.getValue()).first;
+        }
     }
     else
     {
@@ -170,6 +174,7 @@ void SemanticVisitor::visitReturnNode(ReturnNode *_acceptor)
 
 void SemanticVisitor::visitBlockNode(BlockNode *_acceptor)
 {
+    blockmap->insert({1, {nullptr, nullptr}});
     for (auto child : _acceptor->children)
     {
         child->accept(this);
@@ -186,7 +191,7 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
         symtable.top()->insert({token.getValue(), {token, symtype.first}});
         symtable.push(std::make_unique<localtable_t>(*symtable.top()));
         auto curr = funcs.insert({token.getValue(), {}}).first;
-        // curr->second.first = set.insert(_acceptor->return_type->token.getValue()).first;
+        curr->second.first = set.insert(_acceptor->return_type->token.getValue()).first;
 
         auto n = _acceptor->formal_params->params.begin();
         auto t = _acceptor->formal_params->types.begin();
@@ -298,30 +303,34 @@ void SemanticVisitor::visitWhileNode(WhileNode *_acceptor)
     symtable.pop();
 }
 
-void SemanticVisitor::visitForNode(ForNode *)
+void SemanticVisitor::visitForNode(ForNode *_acceptor)
 {
-    // type_t a, b, c;
+    auto &iter = _acceptor->iterator->token;
 
-    // auto &iter = _acceptor->iterator->token;
+    _acceptor->condition->accept(this);
+    auto pos = evaluated_type->find("list");
+    if (pos == evaluated_type->npos)
+    {
+        throw std::runtime_error(
+            "Expression type is not list type.\nOccured at row: " +
+            std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
+    }
 
-    // _acceptor->iterator->accept(this);
-    // a = evaluated_type;
-    // _acceptor->from->accept(this);
-    // b = evaluated_type;
-    // _acceptor->to->accept(this);
-    // c = evaluated_type;
+    pos += 5;
+    auto list_el_type = evaluated_type->c_str() + pos;
 
-    // if (!(a == b && b == c))
-    // {
-    //     throw std::runtime_error(
-    //         "Type mismatch occured at row: " +
-    //         std::to_string(iter.getRow()) + " position: " + std::to_string(iter.getPos()) + "\n");
-    // }
-
-    // symtable.push(std::make_unique<localtable_t>(*symtable.top()));
-    // symtable.top()->insert({iter.getValue(), {iter, a}});
-    // _acceptor->body->accept(this);
-    // symtable.pop();
+    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+    auto iter_iter = symtable.top()->find(iter.getValue());
+    if (iter_iter == symtable.top()->end())
+    {
+        symtable.top()->insert({iter.getValue(), {iter, set.find(list_el_type)}});
+    }
+    else
+    {
+        iter_iter->second.type = set.find(list_el_type);
+    }
+    _acceptor->body->accept(this);
+    symtable.pop();
 }
 
 void SemanticVisitor::visitProgramNode(ProgramNode *_acceptor)
@@ -334,9 +343,20 @@ void SemanticVisitor::visitProgramNode(ProgramNode *_acceptor)
 
 void SemanticVisitor::visitListNode(ListNode *_acceptor)
 {
+    auto prev_evaluated_type = set.end();
     for (auto &i : _acceptor->children)
     {
         i->accept(this);
+        if (prev_evaluated_type == set.end())
+        {
+            prev_evaluated_type = evaluated_type;
+        }
+        if (prev_evaluated_type != evaluated_type)
+        {
+            throw std::runtime_error(
+            "List element type mismatch occured at row: " +
+            std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
+        }
     }
 }
 
