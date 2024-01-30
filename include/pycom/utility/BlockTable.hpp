@@ -1,12 +1,14 @@
 #pragma once
 
 #include <llvm/IR/BasicBlock.h>
+#include <pycom/semanalyzer/Symbol.hpp>
 
 #include <map>
 #include <tuple>
+#include <memory>
 
 #include <pycom/AST/ASTNodePublic.hpp>
-#include <pycom/semanalyzer/SemanticVisitor.hpp>
 
-typedef std::tuple<llvm::BasicBlock *, BlockNode *> block_pair_t;
-typedef std::map<unsigned int, block_pair_t> block_map_t;
+typedef std::map<std::string, Symbol> localtable_t;
+typedef std::tuple<std::shared_ptr<localtable_t>> block_pair_t;
+typedef std::map<BlockNode *, block_pair_t> block_map_t;

@@ -13,6 +13,10 @@
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
 #include <pycom/AST/ASTNode.hpp>
 
+void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *) {}
+void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *) {}
+void CodeEmittingNodeVisitor::visitElseNode(ElseNode *) {}
+
 llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
 {
     Type t = _leaf->token.getType();
@@ -97,11 +101,6 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *)
-{
-    // Error как ты сюда попал?
-}
-
 void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
 {
     stored_array.clear();
@@ -123,10 +122,8 @@ void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
 {
-    // auto funcname = _acceptor->callable->accept(this);
-    auto funcname = "printf";
+    auto funcname = _acceptor->callable.getValue();
     auto callable = module->getFunction(funcname);
-    // auto g = callable->getName();
     _acceptor->params->accept(this);
     auto call = builder->CreateCall(callable, stored_array);
     stored_values.push(call);
@@ -224,10 +221,6 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     stored_values.push(ret);
 }
 
-void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *)
-{
-}
-
 void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     llvm::Value *left;
@@ -261,7 +254,6 @@ void CodeEmittingNodeVisitor::visitReturnNode(ReturnNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
 {
-    blockmap->insert({1, {nullptr, nullptr}});
     for (auto &i : _acceptor->children)
     {
         i->accept(this);
@@ -309,17 +301,13 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     std::vector<llvm::Type *> args(size, floatty);
     auto type = llvm::FunctionType::get(floatty, args, false);
     auto func = llvm::Function::Create(type, llvm::GlobalValue::InternalLinkage, name, module);
-    namedValues.top().insert({name, func});
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(BB);
+    namedValues.top().insert({name, func});
     _acceptor->body->accept(this);
     namedValues.pop();
     builder->SetInsertPoint(main_block);
     stored_values.push(nullptr);
-}
-
-void CodeEmittingNodeVisitor::visitElseNode(ElseNode *)
-{
 }
 
 void CodeEmittingNodeVisitor::visitElifNode(ElifNode *_acceptor)

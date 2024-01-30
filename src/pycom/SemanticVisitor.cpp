@@ -174,7 +174,6 @@ void SemanticVisitor::visitReturnNode(ReturnNode *_acceptor)
 
 void SemanticVisitor::visitBlockNode(BlockNode *_acceptor)
 {
-    blockmap->insert({1, {nullptr, nullptr}});
     for (auto child : _acceptor->children)
     {
         child->accept(this);
@@ -190,6 +189,7 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
     {
         symtable.top()->insert({token.getValue(), {token, symtype.first}});
         symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+        blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
         auto curr = funcs.insert({token.getValue(), {}}).first;
         curr->second.first = set.insert(_acceptor->return_type->token.getValue()).first;
 
@@ -221,6 +221,7 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
         }
 
         _acceptor->body->accept(this);
+        blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
         symtable.pop();
     }
     else
@@ -234,9 +235,8 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
 
 void SemanticVisitor::visitElseNode(ElseNode *_acceptor)
 {
-    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+    blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
     _acceptor->body->accept(this);
-    symtable.pop();
 }
 
 void SemanticVisitor::visitElifNode(ElifNode *_acceptor)
@@ -249,9 +249,8 @@ void SemanticVisitor::visitElifNode(ElifNode *_acceptor)
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
     }
 
-    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+    blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
     _acceptor->body->accept(this);
-    symtable.pop();
 
     if (_acceptor->next_elif)
     {
@@ -273,9 +272,8 @@ void SemanticVisitor::visitIfNode(IfNode *_acceptor)
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
     }
 
-    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+    blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
     _acceptor->body->accept(this);
-    symtable.pop();
 
     if (_acceptor->next_elif)
     {
@@ -298,9 +296,8 @@ void SemanticVisitor::visitWhileNode(WhileNode *_acceptor)
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
     }
 
-    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+    blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
     _acceptor->body->accept(this);
-    symtable.pop();
 }
 
 void SemanticVisitor::visitForNode(ForNode *_acceptor)
@@ -319,7 +316,6 @@ void SemanticVisitor::visitForNode(ForNode *_acceptor)
     pos += 5;
     auto list_el_type = evaluated_type->c_str() + pos;
 
-    symtable.push(std::make_unique<localtable_t>(*symtable.top()));
     auto iter_iter = symtable.top()->find(iter.getValue());
     if (iter_iter == symtable.top()->end())
     {
@@ -329,8 +325,9 @@ void SemanticVisitor::visitForNode(ForNode *_acceptor)
     {
         iter_iter->second.type = set.find(list_el_type);
     }
+
+    blockmap->insert({_acceptor->body, std::make_tuple(symtable.top())});
     _acceptor->body->accept(this);
-    symtable.pop();
 }
 
 void SemanticVisitor::visitProgramNode(ProgramNode *_acceptor)
@@ -379,6 +376,7 @@ void SemanticVisitor::reset()
 {
     set.clear();
     funcs.clear();
+    blockmap->clear();
     while (!symtable.empty())
     {
         symtable.pop();

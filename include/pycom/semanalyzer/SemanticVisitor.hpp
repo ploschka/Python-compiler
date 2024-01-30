@@ -16,7 +16,6 @@
 class SemanticVisitor : public NodeVisitorInterface
 {
 public:
-    typedef std::map<std::string, Symbol> localtable_t;
     SemanticVisitor(block_map_t *_map);
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
@@ -46,7 +45,7 @@ private:
     typedef std::pair<type_t, std::vector<type_t>> func_pair_t;
     typedef std::map<std::string, func_pair_t> func_map_t;
 
-    std::stack<std::unique_ptr<localtable_t>> symtable;
+    std::stack<std::shared_ptr<localtable_t>> symtable;
     typeset_t set;
     func_map_t funcs;
     type_t evaluated_type;
