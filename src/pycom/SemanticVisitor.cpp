@@ -162,6 +162,7 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
             return;
         }
     }
+    symtable.top()->insert({token.getValue(), {token, symtype}});
     _acceptor->right->accept(this);
     if (err)
         return;

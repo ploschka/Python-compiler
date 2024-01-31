@@ -46,6 +46,21 @@ Pycom::Pycom(ErrorManagerInterface *_errmng) : Target(nullptr),
 
     TargetTriple = llvm::sys::getDefaultTargetTriple();
 
+    std::string Error;
+    if (!Target)
+    {
+        Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+    }
+    if (!Target)
+    {
+        errmng->error("Couldn't create target");
+    }
+
+    auto CPU = "generic";
+    auto Features = "";
+
+    TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+
     PB.registerModuleAnalyses(MAM);
     PB.registerCGSCCAnalyses(CGAM);
     PB.registerFunctionAnalyses(FAM);
@@ -76,8 +91,7 @@ bool Pycom::checkSemantics()
     {
         seman->checkSemantics(ast.get());
         state = CompilerState::semantics_checked;
-        bool res = true;
-        return res;
+        return true;
     }
     errmng->error("Can't check semantics, file was not opened");
     return false;
@@ -90,28 +104,16 @@ void Pycom::generate()
         codegen->generate(ast.get());
         state = CompilerState::code_generated;
     }
-    errmng->error("Can't generate code, semantics have not been checked");
+    else
+    {
+        errmng->error("Can't generate code, semantics have not been checked");
+    }
 }
 
 void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olevel, llvm::PIELevel::Level _PIE, llvm::PICLevel::Level _PIC)
 {
     if (state >= CompilerState::code_generated)
     {
-        std::string Error;
-        if (!Target)
-        {
-            Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
-        }
-        if (!Target)
-        {
-            errmng->error("Couldn't create target");
-        }
-
-        auto CPU = "generic";
-        auto Features = "";
-
-        TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-
         module->setPIELevel(_PIE);
         module->setPICLevel(_PIC);
 
@@ -142,7 +144,10 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
         _stream.flush();
         state = CompilerState::compiled;
     }
-    errmng->error("Can't compile, code has not been generated");
+    else
+    {
+        errmng->error("Can't compile, code has not been generated");
+    }
 }
 
 void Pycom::emitLLVM(llvm::raw_ostream &_stream)
@@ -151,7 +156,10 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     {
         module->print(_stream, nullptr);
     }
-    errmng->error("Can't emit llvm, code has not been generated");
+    else
+    {
+        errmng->error("Can't emit llvm, code has not been generated");
+    }
 }
 
 AST *Pycom::getAST() const

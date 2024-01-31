@@ -36,7 +36,7 @@ std::string CalculateVisitor::calculate_binary_string(std::string left, std::str
 
 int CalculateVisitor::calculate_binary_int(int left, int right, Type op)
 {
-    int res;
+    int res = 0;
     switch (op)
     {
     case Type::orop:
@@ -86,7 +86,7 @@ int CalculateVisitor::calculate_binary_int(int left, int right, Type op)
 
 int CalculateVisitor::calculate_unary_int(int value, Type op)
 {
-    int res;
+    int res = 0;
     switch (op)
     {
     case Type::notop:

@@ -11,6 +11,7 @@
 #include <queue>
 #include <stack>
 #include <utility>
+#include <tuple>
 
 class CodeEmittingNodeVisitor : public NodeVisitorInterface
 {
@@ -41,8 +42,8 @@ private:
     };
     static const std::unordered_map<std::string, my_type> typemap;
 
-    llvm::Type *__str_to_type(const std::string &_str);
-    std::pair<llvm::Type *, bool> str_to_type(const std::string &_str);
+    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> __str_to_type(const std::string &_str);
+    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> str_to_type(const std::string &_str);
     llvm::Value *load_from_list(llvm::Value *_element);
     void store_to_list(llvm::Value *_element);
     llvm::Value *getLeafValue(Leaf *_leaf);

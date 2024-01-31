@@ -16,6 +16,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <tuple>
 
 const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmittingNodeVisitor::typemap = {
     {INTEGER_TYPE, CodeEmittingNodeVisitor::my_type::int_type},
@@ -23,35 +24,47 @@ const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmit
     {BOOL_TYPE, CodeEmittingNodeVisitor::my_type::bool_type},
     {VOID_TYPE, CodeEmittingNodeVisitor::my_type::void_type}};
 
-llvm::Type *CodeEmittingNodeVisitor::__str_to_type(const std::string &_str)
+std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> CodeEmittingNodeVisitor::__str_to_type(const std::string &_str)
 {
-    auto t = CodeEmittingNodeVisitor::typemap.find(_str)->second;
-    switch (t)
+    auto t = typemap.find(_str);
+    my_type tt;
+    if (t != typemap.end())
+    {
+        tt = t->second;
+    }
+    else
+    {
+        tt = typemap.find(VOID_TYPE)->second;
+    }
+
+    switch (tt)
     {
     case my_type::int_type:
-        return llvm::Type::getFloatTy(*context);
+        return std::make_tuple(tt, llvm::Type::getFloatTy(*context));
         break;
     case my_type::bool_type:
-        return llvm::Type::getInt8Ty(*context);
+        return std::make_tuple(tt, llvm::Type::getInt8Ty(*context));
         break;
     default:
         break;
     }
-    return nullptr;
+    return std::make_tuple(tt, nullptr);
 }
 
-std::pair<llvm::Type *, bool> CodeEmittingNodeVisitor::str_to_type(const std::string &_str)
+std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> CodeEmittingNodeVisitor::str_to_type(const std::string &_str)
 {
     auto pos = _str.find(LIST_TYPE);
     if (pos == _str.npos)
     {
-        return std::make_pair(__str_to_type(_str), false);
+        auto g = __str_to_type(_str);
+        return std::make_tuple(std::get<0>(g), std::get<1>(g), false);
     }
     else
     {
         pos += 4;
         auto type_ptr = _str.c_str() + pos;
-        return std::make_pair(__str_to_type(type_ptr), true);
+        auto g = __str_to_type(type_ptr);
+        return std::make_tuple(std::get<0>(g), std::get<1>(g), true);
     }
 }
 
@@ -73,11 +86,14 @@ void CodeEmittingNodeVisitor::store_to_list(llvm::Value *_element)
 
 void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *) {}
 void CodeEmittingNodeVisitor::visitElseNode(ElseNode *) {}
+void CodeEmittingNodeVisitor::visitTypeNode(TypeNode *) {}
 
 llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
 {
     Type t = _leaf->token.getType();
     std::string val = _leaf->token.getValue();
+    llvm::Value *v;
+    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> tt;
 
     llvm::Type *type;
     switch (t)
@@ -91,7 +107,32 @@ llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
         {
             return nullptr;
         }
-        return namedValues.top().at(val);
+        v = namedValues.top().at(val);
+        tt = str_to_type(*_leaf->type);
+        if (std::get<2>(tt)) // is list
+        {
+            return v; // return pointer to list struct
+        }
+        else
+        {
+            if (std::get<1>(tt)) // pointer to type
+            {
+                switch (std::get<0>(tt)) // my_type
+                {
+                case my_type::int_type:
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // load int variable
+                    break;
+                case my_type::str_type:
+                    return (v); // return pointer to string
+                    break;
+                case my_type::bool_type:
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // lload bool variable
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
         break;
     case Type::string:
         return builder->CreateGlobalStringPtr(val);
@@ -100,6 +141,7 @@ llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
         return nullptr;
         break;
     }
+    return nullptr;
 }
 
 void CodeEmittingNodeVisitor::stdinit()
@@ -117,7 +159,7 @@ void CodeEmittingNodeVisitor::stdinit()
     auto lnext = llvm::FunctionType::get(voidptrty, {voidptrty}, false);
     auto lpush = llvm::FunctionType::get(voidty, {voidptrty}, false);
     auto linsert = llvm::FunctionType::get(voidty, {voidptrty}, false);
-    auto lcreate = llvm::FunctionType::get(voidptrty, {voidty}, false);
+    auto lcreate = llvm::FunctionType::get(voidptrty, {}, false);
 
     llvm::Function::Create(floorty, llvm::GlobalValue::ExternalLinkage, FLOOR, module);
     llvm::Function::Create(putfty, llvm::GlobalValue::ExternalLinkage, PUTF, module);
@@ -192,14 +234,7 @@ void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
         i->accept(this);
         auto val = stored_values.front();
         stored_values.pop();
-        if (val->getType()->isPointerTy())
-        {
-            stored_array.push_back(builder->CreateLoad(llvm::Type::getFloatTy(*context), val));
-        }
-        else
-        {
-            stored_array.push_back(val);
-        }
+        stored_array.push_back(val);
     }
 }
 
@@ -222,18 +257,7 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     auto right = stored_values.front();
     stored_values.pop();
 
-    auto floatty = llvm::Type::getFloatTy(*context);
-
     llvm::Value *ret;
-
-    if (left->getType()->isPointerTy())
-    {
-        left = builder->CreateLoad(floatty, left, "left");
-    }
-    if (right->getType()->isPointerTy())
-    {
-        right = builder->CreateLoad(floatty, right, "right");
-    }
 
     switch (_acceptor->op->token.getType())
     {
@@ -532,17 +556,70 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitForNode(ForNode *)
+void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
 {
-    // Пока генераторы и массивы не реализованы, никаких циклов for
-    // Error
+
+    auto &token = _acceptor->iterator->token;
+    auto currblock = builder->GetInsertBlock();
+    auto parent = builder->GetInsertBlock()->getParent();
+    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    llvm::BasicBlock *initb = llvm::BasicBlock::Create(*context, "initb", parent);
+    llvm::BasicBlock *condb = llvm::BasicBlock::Create(*context, "condb", parent);
+    llvm::BasicBlock *bodyb = llvm::BasicBlock::Create(*context, "bodyb", parent);
+    llvm::BasicBlock *nextb = llvm::BasicBlock::Create(*context, "nextb", parent);
+    llvm::BasicBlock *afterb = llvm::BasicBlock::Create(*context, "afterb");
+    auto voidptrty = llvm::PointerType::get(*context, 0);
+
+    auto nextfunc = module->getFunction(LISTNEXT);
+    auto loadfunc = module->getFunction(LISTLOAD);
+
+    auto list_elem_type = std::get<1>(str_to_type(*_acceptor->condition->type));
+
+    builder->CreateBr(initb);
+
+    builder->SetInsertPoint(initb); // loop init
+    auto elem = builder->CreateAlloca(list_elem_type);
+    namedValues.top().insert({token.getValue(), elem}); // store loop variable in symbol table
+    _acceptor->condition->accept(this);
+    auto iter = builder->CreateAlloca(voidptrty); // **struct
+    builder->CreateStore(stored_values.front(), iter);
+    stored_values.pop();
+    builder->CreateBr(condb);
+
+    builder->SetInsertPoint(condb); // condition
+    auto cond = builder->CreateIsNull(builder->CreateLoad(voidptrty, iter));
+    builder->CreateCondBr(cond, bodyb, afterb);
+
+    break_stack.push(afterb);
+    continue_stack.push(nextb);
+
+    builder->SetInsertPoint(bodyb);                                                    // loop body
+    auto load = builder->CreateCall(loadfunc, {builder->CreateLoad(voidptrty, iter)}); // pointer to list element data
+    builder->CreateStore(builder->CreateLoad(list_elem_type, load), elem);             // store list element data to loop variable
+    _acceptor->body->accept(this);
+    builder->CreateBr(nextb);
+
+    builder->SetInsertPoint(nextb);
+
+    auto curr = builder->CreateLoad(voidptrty, iter);      // *struct
+    auto nextcall = builder->CreateCall(nextfunc, {curr}); // get next *struct
+    builder->CreateStore(nextcall, iter);                  // store next to iterator
+    builder->CreateBr(condb);
+
+    parent->insert(parent->end(), afterb);
+    builder->SetInsertPoint(afterb);
+
+    if (currblock == main_block)
+    {
+        main_block = afterb;
+    }
+
+    break_stack.pop();
+    continue_stack.pop();
+    stored_values.push(nullptr);
 }
 
 void CodeEmittingNodeVisitor::visitListNode(ListNode *)
-{
-}
-
-void CodeEmittingNodeVisitor::visitTypeNode(TypeNode *)
 {
 }
 
