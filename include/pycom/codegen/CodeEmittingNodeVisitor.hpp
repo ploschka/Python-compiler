@@ -5,7 +5,6 @@
 #include <llvm/IR/Module.h>
 
 #include <pycom/interface/NodeVisitorInterface.hpp>
-#include <pycom/utility/BlockTable.hpp>
 
 #include <map>
 #include <queue>
@@ -29,8 +28,6 @@ private:
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
     std::stack<llvm::BasicBlock *> merge_stack;
-
-    block_map_t *blockmap;
 
     llvm::Value *getLeafValue(Leaf *_leaf);
     void stdinit();
@@ -56,6 +53,5 @@ public:
     void visitListNode(ListNode *_acceptor);
     CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder,
                             llvm::Module *_module,
-                            llvm::LLVMContext *_context,
-                            block_map_t *_map);
+                            llvm::LLVMContext *_context);
 };

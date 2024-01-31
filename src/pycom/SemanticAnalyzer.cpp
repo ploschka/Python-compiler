@@ -5,7 +5,7 @@ void SemanticAnalyzer::checkSemantics(AST *_tree)
     _tree->accept(visitor.get());
 }
 
-SemanticAnalyzer::SemanticAnalyzer(block_map_t *_map) : visitor(std::make_unique<SemanticVisitor>(_map))
+SemanticAnalyzer::SemanticAnalyzer() : visitor(std::make_unique<SemanticVisitor>())
 {
     visitor->stdinit();
 }

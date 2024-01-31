@@ -34,8 +34,7 @@ Pycom::Pycom(ErrorManagerInterface *_errmng) : Target(nullptr),
 
     lexer = std::make_unique<Lexer>();
     parser = std::make_unique<Parser>();
-    blockmap = std::make_unique<block_map_t>();
-    seman = std::make_unique<SemanticAnalyzer>(blockmap.get());
+    seman = std::make_unique<SemanticAnalyzer>();
 
     parser->setLexer(lexer.get());
 
@@ -66,7 +65,7 @@ void Pycom::open(std::istream &_stream)
     module->setDataLayout(TargetMachine->createDataLayout());
     module->setTargetTriple(TargetTriple);
 
-    codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get(), blockmap.get());
+    codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
     ast.reset(parser->getAST());
     state = CompilerState::file_opened;
 }
@@ -80,7 +79,7 @@ bool Pycom::checkSemantics()
         bool res = true;
         return res;
     }
-    errmng->error_exit("Can't check semantics, file was not opened", -1);
+    errmng->error("Can't check semantics, file was not opened");
     return false;
 }
 
@@ -91,7 +90,7 @@ void Pycom::generate()
         codegen->generate(ast.get());
         state = CompilerState::code_generated;
     }
-    errmng->error_exit("Can't generate code, semantics have not been checked", -1);
+    errmng->error("Can't generate code, semantics have not been checked");
 }
 
 void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olevel, llvm::PIELevel::Level _PIE, llvm::PICLevel::Level _PIC)
@@ -105,7 +104,7 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
         }
         if (!Target)
         {
-            errmng->error_exit("Couldn't create target", 1);
+            errmng->error("Couldn't create target");
         }
 
         auto CPU = "generic";
@@ -129,7 +128,7 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
 
         if (llvm::verifyModule(*module, &llvm::errs()))
         {
-            errmng->error_exit("Invalid module", 1);
+            errmng->error("Invalid module");
         }
         MPM.run(*module, MAM);
 
@@ -137,13 +136,13 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
 
         if (TargetMachine->addPassesToEmitFile(PM, _stream, nullptr, FileType))
         {
-            errmng->error_exit("TargetMachine can't emit a file of this type", 1);
+            errmng->error("TargetMachine can't emit a file of this type");
         }
         PM.run(*module);
         _stream.flush();
         state = CompilerState::compiled;
     }
-    errmng->error_exit("Can't compile, code has not been generated", -1);
+    errmng->error("Can't compile, code has not been generated");
 }
 
 void Pycom::emitLLVM(llvm::raw_ostream &_stream)
@@ -152,7 +151,7 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     {
         module->print(_stream, nullptr);
     }
-    errmng->error_exit("Can't  emit llvm, code has not been generated", -1);
+    errmng->error("Can't emit llvm, code has not been generated");
 }
 
 AST *Pycom::getAST() const

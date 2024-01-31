@@ -3,8 +3,8 @@
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/token/Token.hpp>
 #include <pycom/semanalyzer/Symbol.hpp>
-#include <pycom/utility/BlockTable.hpp>
 #include <pycom/utility/Types.hpp>
+#include <pycom/interface/ErrorManagerInterface.hpp>
 
 #include <memory>
 #include <stack>
@@ -17,7 +17,6 @@
 class SemanticVisitor : public NodeVisitorInterface
 {
 public:
-    SemanticVisitor(block_map_t *_map);
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
     void visitFormalParamsNode(FormalParamsNode *_acceptor);
@@ -39,13 +38,17 @@ public:
 
     void reset();
     void stdinit();
+    void setErr(ErrorManagerInterface* _em);
 
 private:
+    typedef std::map<std::string, Symbol> localtable_t;
+
     std::stack<std::shared_ptr<localtable_t>> symtable;
     typeset_t set;
     func_map_t funcs;
     type_t evaluated_type;
     unsigned int lastpos;
     unsigned int lastrow;
-    block_map_t *blockmap;
+    ErrorManagerInterface* em;
+    bool err = false;
 };

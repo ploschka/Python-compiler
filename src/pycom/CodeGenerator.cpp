@@ -7,8 +7,7 @@ void CodeGenerator::generate(AST *_ast)
 
 CodeGenerator::CodeGenerator(llvm::IRBuilder<> *_builder,
                              llvm::Module *_module,
-                             llvm::LLVMContext *_context,
-                             block_map_t *_map)
+                             llvm::LLVMContext *_context)
 {
-    visitor = std::make_unique<CodeEmittingNodeVisitor>(_builder, _module, _context, _map);
+    visitor = std::make_unique<CodeEmittingNodeVisitor>(_builder, _module, _context);
 }

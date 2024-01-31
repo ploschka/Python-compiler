@@ -16,5 +16,5 @@ private:
 
 public:
     void generate(AST *_ast);
-    CodeGenerator(llvm::IRBuilder<> *, llvm::Module *, llvm::LLVMContext *, block_map_t *_map);
+    CodeGenerator(llvm::IRBuilder<> *, llvm::Module *, llvm::LLVMContext *);
 };
