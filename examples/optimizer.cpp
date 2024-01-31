@@ -7,6 +7,7 @@
 #include <memory>
 #include <pycom/utility/Types.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
+#include <pycom/error_manager/ThrowErrorManager.hpp>
 
 int main()
 {
@@ -19,6 +20,7 @@ int main()
         parser->setLexer(lexer.get());
         auto visitor = std::make_unique<PrintVisitor>();
         auto seman = std::make_unique<SemanticAnalyzer>();
+        seman->setEM(new ThrowErrorManager());
 
         auto ast = parser->getAST();
         seman->checkSemantics(ast);

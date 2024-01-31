@@ -2,20 +2,23 @@
 #include <gtest/gtest.h>
 #include <pycom/parser/Parser.hpp>
 #include <pycom/token/Token.hpp>
+#include <pycom/error_manager/ThrowErrorManager.hpp>
 
-static std::unique_ptr<SemanticAnalyzerInterface> semantic = std::make_unique<SemanticAnalyzer>();
-
+static std::unique_ptr<SemanticAnalyzer> semantic = std::make_unique<SemanticAnalyzer>();
 
 /*
 Неизвестная переменная
-b = 1 + a
+b: int = 1 + a
 */
 TEST(SemanticTest, UndefinedVariable)
 {
+    semantic->setEM(new ThrowErrorManager());
+    
     AST* ast = new AST(
         new ProgramNode({
             new AssignmentNode(
                 new Leaf(Token("b", Type::id)),
+                new TypeNode(Token("int", Type::id)),
                 new BinaryNode(
                     new Leaf(Token("1", Type::number)),
                     new Leaf(Token("+", Type::plus)),
@@ -29,8 +32,8 @@ TEST(SemanticTest, UndefinedVariable)
 
 /*
 Известная переменная
-a = 2
-b = 1 + a
+a: int = 2
+b: int = 1 + a
 */
 TEST(SemanticTest, DefinedVariable)
 {
@@ -38,10 +41,12 @@ TEST(SemanticTest, DefinedVariable)
         new ProgramNode({
             new AssignmentNode(
                 new Leaf(Token("a", Type::id)),
+                new TypeNode(Token("int", Type::id)),
                 new Leaf(Token("2", Type::number))
             ),
             new AssignmentNode(
                 new Leaf(Token("b", Type::id)),
+                new TypeNode(Token("int", Type::id)),
                 new BinaryNode(
                     new Leaf(Token("1", Type::number)),
                     new Leaf(Token("+", Type::plus)),
@@ -56,9 +61,9 @@ TEST(SemanticTest, DefinedVariable)
 
 /*
 Несовместимые типы
-a = 10
-b = "deez nutz"
-c = a + b
+a: int = 10
+b: str = "deez nutz"
+c: int = a + b
 */
 TEST(SemanticTest, TypesNotMatch)
 {
@@ -66,14 +71,17 @@ TEST(SemanticTest, TypesNotMatch)
         new ProgramNode({
             new AssignmentNode(
                 new Leaf(Token("a", Type::id)),
+                new TypeNode(Token("int", Type::id)),
                 new Leaf(Token("10", Type::number))
             ),
             new AssignmentNode(
                 new Leaf(Token("b", Type::id)),
+                new TypeNode(Token("str", Type::id)),
                 new Leaf(Token("deez nutz", Type::string))
             ),
             new AssignmentNode(
                 new Leaf(Token("c", Type::id)),
+                new TypeNode(Token("int", Type::id)),
                 new BinaryNode(
                     new Leaf(Token("a", Type::id)),
                     new Leaf(Token("+", Type::plus)),
@@ -87,9 +95,9 @@ TEST(SemanticTest, TypesNotMatch)
 
 /*
 Совместимые типы
-a = "ab"
-b = "deez nutz"
-c = a + b
+a: str = "ab"
+b: str = "deez nutz"
+c: str = a + b
 */
 TEST(SemanticTest, TypesMatch)
 {
@@ -97,14 +105,17 @@ TEST(SemanticTest, TypesMatch)
         new ProgramNode({
             new AssignmentNode(
                 new Leaf(Token("a", Type::id)),
+                new TypeNode(Token("str", Type::id)),
                 new Leaf(Token("ab", Type::string))
             ),
             new AssignmentNode(
                 new Leaf(Token("b", Type::id)),
+                new TypeNode(Token("str", Type::id)),
                 new Leaf(Token("deez nutz", Type::string))
             ),
             new AssignmentNode(
                 new Leaf(Token("c", Type::id)),
+                new TypeNode(Token("str", Type::id)),
                 new BinaryNode(
                     new Leaf(Token("a", Type::id)),
                     new Leaf(Token("+", Type::plus)),
