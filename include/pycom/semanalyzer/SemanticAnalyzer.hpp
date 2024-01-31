@@ -14,4 +14,5 @@ public:
     SemanticAnalyzer();
     void checkSemantics(AST *_tree) override;
     void reset() override;
+    void setEM(ErrorManagerInterface *_em);
 };

@@ -14,3 +14,8 @@ void SemanticAnalyzer::reset()
 {
     visitor->reset();
 }
+
+void SemanticAnalyzer::setEM(ErrorManagerInterface *_em)
+{
+    visitor->setEM(_em);
+}

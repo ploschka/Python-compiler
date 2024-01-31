@@ -4,13 +4,12 @@
 #include <pycom/token/Token.hpp>
 #include <vector>
 
-
 /**
  * Визитёр, вычисляющий значения некоторых узлов.
  * Например, для Бинарного узла 2 + 3 результат будет 5.
  */
-
-class CalculateVisitor: public NodeVisitorInterface {
+class CalculateVisitor : public NodeVisitorInterface
+{
 private:
     bool has_type(ExpressionNode *node, std::string type);
     std::string calculate_binary_string(std::string left, std::string right, Type op);
@@ -25,19 +24,19 @@ public:
     void visitBinaryNode(BinaryNode *_acceptor);
     void visitUnaryNode(UnaryNode *_acceptor);
 
-    void visitTypeNode(TypeNode *) {};
-    void visitFormalParamsNode(FormalParamsNode *) {};
-    void visitActualParamsNode(ActualParamsNode *) {};
-    void visitCallNode(CallNode *) {};
-    void visitAssignmentNode(AssignmentNode *) {};
-    void visitReturnNode(ReturnNode *) {};
-    void visitBlockNode(BlockNode *) {};
-    void visitProgramNode(ProgramNode *) {};
-    void visitFunctionNode(FunctionNode *) {};
-    void visitElseNode(ElseNode *) {};
-    void visitElifNode(ElifNode *) {};
-    void visitIfNode(IfNode *) {};
-    void visitWhileNode(WhileNode *) {};
-    void visitForNode(ForNode *) {};
-    void visitListNode(ListNode *) {};
+    void visitTypeNode(TypeNode *_acceptor);
+    void visitFormalParamsNode(FormalParamsNode *_acceptor);
+    void visitActualParamsNode(ActualParamsNode *_acceptor);
+    void visitCallNode(CallNode *_acceptor);
+    void visitAssignmentNode(AssignmentNode *_acceptor);
+    void visitReturnNode(ReturnNode *_acceptor);
+    void visitBlockNode(BlockNode *_acceptor);
+    void visitProgramNode(ProgramNode *_acceptor);
+    void visitFunctionNode(FunctionNode *_acceptor);
+    void visitElseNode(ElseNode *_acceptor);
+    void visitElifNode(ElifNode *_acceptor);
+    void visitIfNode(IfNode *_acceptor);
+    void visitWhileNode(WhileNode *_acceptor);
+    void visitForNode(ForNode *_acceptor);
+    void visitListNode(ListNode *_acceptor);
 };

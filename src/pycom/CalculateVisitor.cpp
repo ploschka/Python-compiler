@@ -1,6 +1,22 @@
 #include <pycom/optimizer/CalculateVisitor.hpp>
 #include <pycom/utility/Types.hpp>
 
+void CalculateVisitor::visitTypeNode(TypeNode *_acceptor) {}
+void CalculateVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor) {}
+void CalculateVisitor::visitActualParamsNode(ActualParamsNode *_acceptor) {}
+void CalculateVisitor::visitCallNode(CallNode *_acceptor) {}
+void CalculateVisitor::visitAssignmentNode(AssignmentNode *_acceptor) {}
+void CalculateVisitor::visitReturnNode(ReturnNode *_acceptor) {}
+void CalculateVisitor::visitBlockNode(BlockNode *_acceptor) {}
+void CalculateVisitor::visitProgramNode(ProgramNode *_acceptor) {}
+void CalculateVisitor::visitFunctionNode(FunctionNode *_acceptor) {}
+void CalculateVisitor::visitElseNode(ElseNode *_acceptor) {}
+void CalculateVisitor::visitElifNode(ElifNode *_acceptor) {}
+void CalculateVisitor::visitIfNode(IfNode *_acceptor) {}
+void CalculateVisitor::visitWhileNode(WhileNode *_acceptor) {}
+void CalculateVisitor::visitForNode(ForNode *_acceptor) {}
+void CalculateVisitor::visitListNode(ListNode *_acceptor) {}
+
 bool CalculateVisitor::has_type(ExpressionNode *node, std::string type)
 {
     return *node->type == type;
@@ -8,9 +24,12 @@ bool CalculateVisitor::has_type(ExpressionNode *node, std::string type)
 
 std::string CalculateVisitor::calculate_binary_string(std::string left, std::string right, Type op)
 {
-    if (op == Type::plus) {
+    if (op == Type::plus)
+    {
         return left + right;
-    } else {
+    }
+    else
+    {
         return "ķ̵̀ȋ̸͓̣̖̘̩̕l̵͇͚̠͕̂̽̊̚ͅl̵̛̖̦̭̳͛̏ͅ ̴͉̀͌y̷̢̞̔͠ǫ̵̟̖̀̏̒͆͠ṳ̸͇̇̾̄̂̈́r̴̖̱̮͎͋̌̃͗͘s̷̮̖̈́͐̌è̸̻͙͈̀̌l̶̙̩̎̔̎̍f̸̲̹̭͔̒̉̉͝";
     }
 }
@@ -98,13 +117,16 @@ void CalculateVisitor::visitBinaryNode(BinaryNode *_acceptor)
     std::string right_res = this->return_result;
 
     auto op = _acceptor->op->token.getType();
-    if (has_type(_acceptor->left, INTEGER_TYPE)) {
+    if (has_type(_acceptor->left, INTEGER_TYPE))
+    {
         int l = std::stoi(left_res);
         int r = std::stoi(right_res);
         int res = calculate_binary_int(l, r, op);
         this->return_result = std::to_string(res);
         this->return_type = Type::number;
-    } else {
+    }
+    else
+    {
         std::string l = left_res;
         std::string r = right_res;
         std::string res = calculate_binary_string(l, r, op);

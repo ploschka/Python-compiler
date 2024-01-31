@@ -21,10 +21,9 @@ void SemanticVisitor::visitLeaf(Leaf *_acceptor)
         auto symbol = symtable.top()->find(token.getValue());
         if (symbol == symtable.top()->end())
         {
-            em->error("Name " + token.getValue() + " is undefined\n" +
-                      "Occured at row: " +
-                      std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-            err = true;
+            error("Name " + token.getValue() + " is undefined\n" +
+                  "Occured at row: " +
+                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
             return;
         }
         evaluated_type = symbol->second.type;
@@ -34,16 +33,17 @@ void SemanticVisitor::visitLeaf(Leaf *_acceptor)
         switch (token.getType())
         {
         case Type::string:
-            evaluated_type = set.insert("string").first;
+            evaluated_type = set.insert(STRING_TYPE).first;
             break;
         case Type::number:
-            evaluated_type = set.insert("int").first;
+            evaluated_type = set.insert(INTEGER_TYPE).first;
 
         default:
-            evaluated_type = set.insert("void").first;
+            evaluated_type = set.insert(VOID_TYPE).first;
             break;
         }
     }
+    _acceptor->type = evaluated_type;
 }
 
 void SemanticVisitor::visitCallNode(CallNode *_acceptor)
@@ -52,10 +52,9 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
     auto symbol = symtable.top()->find(token.getValue());
     if (symbol == symtable.top()->end())
     {
-        em->error("Name " + token.getValue() + " is undefined\n" +
-                  "Occured at row: " +
-                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-        err = true;
+        error("Name " + token.getValue() + " is undefined\n" +
+              "Occured at row: " +
+              std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
         return;
     }
     else
@@ -63,11 +62,10 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
         auto symtype = set.find(token.getValue());
         if (symbol->second.type != symtype)
         {
-            em->error("Not a callable at row: " +
-                      std::to_string(token.getRow()) +
-                      " position: " +
-                      std::to_string(token.getPos()) + "\n");
-            err = true;
+            error("Not a callable at row: " +
+                  std::to_string(token.getRow()) +
+                  " position: " +
+                  std::to_string(token.getPos()) + "\n");
             return;
         }
     }
@@ -75,9 +73,8 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
     auto func = funcs.find(token.getValue());
     if (func->second.second.size() != _acceptor->params->params.size())
     {
-        em->error("Parameter quantity mismatch occured at row: " +
-                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-        err = true;
+        error("Parameter quantity mismatch occured at row: " +
+              std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
         return;
     }
 
@@ -90,16 +87,16 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
             return;
         if (evaluated_type != *arg_iter++)
         {
-            em->error(
+            error(
                 "Parameter type mismatch occured at row: " +
                 std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-            err = true;
             return;
         }
     }
     evaluated_type = func->second.first;
     lastpos = token.getPos();
     lastrow = token.getRow();
+    _acceptor->type = evaluated_type;
 }
 
 void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
@@ -113,9 +110,8 @@ void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
         return;
     if (a != evaluated_type)
     {
-        em->error("Type mismatch occured at row: " +
-                  std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-        err = true;
+        error("Type mismatch occured at row: " +
+              std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
         return;
     }
     switch (_acceptor->op->token.getType())
@@ -129,11 +125,13 @@ void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
     default:
         break;
     }
+    _acceptor->type = evaluated_type;
 }
 
 void SemanticVisitor::visitUnaryNode(UnaryNode *_acceptor)
 {
     _acceptor->operand->accept(this);
+    _acceptor->type = evaluated_type;
 }
 
 void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
@@ -145,7 +143,7 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
         auto &typtok = _acceptor->type->token;
         if (_acceptor->type->is_list)
         {
-            symtype = set.insert("list " + typtok.getValue()).first;
+            symtype = set.insert(LIST_TYPE + typtok.getValue()).first;
             set.insert(typtok.getValue());
         }
         else
@@ -158,10 +156,9 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
         auto symbol = symtable.top()->find(token.getValue());
         if (symbol == symtable.top()->end())
         {
-            em->error("Name " + token.getValue() + " is undefined\n" +
-                      "Occured at row: " +
-                      std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-            err = true;
+            error("Name " + token.getValue() + " is undefined\n" +
+                  "Occured at row: " +
+                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
             return;
         }
     }
@@ -170,9 +167,8 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
         return;
     if (evaluated_type != symtype)
     {
-        em->error("Type mismatch occured at row: " +
-                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-        err = true;
+        error("Type mismatch occured at row: " +
+              std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
         return;
     }
     evaluated_type = symtype;
@@ -222,10 +218,9 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
             }
             else
             {
-                em->error("Name " + token.getValue() + " is already defined\n" +
-                          "Defined second time at row : " +
-                          std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-                err = true;
+                error("Name " + token.getValue() + " is already defined\n" +
+                      "Defined second time at row : " +
+                      std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
                 return;
             }
 
@@ -238,10 +233,9 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
     }
     else
     {
-        em->error("Name " + token.getValue() + " is already defined\n" +
-                  "Defined second time at row : " +
-                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
-        err = true;
+        error("Name " + token.getValue() + " is already defined\n" +
+              "Defined second time at row : " +
+              std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
         return;
     }
 }
@@ -256,12 +250,11 @@ void SemanticVisitor::visitElifNode(ElifNode *_acceptor)
     _acceptor->condition->accept(this);
     if (err)
         return;
-    if (evaluated_type != set.find("Bool"))
+    if (evaluated_type != set.find(BOOL_TYPE))
     {
-        em->error(
-            "Condition type is not Bool.\nOccured at row: " +
+        error(
+            "Condition type is not bool.\nOccured at row: " +
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-        err = true;
         return;
     }
 
@@ -282,12 +275,11 @@ void SemanticVisitor::visitIfNode(IfNode *_acceptor)
     _acceptor->condition->accept(this);
     if (err)
         return;
-    if (evaluated_type != set.find("Bool"))
+    if (evaluated_type != set.find(BOOL_TYPE))
     {
-        em->error(
-            "Condition type is not Bool.\nOccured at row: " +
+        error(
+            "Condition type is not bool.\nOccured at row: " +
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-        err = true;
         return;
     }
 
@@ -309,12 +301,11 @@ void SemanticVisitor::visitWhileNode(WhileNode *_acceptor)
     if (err)
         return;
 
-    if (evaluated_type != set.find("Bool"))
+    if (evaluated_type != set.find(BOOL_TYPE))
     {
-        em->error(
-            "Condition type is not Bool.\nOccured at row: " +
+        error(
+            "Condition type is not bool.\nOccured at row: " +
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-        err = true;
         return;
     }
 
@@ -328,17 +319,16 @@ void SemanticVisitor::visitForNode(ForNode *_acceptor)
     _acceptor->condition->accept(this);
     if (err)
         return;
-    auto pos = evaluated_type->find("list");
+    auto pos = evaluated_type->find(LIST_TYPE);
     if (pos == evaluated_type->npos)
     {
-        em->error(
+        error(
             "Expression type is not list type.\nOccured at row: " +
             std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-        err = true;
         return;
     }
 
-    pos += 5;
+    pos += 4;
     auto list_el_type = evaluated_type->c_str() + pos;
 
     auto iter_iter = symtable.top()->find(iter.getValue());
@@ -378,29 +368,32 @@ void SemanticVisitor::visitListNode(ListNode *_acceptor)
         }
         if (prev_evaluated_type != evaluated_type)
         {
-            em->error(
+            error(
                 "List element type mismatch occured at row: " +
                 std::to_string(lastrow) + " position: " + std::to_string(lastpos) + "\n");
-            err = true;
             return;
         }
     }
-    evaluated_type = set.insert("list " + *evaluated_type).first;
+    evaluated_type = set.insert(LIST_TYPE + *evaluated_type).first;
+    _acceptor->type = evaluated_type;
 }
 
 void SemanticVisitor::stdinit()
 {
     symtable.push(std::make_unique<localtable_t>());
 
-    Symbol tr = {{"True", Type::id}, set.insert("bool").first};
-    Symbol fl = {{"False", Type::id}, set.insert("bool").first};
-    Symbol wr = {{"Put_Line", Type::id}, set.insert("Put_Line").first};
+    Symbol _1 = {{"True", Type::id}, set.insert("bool").first};
+    Symbol _2 = {{"False", Type::id}, set.insert("bool").first};
+    Symbol _3 = {{"puts", Type::id}, set.insert("puts").first};
+    Symbol _4 = {{"putf", Type::id}, set.insert("putf").first};
 
-    funcs.insert({"Put_Line", {set.insert("void").first, {set.insert("String").first}}});
+    funcs.insert({"puts", {set.insert(VOID_TYPE).first, {set.insert(STRING_TYPE).first}}});
+    funcs.insert({"putf", {set.insert(VOID_TYPE).first, {set.insert(INTEGER_TYPE).first}}});
 
-    symtable.top()->insert({tr.token.getValue(), tr});
-    symtable.top()->insert({fl.token.getValue(), fl});
-    symtable.top()->insert({wr.token.getValue(), wr});
+    symtable.top()->insert({_1.token.getValue(), _1});
+    symtable.top()->insert({_2.token.getValue(), _2});
+    symtable.top()->insert({_3.token.getValue(), _3});
+    symtable.top()->insert({_4.token.getValue(), _4});
 }
 
 void SemanticVisitor::reset()
@@ -415,7 +408,16 @@ void SemanticVisitor::reset()
     this->stdinit();
 }
 
-void SemanticVisitor::setErr(ErrorManagerInterface *_em)
+void SemanticVisitor::setEM(ErrorManagerInterface *_em)
 {
-    this->em = _em;
+    em = _em;
+}
+
+void SemanticVisitor::error(const std::string &_str)
+{
+    if (em)
+    {
+        error(_str);
+    }
+    err = true;
 }

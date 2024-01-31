@@ -38,7 +38,7 @@ public:
 
     void reset();
     void stdinit();
-    void setErr(ErrorManagerInterface* _em);
+    void setEM(ErrorManagerInterface *_em);
 
 private:
     typedef std::map<std::string, Symbol> localtable_t;
@@ -49,6 +49,7 @@ private:
     type_t evaluated_type;
     unsigned int lastpos;
     unsigned int lastrow;
-    ErrorManagerInterface* em;
+    ErrorManagerInterface *em;
     bool err = false;
+    void error(const std::string &_str);
 };
