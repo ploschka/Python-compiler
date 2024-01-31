@@ -1,21 +1,21 @@
 #include <pycom/optimizer/CalculateVisitor.hpp>
 #include <pycom/utility/Types.hpp>
 
-void CalculateVisitor::visitTypeNode(TypeNode *_acceptor) {}
-void CalculateVisitor::visitFormalParamsNode(FormalParamsNode *_acceptor) {}
-void CalculateVisitor::visitActualParamsNode(ActualParamsNode *_acceptor) {}
-void CalculateVisitor::visitCallNode(CallNode *_acceptor) {}
-void CalculateVisitor::visitAssignmentNode(AssignmentNode *_acceptor) {}
-void CalculateVisitor::visitReturnNode(ReturnNode *_acceptor) {}
-void CalculateVisitor::visitBlockNode(BlockNode *_acceptor) {}
-void CalculateVisitor::visitProgramNode(ProgramNode *_acceptor) {}
-void CalculateVisitor::visitFunctionNode(FunctionNode *_acceptor) {}
-void CalculateVisitor::visitElseNode(ElseNode *_acceptor) {}
-void CalculateVisitor::visitElifNode(ElifNode *_acceptor) {}
-void CalculateVisitor::visitIfNode(IfNode *_acceptor) {}
-void CalculateVisitor::visitWhileNode(WhileNode *_acceptor) {}
-void CalculateVisitor::visitForNode(ForNode *_acceptor) {}
-void CalculateVisitor::visitListNode(ListNode *_acceptor) {}
+void CalculateVisitor::visitTypeNode(TypeNode *) {}
+void CalculateVisitor::visitFormalParamsNode(FormalParamsNode *) {}
+void CalculateVisitor::visitActualParamsNode(ActualParamsNode *) {}
+void CalculateVisitor::visitCallNode(CallNode *) {}
+void CalculateVisitor::visitAssignmentNode(AssignmentNode *) {}
+void CalculateVisitor::visitReturnNode(ReturnNode *) {}
+void CalculateVisitor::visitBlockNode(BlockNode *) {}
+void CalculateVisitor::visitProgramNode(ProgramNode *) {}
+void CalculateVisitor::visitFunctionNode(FunctionNode *) {}
+void CalculateVisitor::visitElseNode(ElseNode *) {}
+void CalculateVisitor::visitElifNode(ElifNode *) {}
+void CalculateVisitor::visitIfNode(IfNode *) {}
+void CalculateVisitor::visitWhileNode(WhileNode *) {}
+void CalculateVisitor::visitForNode(ForNode *) {}
+void CalculateVisitor::visitListNode(ListNode *) {}
 
 bool CalculateVisitor::has_type(ExpressionNode *node, std::string type)
 {

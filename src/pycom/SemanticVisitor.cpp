@@ -37,7 +37,7 @@ void SemanticVisitor::visitLeaf(Leaf *_acceptor)
             break;
         case Type::number:
             evaluated_type = set.insert(INTEGER_TYPE).first;
-
+            break;
         default:
             evaluated_type = set.insert(VOID_TYPE).first;
             break;
