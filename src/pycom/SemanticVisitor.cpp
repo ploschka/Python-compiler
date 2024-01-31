@@ -26,7 +26,7 @@ void SemanticVisitor::visitLeaf(Leaf *_acceptor)
                   std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
             return;
         }
-        evaluated_type = symbol->second.type;
+        evaluated_type = symbol->second.second;
     }
     else
     {
@@ -60,7 +60,7 @@ void SemanticVisitor::visitCallNode(CallNode *_acceptor)
     else
     {
         auto symtype = set.find(token.getValue());
-        if (symbol->second.type != symtype)
+        if (symbol->second.second != symtype)
         {
             error("Not a callable at row: " +
                   std::to_string(token.getRow()) +
@@ -339,7 +339,7 @@ void SemanticVisitor::visitForNode(ForNode *_acceptor)
     }
     else
     {
-        iter_iter->second.type = set.find(list_el_type);
+        iter_iter->second.second = set.find(list_el_type);
     }
 
     _acceptor->body->accept(this);
@@ -383,18 +383,18 @@ void SemanticVisitor::stdinit()
 {
     symtable.push(std::make_unique<localtable_t>());
 
-    Symbol _1 = {{"True", Type::id}, set.insert("bool").first};
-    Symbol _2 = {{"False", Type::id}, set.insert("bool").first};
-    Symbol _3 = {{"puts", Type::id}, set.insert("puts").first};
-    Symbol _4 = {{"putf", Type::id}, set.insert("putf").first};
+    symbol_t _1 = {{"True", Type::id}, set.insert("bool").first};
+    symbol_t _2 = {{"False", Type::id}, set.insert("bool").first};
+    symbol_t _3 = {{"puts", Type::id}, set.insert("puts").first};
+    symbol_t _4 = {{"putf", Type::id}, set.insert("putf").first};
 
     funcs.insert({"puts", {set.insert(VOID_TYPE).first, {set.insert(STRING_TYPE).first}}});
     funcs.insert({"putf", {set.insert(VOID_TYPE).first, {set.insert(INTEGER_TYPE).first}}});
 
-    symtable.top()->insert({_1.token.getValue(), _1});
-    symtable.top()->insert({_2.token.getValue(), _2});
-    symtable.top()->insert({_3.token.getValue(), _3});
-    symtable.top()->insert({_4.token.getValue(), _4});
+    symtable.top()->insert({_1.first.getValue(), _1});
+    symtable.top()->insert({_2.first.getValue(), _2});
+    symtable.top()->insert({_3.first.getValue(), _3});
+    symtable.top()->insert({_4.first.getValue(), _4});
 }
 
 void SemanticVisitor::reset()

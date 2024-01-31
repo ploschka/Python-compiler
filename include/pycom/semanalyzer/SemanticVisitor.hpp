@@ -2,7 +2,6 @@
 
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/token/Token.hpp>
-#include <pycom/semanalyzer/Symbol.hpp>
 #include <pycom/utility/Types.hpp>
 #include <pycom/interface/ErrorManagerInterface.hpp>
 
@@ -41,7 +40,8 @@ public:
     void setEM(ErrorManagerInterface *_em);
 
 private:
-    typedef std::map<std::string, Symbol> localtable_t;
+    typedef std::pair<Token, type_t> symbol_t;
+    typedef std::map<std::string, symbol_t> localtable_t;
 
     std::stack<std::shared_ptr<localtable_t>> symtable;
     typeset_t set;

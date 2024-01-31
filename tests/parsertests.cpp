@@ -929,14 +929,11 @@ TEST(ParserTest, AssignWithType)
         Token("", Type::newline),
         Token("", Type::eof)};
     ProgramNode *target_root = new ProgramNode(
-        {
-            new AssignmentNode(
-                new Leaf(Token("a", Type::id)),
-                new TypeNode(Token("int", Type::id)),
-                new Leaf(Token("5", Type::number))
-            ),
-            new Leaf(Token("", Type::eof))
-        });
+        {new AssignmentNode(
+             new Leaf(Token("a", Type::id)),
+             new TypeNode(Token("int", Type::id)),
+             new Leaf(Token("5", Type::number))),
+         new Leaf(Token("", Type::eof))});
     auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
@@ -966,18 +963,15 @@ TEST(ParserTest, AssignWithTypeList)
         Token("", Type::newline),
         Token("", Type::eof)};
     ProgramNode *target_root = new ProgramNode(
-        {
-            new AssignmentNode(
-                new Leaf(Token("a", Type::id)),
-                new TypeNode(Token("int", Type::id), true),
-                new ListNode({
-                    new Leaf(Token("1", Type::number)),
-                    new Leaf(Token("2", Type::number)),
-                    new Leaf(Token("3", Type::number)),
-                })
-            ),
-            new Leaf(Token("", Type::eof))
-        });
+        {new AssignmentNode(
+             new Leaf(Token("a", Type::id)),
+             new TypeNode(Token("int", Type::id), true),
+             new ListNode({
+                 new Leaf(Token("1", Type::number)),
+                 new Leaf(Token("2", Type::number)),
+                 new Leaf(Token("3", Type::number)),
+             })),
+         new Leaf(Token("", Type::eof))});
     auto nodes = convert(tokens, target_root);
     auto test_nodes = nodes.first;
     auto target_nodes = nodes.second;
