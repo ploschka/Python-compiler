@@ -46,11 +46,11 @@ Parser::Parser() : token(Token("хуй", Type::bandass)){};
 void Parser::setLexer(LexerInterface *_lexer)
 {
     this->lexer = _lexer;
-    this->next_token();
 }
 
 AST *Parser::getAST()
 {
+    this->next_token();
     return new AST(this->file());
 }
 
