@@ -3,6 +3,7 @@
 #include <pycom/interface/ASTNodeInterface.hpp>
 #include <pycom/interface/VisitableNodeInterface.hpp>
 #include <pycom/token/Token.hpp>
+#include <pycom/utility/Types.hpp>
 
 #include <vector>
 
@@ -13,6 +14,8 @@ class BaseASTNode : public ASTNodeInterface, public VisitableNodeInterface
 // ============= Expressions =============
 class ExpressionNode : public BaseASTNode
 {
+public:
+    type_t type;
 }; // Абстрактный класс выражения
 
 class Leaf : public ExpressionNode

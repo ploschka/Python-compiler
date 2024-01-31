@@ -4,6 +4,7 @@
 #include <pycom/token/Token.hpp>
 #include <pycom/semanalyzer/Symbol.hpp>
 #include <pycom/utility/BlockTable.hpp>
+#include <pycom/utility/Types.hpp>
 
 #include <memory>
 #include <stack>
@@ -40,11 +41,6 @@ public:
     void stdinit();
 
 private:
-    typedef std::set<std::string> typeset_t;
-    typedef typeset_t::const_iterator type_t;
-    typedef std::pair<type_t, std::vector<type_t>> func_pair_t;
-    typedef std::map<std::string, func_pair_t> func_map_t;
-
     std::stack<std::shared_ptr<localtable_t>> symtable;
     typeset_t set;
     func_map_t funcs;
