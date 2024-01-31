@@ -5,6 +5,7 @@
 #include <llvm/IR/Module.h>
 
 #include <pycom/interface/NodeVisitorInterface.hpp>
+#include <pycom/interface/ErrorManagerInterface.hpp>
 
 #include <map>
 #include <queue>
@@ -29,8 +30,24 @@ private:
     std::stack<llvm::BasicBlock *> continue_stack;
     std::stack<llvm::BasicBlock *> merge_stack;
 
+    ErrorManagerInterface *em;
+
+    enum class my_type
+    {
+        int_type,
+        str_type,
+        bool_type,
+        void_type
+    };
+    static const std::unordered_map<std::string, my_type> typemap;
+
+    llvm::Type *__str_to_type(const std::string &_str);
+    std::pair<llvm::Type *, bool> str_to_type(const std::string &_str);
+    llvm::Value *load_from_list(llvm::Value *_element);
+    void store_to_list(llvm::Value *_element);
     llvm::Value *getLeafValue(Leaf *_leaf);
     void stdinit();
+    void error(const std::string &_str);
 
 public:
     void visitLeaf(Leaf *_acceptor);
@@ -54,4 +71,6 @@ public:
     CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder,
                             llvm::Module *_module,
                             llvm::LLVMContext *_context);
+
+    void setEM(ErrorManagerInterface *_em);
 };

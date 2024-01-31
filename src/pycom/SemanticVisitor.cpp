@@ -205,22 +205,22 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
         auto t = _acceptor->formal_params->types.begin();
         while (n != _acceptor->formal_params->params.end() && t != _acceptor->formal_params->types.end())
         {
-            auto token = (*n)->token;
+            auto tt = (*n)->token;
             auto type = (*t)->token;
 
             symtype = set.insert(type.getValue());
             curr->second.second.push_back(symtype.first);
 
-            auto symbol = symtable.top()->find(token.getValue());
+            auto symbol = symtable.top()->find(tt.getValue());
             if (symbol == symtable.top()->end())
             {
-                symtable.top()->insert({token.getValue(), {token, symtype.first}});
+                symtable.top()->insert({tt.getValue(), {tt, symtype.first}});
             }
             else
             {
-                error("Name " + token.getValue() + " is already defined\n" +
+                error("Name " + tt.getValue() + " is already defined\n" +
                       "Defined second time at row : " +
-                      std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
+                      std::to_string(tt.getRow()) + " position: " + std::to_string(tt.getPos()) + "\n");
                 return;
             }
 

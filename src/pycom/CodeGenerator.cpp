@@ -11,3 +11,8 @@ CodeGenerator::CodeGenerator(llvm::IRBuilder<> *_builder,
 {
     visitor = std::make_unique<CodeEmittingNodeVisitor>(_builder, _module, _context);
 }
+
+void CodeGenerator::setEM(ErrorManagerInterface* _em)
+{
+    visitor->setEM(_em);
+}
