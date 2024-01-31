@@ -7,6 +7,7 @@
 #include <memory>
 #include <pycom/utility/Types.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
+#include <pycom/error_manager/ThrowErrorManager.hpp>
 
 int main()
 {
@@ -18,8 +19,8 @@ int main()
         auto parser = std::make_unique<Parser>();
         parser->setLexer(lexer.get());
         auto visitor = std::make_unique<PrintVisitor>();
-        auto blockmap = std::make_unique<block_map_t>();
-        auto seman = std::make_unique<SemanticAnalyzer>(blockmap.get());
+        auto seman = std::make_unique<SemanticAnalyzer>();
+        seman->setEM(new ThrowErrorManager());
 
         auto ast = parser->getAST();
         seman->checkSemantics(ast);

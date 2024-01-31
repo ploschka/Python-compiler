@@ -38,6 +38,7 @@ set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticVisitor.cpp 
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 set(optimizerlib src/pycom/Optimizer.cpp src/pycom/CalculateVisitor.cpp src/pycom/ShortenExpressionVisitor.cpp)
 set(utilitylib src/pycom/ErrorManager.cpp)
+set(throwemlib src/pycom/ThrowErrorManager.cpp)
 
 add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
@@ -47,10 +48,12 @@ add_library(semanalyzer STATIC ${semanalyzerlib})
 add_library(codegen STATIC ${codegenlib})
 add_library(optimizer STATIC ${optimizerlib})
 add_library(utility STATIC ${utilitylib})
+add_library(throwem STATIC ${throwemlib})
 
 target_link_libraries(lexer token)
 target_link_libraries(parser lexer ast token)
 target_link_libraries(codegen ${llvm_libraries})
+target_link_libraries(optimizer ast token)
 
 set(libs lexer parser codegen semanalyzer utility optimizer)
 
@@ -94,20 +97,23 @@ if(PYCOM_BUILD_TESTS)
     add_library(lexermock STATIC ${lexmocklib})
     target_link_libraries(lexermock token)
 
-    add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp)
+    add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp tests/semantictests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock)
+    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock throwem)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
     set(lexex lexerexample)
     set(parsex parserexample)
-    set(examples ${lexex} ${parsex})
+    set(optimex optimizerexample)
+    set(examples ${lexex} ${parsex} ${optimex})
 
     add_executable(${lexex} examples/lexer.cpp)
     add_executable(${parsex} examples/parser.cpp)
+    add_executable(${optimex} examples/optimizer.cpp)
 
     target_link_libraries(${parsex} ex_visitors)
+    target_link_libraries(${optimex} ex_visitors)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
