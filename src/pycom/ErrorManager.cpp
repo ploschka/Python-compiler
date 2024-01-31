@@ -3,13 +3,19 @@
 void ErrorManager::error(const std::string &_str, void *)
 {
     stream << _str << std::endl;
-    handler(nullptr);
+    if (handler)
+    {
+        handler(nullptr);
+    }
 }
 
 void ErrorManager::error(const char *_str, void *)
 {
     stream << _str << std::endl;
-    handler(nullptr);
+    if (handler)
+    {
+        handler(nullptr);
+    }
 }
 
 void ErrorManager::registerHandler(error_handler_t _func)

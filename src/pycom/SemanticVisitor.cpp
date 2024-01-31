@@ -417,7 +417,7 @@ void SemanticVisitor::error(const std::string &_str)
 {
     if (em)
     {
-        error(_str);
+        em->error(_str);
     }
     err = true;
 }
