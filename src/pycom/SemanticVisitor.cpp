@@ -140,7 +140,7 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     auto token = _acceptor->left->token;
     type_t symtype;
-    if (!_acceptor->type)
+    if (_acceptor->type)
     {
         auto &typtok = _acceptor->type->token;
         if (_acceptor->type->is_list)
