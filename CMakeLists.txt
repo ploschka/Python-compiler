@@ -51,6 +51,7 @@ add_library(utility STATIC ${utilitylib})
 target_link_libraries(lexer token)
 target_link_libraries(parser lexer ast token)
 target_link_libraries(codegen ${llvm_libraries})
+target_link_libraries(optimizer ast token)
 
 set(libs lexer parser codegen semanalyzer utility optimizer)
 
@@ -94,7 +95,7 @@ if(PYCOM_BUILD_TESTS)
     add_library(lexermock STATIC ${lexmocklib})
     target_link_libraries(lexermock token)
 
-    add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp)
+    add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp tests/semantictests.cpp)
 
     target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock)
 endif(PYCOM_BUILD_TESTS)
@@ -102,12 +103,15 @@ endif(PYCOM_BUILD_TESTS)
 if(PYCOM_BUILD_EXAMPLES)
     set(lexex lexerexample)
     set(parsex parserexample)
-    set(examples ${lexex} ${parsex})
+    set(optimex optimizerexample)
+    set(examples ${lexex} ${parsex} ${optimex})
 
     add_executable(${lexex} examples/lexer.cpp)
     add_executable(${parsex} examples/parser.cpp)
+    add_executable(${optimex} examples/optimizer.cpp)
 
     target_link_libraries(${parsex} ex_visitors)
+    target_link_libraries(${optimex} ex_visitors)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
