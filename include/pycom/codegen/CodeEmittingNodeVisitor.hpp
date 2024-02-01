@@ -44,8 +44,6 @@ private:
 
     std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> __str_to_type(const std::string &_str);
     std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> str_to_type(const std::string &_str);
-    llvm::Value *load_from_list(llvm::Value *_element);
-    void store_to_list(llvm::Value *_element);
     llvm::Value *getLeafValue(Leaf *_leaf);
     void stdinit();
     void error(const std::string &_str);

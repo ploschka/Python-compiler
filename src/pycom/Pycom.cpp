@@ -77,10 +77,6 @@ void Pycom::open(std::istream &_stream)
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
     module = std::make_unique<llvm::Module>("pycom", *context);
 
-    module->setDataLayout(TargetMachine->createDataLayout());
-    module->setTargetTriple(TargetTriple);
-
-    codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
     ast.reset(parser->getAST());
     state = CompilerState::file_opened;
 }
@@ -101,6 +97,11 @@ void Pycom::generate()
 {
     if (state >= CompilerState::semantics_checked)
     {
+        module->setDataLayout(TargetMachine->createDataLayout());
+        module->setTargetTriple(TargetTriple);
+
+        codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
+
         codegen->generate(ast.get());
         state = CompilerState::code_generated;
     }
