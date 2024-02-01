@@ -96,7 +96,8 @@ llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
         tt = str_to_type(*_leaf->type);
         if (std::get<2>(tt)) // is list
         {
-            return builder->CreateLoad(voidptrty, v); // return pointer to list struct
+            return builder->CreateCall(module->getFunction(LISTNEXT),
+                                       {builder->CreateLoad(voidptrty, v)}); // return pointer to list struct
         }
         else
         {
