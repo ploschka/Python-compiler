@@ -7,4 +7,4 @@ def get_by_index(arr: list[int], i: int) -> int:
     return -666
 
 arr: list[int] = [1, 2, 3]
-print(get_by_index(arr, 2))
+putf(get_by_index(arr, 2))
