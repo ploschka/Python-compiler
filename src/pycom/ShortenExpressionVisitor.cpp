@@ -65,10 +65,15 @@ void ShortenExpressionVisitor::visitLeaf(Leaf *_acceptor)
             this->is_constant = false;
         }
     }
-    else
+    else if (type == Type::number || type == Type::string)
     { // Если какое-то значение, вроде числа или строки
         this->shortenedExpr = _acceptor;
         this->is_constant = true;
+    }
+    else 
+    { // Всё остальное, break, pass, continue и т. д.
+        this->shortenedExpr = _acceptor;
+        this->is_constant = false;
     }
 }
 
