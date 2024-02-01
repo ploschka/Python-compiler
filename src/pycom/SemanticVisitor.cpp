@@ -123,6 +123,7 @@ void SemanticVisitor::visitBinaryNode(BinaryNode *_acceptor)
         evaluated_type = set.insert("bool").first;
         break;
     default:
+        evaluated_type = a;
         break;
     }
     _acceptor->type = evaluated_type;
@@ -137,18 +138,30 @@ void SemanticVisitor::visitUnaryNode(UnaryNode *_acceptor)
 void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     auto token = _acceptor->left->token;
-    type_t symtype;
+    type_t lefttype;
+    _acceptor->right->accept(this);
+    if (err)
+        return;
+    auto righttype = evaluated_type;
+
     if (_acceptor->type)
     {
         auto &typtok = _acceptor->type->token;
         if (_acceptor->type->is_list)
         {
-            symtype = set.insert(LIST_TYPE + typtok.getValue()).first;
+            lefttype = set.insert(LIST_TYPE + typtok.getValue()).first;
             set.insert(typtok.getValue());
         }
         else
         {
-            symtype = set.insert(typtok.getValue()).first;
+            lefttype = set.insert(typtok.getValue()).first;
+        }
+
+        if (righttype != lefttype)
+        {
+            error("Type mismatch occured at row: " +
+                  std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
+            return;
         }
     }
     else
@@ -161,18 +174,16 @@ void SemanticVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
                   std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
             return;
         }
+        lefttype = symbol->second.second;
     }
-    symtable.top()->insert({token.getValue(), {token, symtype}});
-    _acceptor->right->accept(this);
-    if (err)
-        return;
-    if (evaluated_type != symtype)
+    symtable.top()->insert({token.getValue(), {token, lefttype}});
+    if (righttype != lefttype)
     {
         error("Type mismatch occured at row: " +
               std::to_string(token.getRow()) + " position: " + std::to_string(token.getPos()) + "\n");
         return;
     }
-    evaluated_type = symtype;
+    evaluated_type = lefttype;
 }
 
 void SemanticVisitor::visitReturnNode(ReturnNode *_acceptor)
@@ -198,6 +209,7 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
     if (symbol == symtable.top()->end() && symtype.second)
     {
         symtable.top()->insert({token.getValue(), {token, symtype.first}});
+
         symtable.push(std::make_unique<localtable_t>(*symtable.top()));
         auto curr = funcs.insert({token.getValue(), {}}).first;
         curr->second.first = set.insert(_acceptor->return_type->token.getValue()).first;
@@ -209,13 +221,24 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
             auto tt = (*n)->token;
             auto type = (*t)->token;
 
-            symtype = set.insert(type.getValue());
-            curr->second.second.push_back(symtype.first);
+            type_t symtype;
+
+            if ((*t)->is_list)
+            {
+                symtype = set.insert(LIST_TYPE + type.getValue()).first;
+                set.insert(type.getValue());
+            }
+            else
+            {
+                symtype = set.insert(type.getValue()).first;
+            }
+
+            curr->second.second.push_back(symtype);
 
             auto symbol = symtable.top()->find(tt.getValue());
             if (symbol == symtable.top()->end())
             {
-                symtable.top()->insert({tt.getValue(), {tt, symtype.first}});
+                symtable.top()->insert({tt.getValue(), {tt, symtype}});
             }
             else
             {
