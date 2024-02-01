@@ -18,7 +18,13 @@ void CodeEmittingNodeVisitor::write(std::string s) {
 }
 
 void CodeEmittingNodeVisitor::write(Token token) {
-    write(token.getValue());
+    if (token.getType() == Type::string) {
+        write("\"");
+        write(token.getValue());
+        write("\"");
+    } else {
+        write(token.getValue());
+    }
 }
 
 void CodeEmittingNodeVisitor::write(Leaf* leaf) {
