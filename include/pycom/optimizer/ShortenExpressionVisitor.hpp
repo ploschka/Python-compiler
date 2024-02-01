@@ -18,7 +18,7 @@ class ShortenExpressionVisitor : public NodeVisitorInterface
     ExpressionNode *shortenedExpr; // Сокращённое значение
 
     CalculateVisitor *calculator = new CalculateVisitor();
-    std::vector<VariableTable> scopes_stack;
+    std::vector<VariableTable*> scopes_stack;
 
     bool is_var_constant(std::string id);
     ExpressionNode *get_var(std::string id);

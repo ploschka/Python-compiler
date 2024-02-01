@@ -5,4 +5,4 @@ def fib(a: int, b: int, n: int) -> int:
         return fib(b, a + b, n - 1)
     
 
-puts(fib(0, 1, 10))
+fib(0, 1, 10)

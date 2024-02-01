@@ -8,10 +8,10 @@ bool ShortenExpressionVisitor::is_var_constant(std::string id)
     for (int i = this->scopes_stack.size() - 1; i >= 0; i--)
     {
         auto scope = this->scopes_stack[i];
-        bool scope_has_var = scope.variables.find(id) != scope.variables.end();
+        bool scope_has_var = scope->variables.find(id) != scope->variables.end();
         if (scope_has_var)
         {
-            return scope.is_var_constant.at(id);
+            return scope->is_var_constant.at(id);
         }
     }
     return false;
@@ -22,10 +22,10 @@ ExpressionNode *ShortenExpressionVisitor::get_var(std::string id)
     for (int i = this->scopes_stack.size() - 1; i >= 0; i--)
     {
         auto scope = this->scopes_stack[i];
-        bool scope_has_var = scope.variables.find(id) != scope.variables.end();
+        bool scope_has_var = scope->variables.find(id) != scope->variables.end();
         if (scope_has_var)
         {
-            return scope.variables.at(id);
+            return scope->variables.at(id);
         }
     }
     return nullptr;
@@ -34,13 +34,13 @@ ExpressionNode *ShortenExpressionVisitor::get_var(std::string id)
 void ShortenExpressionVisitor::set_var(std::string id, ExpressionNode *node, bool is_constant)
 {
     auto scope = this->scopes_stack[this->scopes_stack.size() - 1];
-    scope.variables.insert({id, node});
-    scope.is_var_constant.insert({id, is_constant});
+    scope->variables.insert({id, node});
+    scope->is_var_constant.insert({id, is_constant});
 }
 
 void ShortenExpressionVisitor::add_scope()
 {
-    this->scopes_stack.push_back(VariableTable());
+    this->scopes_stack.push_back(new VariableTable());
 }
 
 void ShortenExpressionVisitor::remove_scope()

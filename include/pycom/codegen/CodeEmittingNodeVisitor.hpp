@@ -1,54 +1,21 @@
 #pragma once
-
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-
 #include <pycom/interface/NodeVisitorInterface.hpp>
-#include <pycom/interface/ErrorManagerInterface.hpp>
-
+#include <pycom/token/Token.hpp>
 #include <map>
 #include <queue>
 #include <stack>
 #include <utility>
-#include <tuple>
+#include <ostream>
 
 class CodeEmittingNodeVisitor : public NodeVisitorInterface
 {
 private:
-    typedef std::map<std::string, llvm::Value *> symbtable_t;
-    typedef std::tuple<llvm::Value *, llvm::Value *, llvm::BasicBlock *> phival_t;
-
-    llvm::IRBuilder<> *builder;
-    llvm::Module *module;
-    llvm::LLVMContext *context;
-
-    std::stack<symbtable_t> namedValues;
-    std::queue<llvm::Value *> stored_values;
-    std::vector<llvm::Value *> stored_array;
-    llvm::BasicBlock *main_block;
-    std::stack<llvm::BasicBlock *> break_stack;
-    std::stack<llvm::BasicBlock *> continue_stack;
-    std::stack<llvm::BasicBlock *> merge_stack;
-
-    ErrorManagerInterface *em;
-
-    enum class my_type
-    {
-        int_type,
-        str_type,
-        bool_type,
-        void_type
-    };
-    static const std::unordered_map<std::string, my_type> typemap;
-
-    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> __str_to_type(const std::string &_str);
-    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> str_to_type(const std::string &_str);
-    llvm::Value *getLeafValue(Leaf *_leaf);
-    void stdinit();
-    void error(const std::string &_str);
-
+    std::ostream& stream;
+    void write(std::string s);
+    void write(Token token);
+    void write(Leaf* leaf);
 public:
+    CodeEmittingNodeVisitor(std::ostream& _stream);
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
     void visitFormalParamsNode(FormalParamsNode *_acceptor);
@@ -67,9 +34,4 @@ public:
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
     void visitListNode(ListNode *_acceptor);
-    CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder,
-                            llvm::Module *_module,
-                            llvm::LLVMContext *_context);
-
-    void setEM(ErrorManagerInterface *_em);
 };

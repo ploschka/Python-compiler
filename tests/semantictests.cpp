@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <pycom/parser/Parser.hpp>
 #include <pycom/token/Token.hpp>
-#include "ThrowErrorManager.hpp"
+#include <pycom/error_manager/ThrowErrorManager.hpp>
 
 static std::unique_ptr<SemanticAnalyzer> semantic = std::make_unique<SemanticAnalyzer>();
 

@@ -8,6 +8,7 @@
 #include <pycom/utility/Types.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <pycom/error_manager/ThrowErrorManager.hpp>
+#include <pycom/codegen/CodeGenerator.hpp>
 
 int main()
 {
@@ -21,17 +22,18 @@ int main()
         auto visitor = std::make_unique<PrintVisitor>();
         auto seman = std::make_unique<SemanticAnalyzer>();
         seman->setEM(new ThrowErrorManager());
+        auto codegen = std::make_unique<CodeGenerator>(std::cout);
 
         auto ast = parser->getAST();
         seman->checkSemantics(ast);
 
         std::cout << "Befor optimization:\n\n";
-        ast->accept(visitor.get());
+        codegen->generate(ast);
 
         std::cout << "\n\nAfter optimization:\n\n";
         auto optimizer = std::make_unique<Optimizer>();
         optimizer->optimize(ast);
-        ast->accept(visitor.get());
+        codegen->generate(ast);
     }
     catch (std::exception &e)
     {

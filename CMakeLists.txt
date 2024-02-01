@@ -10,20 +10,6 @@ option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-find_package(LLVM REQUIRED CONFIG)
-include_directories(${LLVM_INCLUDE_DIRS})
-separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-add_definitions(${LLVM_DEFINITIONS_LIST})
-foreach(target ${LLVM_TARGETS_TO_BUILD})
-  list(APPEND targets "LLVM${target}CodeGen")
-endforeach()
-# foreach(target ${LLVM_TARGETS_TO_BUILD})
-#   list(APPEND target_asmparsers "LLVM${target}AsmParser")
-# endforeach()
-list(APPEND target_asmparsers LLVMX86AsmParser)
-
-llvm_map_components_to_libnames(llvm_libraries analysis support core object irreader executionengine scalaropts instcombine orcjit runtimedyld)
-
 include_directories(include)
 
 set(exename pycom)
@@ -37,7 +23,7 @@ set(parslib src/pycom/Parser.cpp)
 set(semanalyzerlib src/pycom/SemanticAnalyzer.cpp src/pycom/SemanticVisitor.cpp)
 set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp)
 set(optimizerlib src/pycom/Optimizer.cpp src/pycom/CalculateVisitor.cpp src/pycom/ShortenExpressionVisitor.cpp)
-set(utilitylib src/pycom/ErrorManager.cpp)
+set(utilitylib src/pycom/ErrorManager.cpp src/pycom/ThrowErrorManager.cpp)
 
 add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
@@ -92,12 +78,11 @@ if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
 
     add_library(lexermock STATIC tests/LexerMock.cpp)
-    add_library(throwem STATIC tests/ThrowErrorManager.cpp)
     target_link_libraries(lexermock token)
 
     add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp tests/semantictests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock throwem)
+    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock utility)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
