@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <pycom/interface/LexerInterface.hpp>
 
@@ -12,6 +14,6 @@ public:
     LexerMock(std::vector<Token> tokens);
     Token getToken();
 
-    void open(std::istream &_stream) {}
-    void setState(LexerStateInterface *_state) {}
+    void open(std::istream &_stream);
+    void setState(std::unique_ptr<LexerStateInterface> &&_state);
 };

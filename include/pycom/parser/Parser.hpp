@@ -43,6 +43,7 @@ private:
     ActualParamsNode *func_call();
     Leaf *atom();
     TypeNode *type_hint();
+    TypeNode *type();
     ActualParamsNode *arguments();
     void compound_stmt(BlockNode *_parent_block);
     FormalParamsNode *params();

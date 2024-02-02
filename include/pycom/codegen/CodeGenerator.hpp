@@ -6,6 +6,7 @@
 
 #include <pycom/interface/CodeGeneratorInterface.hpp>
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
+#include <pycom/interface/ErrorManagerInterface.hpp>
 
 #include <memory>
 
@@ -17,4 +18,5 @@ private:
 public:
     void generate(AST *_ast);
     CodeGenerator(llvm::IRBuilder<> *, llvm::Module *, llvm::LLVMContext *);
+    void setEM(ErrorManagerInterface* _em);
 };

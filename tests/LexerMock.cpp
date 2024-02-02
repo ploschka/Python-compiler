@@ -1,4 +1,4 @@
-#include <pycom/lexer/LexerMock.hpp>
+#include "LexerMock.hpp"
 
 LexerMock::LexerMock(std::vector<Token> tokens) {
     this->tokens = tokens;
@@ -12,3 +12,6 @@ Token LexerMock::getToken() {
         return this->tokens[this->i++];
     }
 }
+
+void LexerMock::open(std::istream &_stream) {}
+void LexerMock::setState(std::unique_ptr<LexerStateInterface> &&_state) {}

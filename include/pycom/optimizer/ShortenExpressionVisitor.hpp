@@ -1,20 +1,31 @@
 #pragma once
-
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/token/Token.hpp>
-#include <pycom/utility/Types.hpp>
-#include <pycom/interface/ErrorManagerInterface.hpp>
-
-#include <memory>
-#include <stack>
-#include <string>
-#include <utility>
-#include <map>
+#include <pycom/optimizer/CalculateVisitor.hpp>
 #include <vector>
-#include <set>
+#include <map>
 
-class SemanticVisitor : public NodeVisitorInterface
+struct VariableTable
 {
+    std::map<std::string, ExpressionNode *> variables;
+    std::map<std::string, bool> is_var_constant; // Была ли переменная сокращена до константы
+};
+
+class ShortenExpressionVisitor : public NodeVisitorInterface
+{
+    // Возвращаемые узлами значения:
+    bool is_constant;              // Был ли узел сокращён до константы
+    ExpressionNode *shortenedExpr; // Сокращённое значение
+
+    CalculateVisitor *calculator = new CalculateVisitor();
+    std::vector<VariableTable> scopes_stack;
+
+    bool is_var_constant(std::string id);
+    ExpressionNode *get_var(std::string id);
+    void set_var(std::string id, ExpressionNode *node, bool is_constant);
+    void add_scope();
+    void remove_scope();
+
 public:
     void visitLeaf(Leaf *_acceptor);
     void visitTypeNode(TypeNode *_acceptor);
@@ -34,22 +45,4 @@ public:
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
     void visitListNode(ListNode *_acceptor);
-
-    void reset();
-    void stdinit();
-    void setEM(ErrorManagerInterface *_em);
-
-private:
-    typedef std::pair<Token, type_t> symbol_t;
-    typedef std::map<std::string, symbol_t> localtable_t;
-
-    std::stack<std::shared_ptr<localtable_t>> symtable;
-    typeset_t set;
-    func_map_t funcs;
-    type_t evaluated_type;
-    unsigned int lastpos;
-    unsigned int lastrow;
-    ErrorManagerInterface *em;
-    bool err = false;
-    void error(const std::string &_str);
 };

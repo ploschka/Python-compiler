@@ -207,7 +207,7 @@ void PrintVisitor::visitCallNode(CallNode *_acceptor)
     this->indent++;
     this->print_line("callable:");
     this->indent++;
-    _acceptor->callable->accept(this);
+    this->print_line("<" + type_to_str(_acceptor->callable.getType()) + ", " + _acceptor->callable.getValue() + ">");
     this->indent--;
     this->print_line("params:");
     this->indent++;
@@ -390,6 +390,9 @@ void PrintVisitor::visitListNode(ListNode *_acceptor)
 
 void PrintVisitor::visitTypeNode(TypeNode *_acceptor)
 {
-    std::string text = "Type: <" + _acceptor->token.getValue() + ">";
+    std::string text = "Type: " + _acceptor->token.getValue();
+    if (_acceptor->is_list) {
+        text += "[]";
+    }
     this->print_line(text);
 }

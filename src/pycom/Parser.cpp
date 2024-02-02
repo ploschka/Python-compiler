@@ -8,48 +8,49 @@
 #include <set>
 
 static const std::map<std::string, std::set<Type>> FIRSTS = {
-    {"comparison", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
-    {"if_stmt", {Type::ifkw}},
-    {"block", {Type::string, Type::plus, Type::newline, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
-    {"assignment", {Type::id}},
-    {"primary", {Type::string, Type::id, Type::number, Type::lpr, Type::lsbr}},
-    {"disjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"return_stmt", {Type::returnkw}},
-    {"while_stmt", {Type::whilekw}},
-    {"term", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
-    {"arguments", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"statements", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
-    {"params", {Type::id}},
+    {"func_call", {Type::lpr}},
     {"list", {Type::lsbr}},
     {"type_hint", {Type::colon}},
+    {"params", {Type::id}},
+    {"sum", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv}},
+    {"arguments", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
+    {"block", {Type::plus, Type::passkw, Type::lsbr, Type::continuekw, Type::id, Type::lpr, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::newline, Type::returnkw, Type::notop}},
+    {"term", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv}},
+    {"atom", {Type::number, Type::string, Type::id}},
+    {"primary", {Type::lsbr, Type::id, Type::lpr, Type::string, Type::number}},
+    {"factor", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv}},
     {"function_def", {Type::defkw}},
-    {"statement", {Type::string, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
-    {"inversion", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"for_stmt", {Type::forkw}},
-    {"simple_stmt", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
-    {"list_values", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"factor", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
-    {"sum", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr}},
-    {"compound_stmt", {Type::whilekw, Type::forkw, Type::defkw, Type::ifkw}},
-    {"expression", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"atom", {Type::string, Type::number, Type::id}},
+    {"simple_stmt", {Type::plus, Type::passkw, Type::lsbr, Type::continuekw, Type::id, Type::lpr, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::returnkw, Type::notop}},
+    {"list_values", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
+    {"compound_stmt", {Type::ifkw, Type::forkw, Type::defkw, Type::whilekw}},
+    {"inversion", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
+    {"conjunction", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
     {"else_block", {Type::elsekw}},
-    {"file", {Type::string, Type::eof, Type::plus, Type::forkw, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::ifkw, Type::inv, Type::lpr, Type::id, Type::minus, Type::whilekw, Type::continuekw, Type::lsbr, Type::notop, Type::defkw}},
-    {"simple_stmts", {Type::string, Type::plus, Type::returnkw, Type::breakkw, Type::passkw, Type::number, Type::id, Type::inv, Type::lpr, Type::minus, Type::continuekw, Type::lsbr, Type::notop}},
+    {"while_stmt", {Type::whilekw}},
+    {"disjunction", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
+    {"statements", {Type::plus, Type::passkw, Type::lsbr, Type::continuekw, Type::id, Type::ifkw, Type::lpr, Type::defkw, Type::whilekw, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::forkw, Type::returnkw, Type::notop}},
+    {"assignment", {Type::id}},
+    {"statement", {Type::plus, Type::passkw, Type::lsbr, Type::continuekw, Type::id, Type::ifkw, Type::lpr, Type::defkw, Type::whilekw, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::forkw, Type::returnkw, Type::notop}},
+    {"type", {Type::id}},
+    {"comparison", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv}},
     {"elif_stmt", {Type::elifkw}},
-    {"conjunction", {Type::string, Type::plus, Type::id, Type::number, Type::inv, Type::lpr, Type::minus, Type::lsbr, Type::notop}},
-    {"func_call", {Type::lpr}}};
+    {"expression", {Type::plus, Type::lsbr, Type::id, Type::lpr, Type::string, Type::minus, Type::number, Type::inv, Type::notop}},
+    {"file", {Type::plus, Type::passkw, Type::eof, Type::continuekw, Type::lsbr, Type::id, Type::ifkw, Type::lpr, Type::defkw, Type::whilekw, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::forkw, Type::returnkw, Type::notop}},
+    {"for_stmt", {Type::forkw}},
+    {"simple_stmts", {Type::plus, Type::passkw, Type::lsbr, Type::continuekw, Type::id, Type::lpr, Type::string, Type::minus, Type::breakkw, Type::number, Type::inv, Type::returnkw, Type::notop}},
+    {"if_stmt", {Type::ifkw}},
+    {"return_stmt", {Type::returnkw}}};
 
 Parser::Parser() : token(Token("хуй", Type::bandass)){};
 
 void Parser::setLexer(LexerInterface *_lexer)
 {
     this->lexer = _lexer;
-    this->next_token();
 }
 
 AST *Parser::getAST()
 {
+    this->next_token();
     return new AST(this->file());
 }
 
@@ -202,8 +203,7 @@ void Parser::simple_stmts(BlockNode *_parent_block)
  */
 void Parser::simple_stmt(BlockNode *_parent_block)
 {
-    if (this->is_token_in_firsts("assignment") 
-        && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
+    if (this->is_token_in_firsts("assignment") && (this->forward(1).getType() == Type::assign || this->forward(1).getType() == Type::colon))
     {
         _parent_block->add_child(this->assignment());
     }
@@ -228,15 +228,41 @@ void Parser::simple_stmt(BlockNode *_parent_block)
 
 /**
  * type_hint:
- *  | COLON ID
+ *  | COLON type
  */
 TypeNode *Parser::type_hint()
 {
     this->check_get_next(Type::colon);
-    Token type_token = this->check_get_next(Type::id);
-    return new TypeNode(type_token);
+    return this->type();
 }
 
+/**
+ * type:
+ *  | ID
+ *  | ID LSBR ID RSBR
+ */
+TypeNode *Parser::type()
+{
+    Token type_token_1 = this->check_get_next(Type::id);
+
+    if (this->token_matches(Type::lsbr))
+    {
+        if (type_token_1.getValue() != "list")
+        {
+            this->error("Bro created list without the list💀💀💀");
+        }
+        this->check_get_next(Type::lsbr);
+        Token type_token_2 = this->check_get_next(Type::id);
+        this->check_get_next(Type::rsbr);
+        auto node = new TypeNode(type_token_2);
+        node->is_list = true;
+        return node;
+    }
+    else
+    {
+        return new TypeNode(type_token_1);
+    }
+}
 /**
  * assignment:
  *  | ID ASSIGN expression
@@ -480,7 +506,7 @@ ExpressionNode *Parser::factor()
 /**
  * primary:
  *  | LPR expression RPR
- *  | LPR expression RPR func_call
+ *  | LPR expression RPR
  *  | atom
  *  | atom func_call
  *  | list
@@ -492,21 +518,15 @@ ExpressionNode *Parser::primary()
         this->check_get_next(Type::lpr);
         auto expr = this->expression();
         this->check_get_next(Type::rpr);
-
-        if (this->is_token_in_firsts("func_call"))
-        {
-            ActualParamsNode *params = this->func_call();
-            return new CallNode(expr, params);
-        }
         return expr;
     }
     else if (this->is_token_in_firsts("atom"))
     {
-        auto atom = this->atom();
+        Leaf *atom = this->atom();
         if (this->is_token_in_firsts("func_call"))
         {
             ActualParamsNode *params = this->func_call();
-            return new CallNode(atom, params);
+            return new CallNode(atom->token, params);
         }
         return atom;
     }
@@ -515,6 +535,7 @@ ExpressionNode *Parser::primary()
         return this->list();
     }
     this->error("primary");
+    return nullptr;
 };
 
 /**
@@ -665,8 +686,8 @@ FormalParamsNode *Parser::params()
 
 /**
  * function_def
- *  | DEFKW ID LPR params RPR COLON block
- *  | DEFKW ID LPR RPR COLON block
+ *  | DEFKW ID LPR RPR ARROW type COLON block
+ *  | DEFKW ID LPR params RPR ARROW type COLON block
  */
 FunctionNode *Parser::function_def()
 {
@@ -683,9 +704,11 @@ FunctionNode *Parser::function_def()
         params = new FormalParamsNode({}, {});
     }
     this->check_get_next(Type::rpr);
+    this->check_get_next(Type::arrow);
+    TypeNode *type = this->type();
     this->check_get_next(Type::colon);
     BlockNode *body = this->block();
-    return new FunctionNode(id, params, body);
+    return new FunctionNode(id, type, params, body);
 };
 
 /**

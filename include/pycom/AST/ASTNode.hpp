@@ -3,6 +3,7 @@
 #include <pycom/interface/ASTNodeInterface.hpp>
 #include <pycom/interface/VisitableNodeInterface.hpp>
 #include <pycom/token/Token.hpp>
+#include <pycom/utility/Types.hpp>
 
 #include <vector>
 
@@ -13,6 +14,8 @@ class BaseASTNode : public ASTNodeInterface, public VisitableNodeInterface
 // ============= Expressions =============
 class ExpressionNode : public BaseASTNode
 {
+public:
+    type_t type;
 }; // Абстрактный класс выражения
 
 class Leaf : public ExpressionNode
@@ -27,7 +30,8 @@ class TypeNode : public BaseASTNode
 {
 public:
     Token token;
-    TypeNode(Token _type_token);
+    bool is_list;
+    TypeNode(Token _type_token, bool is_list = false);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitTypeNode(this); };
 };
 
@@ -55,9 +59,9 @@ public:
 class CallNode : public ExpressionNode
 {
 public:
-    ExpressionNode *callable;
+    Token callable;
     ActualParamsNode *params;
-    CallNode(ExpressionNode *_callable, ActualParamsNode *_params);
+    CallNode(Token _callable, ActualParamsNode *_params);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitCallNode(this); };
 };
 class BinaryNode : public ExpressionNode
@@ -124,9 +128,10 @@ class FunctionNode : public BaseASTNode
 {
 public:
     Leaf *id;
+    TypeNode *return_type;
     FormalParamsNode *formal_params;
     BlockNode *body;
-    FunctionNode(Leaf *_id, FormalParamsNode *_formal_params, BlockNode *_body);
+    FunctionNode(Leaf *_id, TypeNode *return_type, FormalParamsNode *_formal_params, BlockNode *_body);
     void accept(NodeVisitorInterface *_visitor) { _visitor->visitFunctionNode(this); };
 };
 

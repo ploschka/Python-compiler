@@ -12,27 +12,120 @@
 
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
 #include <pycom/AST/ASTNode.hpp>
+#include <pycom/utility/Types.hpp>
+
+#include <unordered_map>
+#include <utility>
+#include <tuple>
+
+const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmittingNodeVisitor::typemap = {
+    {INTEGER_TYPE, CodeEmittingNodeVisitor::my_type::int_type},
+    {STRING_TYPE, CodeEmittingNodeVisitor::my_type::str_type},
+    {BOOL_TYPE, CodeEmittingNodeVisitor::my_type::bool_type},
+    {VOID_TYPE, CodeEmittingNodeVisitor::my_type::void_type}};
+
+std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> CodeEmittingNodeVisitor::__str_to_type(const std::string &_str)
+{
+    auto t = typemap.find(_str);
+    my_type tt;
+    if (t != typemap.end())
+    {
+        tt = t->second;
+    }
+    else
+    {
+        tt = typemap.find(VOID_TYPE)->second;
+    }
+
+    switch (tt)
+    {
+    case my_type::int_type:
+        return std::make_tuple(tt, llvm::Type::getFloatTy(*context));
+        break;
+    case my_type::bool_type:
+        return std::make_tuple(tt, llvm::Type::getInt8Ty(*context));
+        break;
+    default:
+        break;
+    }
+    return std::make_tuple(tt, nullptr);
+}
+
+std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> CodeEmittingNodeVisitor::str_to_type(const std::string &_str)
+{
+    auto pos = _str.find(LIST_TYPE);
+    if (pos == _str.npos)
+    {
+        auto g = __str_to_type(_str);
+        return std::make_tuple(std::get<0>(g), std::get<1>(g), false);
+    }
+    else
+    {
+        pos += 4;
+        auto type_ptr = _str.c_str() + pos;
+        auto g = __str_to_type(type_ptr);
+        return std::make_tuple(std::get<0>(g), std::get<1>(g), true);
+    }
+}
+
+void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *) {}
+void CodeEmittingNodeVisitor::visitElseNode(ElseNode *) {}
+void CodeEmittingNodeVisitor::visitTypeNode(TypeNode *) {}
 
 llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
 {
     Type t = _leaf->token.getType();
     std::string val = _leaf->token.getValue();
-    if (t == Type::number)
+    llvm::Value *v;
+    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> tt;
+    auto voidptrty = llvm::PointerType::get(*context, 0);
+
+    llvm::Type *type;
+    switch (t)
     {
-        auto type = llvm::Type::getFloatTy(*context);
+    case Type::number:
+        type = llvm::Type::getFloatTy(*context);
         return llvm::ConstantFP::get(type, llvm::StringRef(val));
-    }
-    if (t == Type::id)
-    {
+        break;
+    case Type::id:
         if (namedValues.top().find(val) == namedValues.top().end())
         {
             return nullptr;
         }
-        return namedValues.top().at(val);
-    }
-    if (t == Type::string)
-    {
+        v = namedValues.top().at(val);
+        tt = str_to_type(*_leaf->type);
+        if (std::get<2>(tt)) // is list
+        {
+            return builder->CreateCall(module->getFunction(LISTNEXT),
+                                       {builder->CreateLoad(voidptrty, v)}); // return pointer to list struct
+        }
+        else
+        {
+            if (std::get<1>(tt)) // pointer to type
+            {
+                switch (std::get<0>(tt)) // my_type
+                {
+                case my_type::int_type:
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // load int variable
+                    break;
+                case my_type::str_type:
+                    return (v); // return pointer to string
+                    break;
+                case my_type::bool_type:
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // lload bool variable
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        break;
+    case Type::string:
         return builder->CreateGlobalStringPtr(val);
+        break;
+    default:
+        return nullptr;
+        break;
     }
     return nullptr;
 }
@@ -42,60 +135,84 @@ void CodeEmittingNodeVisitor::stdinit()
     auto floatty = llvm::Type::getFloatTy(*context);
     auto voidty = llvm::Type::getVoidTy(*context);
     auto strty = llvm::Type::getInt8PtrTy(*context);
+    auto boolty = llvm::Type::getInt8Ty(*context);
+    auto voidptrty = llvm::PointerType::get(*context, 0);
 
     auto putfty = llvm::FunctionType::get(voidty, {floatty}, false);
     auto putsty = llvm::FunctionType::get(voidty, {strty}, false);
     auto floorty = llvm::FunctionType::get(floatty, {floatty}, false);
+    auto lloadty = llvm::FunctionType::get(voidptrty, {voidptrty}, false);
+    auto lstorety = llvm::FunctionType::get(voidty, {voidptrty}, false);
+    auto lnext = llvm::FunctionType::get(voidptrty, {voidptrty}, false);
+    auto lpushi = llvm::FunctionType::get(voidty, {voidptrty, floatty}, false);
+    auto lpushs = llvm::FunctionType::get(voidty, {voidptrty, strty}, false);
+    auto lpushb = llvm::FunctionType::get(voidty, {voidptrty, boolty}, false);
+    auto lcreate = llvm::FunctionType::get(voidptrty, {}, false);
 
-    llvm::Function::Create(floorty, llvm::GlobalValue::ExternalLinkage, "__floor", module);
-    llvm::Function::Create(putfty, llvm::GlobalValue::ExternalLinkage, "__putf", module);
-    llvm::Function::Create(putsty, llvm::GlobalValue::ExternalLinkage, "__puts", module);
+    llvm::Function::Create(floorty, llvm::GlobalValue::ExternalLinkage, FLOOR, module);
+    llvm::Function::Create(putfty, llvm::GlobalValue::ExternalLinkage, PUTF, module);
+    llvm::Function::Create(putsty, llvm::GlobalValue::ExternalLinkage, PUTS, module);
+    llvm::Function::Create(lloadty, llvm::GlobalValue::ExternalLinkage, LISTLOAD, module);
+    llvm::Function::Create(lstorety, llvm::GlobalValue::ExternalLinkage, LISTSTORE, module);
+    llvm::Function::Create(lnext, llvm::GlobalValue::ExternalLinkage, LISTNEXT, module);
+    llvm::Function::Create(lpushi, llvm::GlobalValue::ExternalLinkage, LISTPUSHINT, module);
+    llvm::Function::Create(lpushs, llvm::GlobalValue::ExternalLinkage, LISTPUSHSTR, module);
+    llvm::Function::Create(lpushb, llvm::GlobalValue::ExternalLinkage, LISTPUSHBOOL, module);
+    llvm::Function::Create(lcreate, llvm::GlobalValue::ExternalLinkage, LISTCREATE, module);
 }
 
 CodeEmittingNodeVisitor::CodeEmittingNodeVisitor(
     llvm::IRBuilder<> *_builder,
     llvm::Module *_module,
-    llvm::LLVMContext *_context) : builder(_builder), module(_module), context(_context) {}
+    llvm::LLVMContext *_context) : builder(_builder),
+                                   module(_module),
+                                   context(_context) {}
 
 void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
 {
-    auto t = _acceptor->token.getType();
-    switch (t)
+    auto &t = _acceptor->token;
+    llvm::Value *v;
+    switch (t.getType())
     {
     case Type::continuekw:
         if (continue_stack.empty())
         {
-            // Error
+            error(
+                "Continue statement outside loop.\n"
+                "Occured at row " +
+                std::to_string(t.getRow()) +
+                "position " + std::to_string(t.getPos()) + "\n");
         }
         else
         {
             builder->CreateBr(continue_stack.top());
         }
-        break;
-    case Type::passkw:
-
         break;
     case Type::breakkw:
         if (break_stack.empty())
         {
-            // Error
+            error(
+                "Break statement outside loop.\n"
+                "Occured at row " +
+                std::to_string(t.getRow()) +
+                "position " + std::to_string(t.getPos()) + "\n");
         }
         else
         {
-            builder->CreateBr(continue_stack.top());
+            builder->CreateBr(break_stack.top());
         }
+        break;
+    case Type::id:
+    case Type::string:
+    case Type::number:
+        v = getLeafValue(_acceptor);
+        stored_values.push(v);
         break;
 
     default:
-        // Error как ты сюда попал?
+        stored_values.push(nullptr);
         break;
     }
-    stored_values.push(nullptr);
-}
-
-void CodeEmittingNodeVisitor::visitFormalParamsNode(FormalParamsNode *)
-{
-    // Error как ты сюда попал?
 }
 
 void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
@@ -106,33 +223,14 @@ void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
         i->accept(this);
         auto val = stored_values.front();
         stored_values.pop();
-        if (val->getType()->isPointerTy())
-        {
-            stored_array.push_back(builder->CreateLoad(llvm::Type::getFloatTy(*context), val));
-        }
-        else
-        {
-            stored_array.push_back(val);
-        }
+        stored_array.push_back(val);
     }
-}
-
-void CodeEmittingNodeVisitor::visitVariableNode(VariableNode *_acceptor)
-{
-    auto val = getLeafValue(_acceptor->chain[0]);
-    if (!val)
-    {
-        // Error
-        return;
-    }
-    stored_values.push(val);
 }
 
 void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
 {
-    auto funcname = _acceptor->callable->chain[0]->token.getValue();
+    auto funcname = _acceptor->callable.getValue();
     auto callable = module->getFunction(funcname);
-    // auto g = callable->getName();
     _acceptor->params->accept(this);
     auto call = builder->CreateCall(callable, stored_array);
     stored_values.push(call);
@@ -148,18 +246,7 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     auto right = stored_values.front();
     stored_values.pop();
 
-    auto floatty = llvm::Type::getFloatTy(*context);
-
     llvm::Value *ret;
-
-    if (left->getType()->isPointerTy())
-    {
-        left = builder->CreateLoad(floatty, left, "left");
-    }
-    if (right->getType()->isPointerTy())
-    {
-        right = builder->CreateLoad(floatty, right, "right");
-    }
 
     switch (_acceptor->op->token.getType())
     {
@@ -179,7 +266,7 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
         ret = builder->CreateFRem(left, right);
         break;
     case Type::idiv:
-        ret = builder->CreateCall(module->getFunction("__floor"), {builder->CreateFDiv(left, right)});
+        ret = builder->CreateCall(module->getFunction(FLOOR), {builder->CreateFDiv(left, right)});
         break;
     case Type::matmul:
         // Error
@@ -230,28 +317,49 @@ void CodeEmittingNodeVisitor::visitBinaryNode(BinaryNode *_acceptor)
     stored_values.push(ret);
 }
 
-void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *)
+void CodeEmittingNodeVisitor::visitUnaryNode(UnaryNode *_acceptor)
 {
+    _acceptor->operand->accept(this);
+    auto val = stored_values.front();
+    stored_values.pop();
+
+    auto op = _acceptor->op->token.getType();
+    switch (op)
+    {
+    case Type::minus:
+        builder->CreateFNeg(val);
+        break;
+    case Type::plus:
+        break;
+    case Type::notop:
+        builder->CreateNot(val);
+        break;
+
+    default:
+        break;
+    }
 }
 
 void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 {
     llvm::Value *left;
+
+    _acceptor->right->accept(this);
+    auto right = stored_values.front();
+    stored_values.pop();
+    auto tt = std::get<1>(str_to_type(*_acceptor->right->type));
+
     auto name = _acceptor->left->token.getValue();
     if (namedValues.top().find(name) == namedValues.top().end())
     {
-        // auto type = llvm::Type::getFloatTy(*context);
         auto size = llvm::ConstantInt::get(*context, llvm::APInt(32, 1));
-        left = builder->CreateAlloca(llvm::Type::getFloatTy(*context), size, name);
+        left = builder->CreateAlloca(tt, size, name);
         namedValues.top().insert({name, left});
     }
     else
     {
         left = namedValues.top().at(name);
     }
-    _acceptor->right->accept(this);
-    auto right = stored_values.front();
-    stored_values.pop();
     builder->CreateStore(right, left);
     stored_values.push(nullptr);
 }
@@ -314,17 +422,13 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     std::vector<llvm::Type *> args(size, floatty);
     auto type = llvm::FunctionType::get(floatty, args, false);
     auto func = llvm::Function::Create(type, llvm::GlobalValue::InternalLinkage, name, module);
-    namedValues.top().insert({name, func});
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(BB);
+    namedValues.top().insert({name, func});
     _acceptor->body->accept(this);
     namedValues.pop();
     builder->SetInsertPoint(main_block);
     stored_values.push(nullptr);
-}
-
-void CodeEmittingNodeVisitor::visitElseNode(ElseNode *)
-{
 }
 
 void CodeEmittingNodeVisitor::visitElifNode(ElifNode *_acceptor)
@@ -443,8 +547,107 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
     stored_values.push(nullptr);
 }
 
-void CodeEmittingNodeVisitor::visitForNode(ForNode *)
+void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
 {
-    // Пока генераторы и массивы не реализованы, никаких циклов for
-    // Error
+
+    auto &token = _acceptor->iterator->token;
+    auto currblock = builder->GetInsertBlock();
+    auto parent = builder->GetInsertBlock()->getParent();
+    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
+    llvm::BasicBlock *initb = llvm::BasicBlock::Create(*context, "initb", parent);
+    llvm::BasicBlock *condb = llvm::BasicBlock::Create(*context, "condb", parent);
+    llvm::BasicBlock *bodyb = llvm::BasicBlock::Create(*context, "bodyb", parent);
+    llvm::BasicBlock *nextb = llvm::BasicBlock::Create(*context, "nextb", parent);
+    llvm::BasicBlock *afterb = llvm::BasicBlock::Create(*context, "afterb");
+    auto voidptrty = llvm::PointerType::get(*context, 0);
+
+    auto nextfunc = module->getFunction(LISTNEXT);
+    auto loadfunc = module->getFunction(LISTLOAD);
+
+    auto list_elem_type = std::get<1>(str_to_type(*_acceptor->condition->type));
+
+    builder->CreateBr(initb);
+
+    builder->SetInsertPoint(initb); // loop init
+    auto elem = builder->CreateAlloca(list_elem_type);
+    namedValues.top().insert({token.getValue(), elem}); // store loop variable in symbol table
+    _acceptor->condition->accept(this);
+    auto iter = builder->CreateAlloca(voidptrty); // **struct
+    builder->CreateStore(stored_values.front(), iter);
+    stored_values.pop();
+    builder->CreateBr(condb);
+
+    builder->SetInsertPoint(condb); // condition
+    auto cond = builder->CreateIsNull(builder->CreateLoad(voidptrty, iter));
+    builder->CreateCondBr(cond, bodyb, afterb);
+
+    break_stack.push(afterb);
+    continue_stack.push(nextb);
+
+    builder->SetInsertPoint(bodyb);                                                    // loop body
+    auto load = builder->CreateCall(loadfunc, {builder->CreateLoad(voidptrty, iter)}); // pointer to list element data
+    builder->CreateStore(builder->CreateLoad(list_elem_type, load), elem);             // store list element data to loop variable
+    _acceptor->body->accept(this);
+    builder->CreateBr(nextb);
+
+    builder->SetInsertPoint(nextb);
+
+    auto curr = builder->CreateLoad(voidptrty, iter);      // *struct
+    auto nextcall = builder->CreateCall(nextfunc, {curr}); // get next *struct
+    builder->CreateStore(nextcall, iter);                  // store next to iterator
+    builder->CreateBr(condb);
+
+    parent->insert(parent->end(), afterb);
+    builder->SetInsertPoint(afterb);
+
+    if (currblock == main_block)
+    {
+        main_block = afterb;
+    }
+
+    break_stack.pop();
+    continue_stack.pop();
+    stored_values.push(nullptr);
+}
+
+void CodeEmittingNodeVisitor::visitListNode(ListNode *_acceptor)
+{
+    auto create = module->getFunction(LISTCREATE);
+    llvm::Function *push;
+
+    auto listelemtype = std::get<0>(str_to_type(*_acceptor->type));
+    switch (listelemtype)
+    {
+    case my_type::int_type:
+        push = module->getFunction(LISTPUSHINT);
+        break;
+    case my_type::bool_type:
+        push = module->getFunction(LISTPUSHBOOL);
+        break;
+    case my_type::str_type:
+        push = module->getFunction(LISTPUSHSTR);
+        break;
+    default:
+        break;
+    }
+
+    auto start = builder->CreateCall(create, {});
+
+    for (auto &i : _acceptor->children)
+    {
+        i->accept(this);
+        builder->CreateCall(push, {start, stored_values.front()});
+        stored_values.pop();
+    }
+    stored_values.push(start);
+}
+
+void CodeEmittingNodeVisitor::setEM(ErrorManagerInterface *_em)
+{
+    em = _em;
+}
+
+void CodeEmittingNodeVisitor::error(const std::string &_str)
+{
+    em->error(_str);
 }

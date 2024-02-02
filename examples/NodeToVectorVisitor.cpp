@@ -167,6 +167,9 @@ void NodeToVectorVisitor::visitLeaf(Leaf *_acceptor)
 void NodeToVectorVisitor::visitTypeNode(TypeNode *_acceptor) 
 {
     std::string text = "Type: " + _acceptor->token.getValue();
+    if (_acceptor->is_list) {
+        text += "[]";
+    }
     this->nodes.push_back(text);
 }
 
@@ -198,7 +201,7 @@ void NodeToVectorVisitor::visitCallNode(CallNode *_acceptor)
 {
     std::string text = "Call";
     this->nodes.push_back(text);
-    _acceptor->callable->accept(this);
+    this->nodes.push_back("<" + type_to_str(_acceptor->callable.getType()) + ", " + _acceptor->callable.getValue() + ">");
     _acceptor->params->accept(this);
 }
 
