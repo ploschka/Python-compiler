@@ -16,13 +16,18 @@
 
 #include <pycom/lib/Pycom.hpp>
 
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/wait.h>
+
 enum class CompilerState
 {
     created,
     file_opened,
     semantics_checked,
     code_generated,
-    compiled
+    compiled,
+    linked
 };
 
 Pycom::Pycom(ErrorManagerInterface *_errmng) : Target(nullptr),
@@ -160,6 +165,57 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     else
     {
         errmng->error("Can't emit llvm, code has not been generated");
+    }
+}
+
+void Pycom::link(std::string &_input_file, std::string &_output_file)
+{
+    if (state >= CompilerState::compiled)
+    {
+        pid_t pid = fork();
+        if (pid < 0)
+        {
+            errmng->error("Can't create new process");
+            errmng->error(strerror(errno));
+            return;
+        }
+        if (pid == 0)
+        {
+            const uint32_t size = 10;
+
+            auto args = std::make_unique<char *[]>(size);
+            memset(args.get(), 0, sizeof(char *) * size);
+
+            args[0] = "/usr/bin/ld";
+
+            if (execvp("ld", args.get()) < 0)
+            {
+                errmng->error("Can't execute linker");
+                errmng->error(strerror(errno));
+                return;
+            }
+        }
+        if (pid > 0)
+        {
+            int status;
+            if (waitpid(pid, &status, 0) < 0)
+            {
+                errmng->error("Can't wait for linker process");
+                errmng->error(strerror(errno));
+            }
+            if (WIFEXITED(status))
+            {
+                if (WEXITSTATUS(status) != 0)
+                {
+                    errmng->error(std::string("Linker exited with exit status ") + std::to_string(WEXITSTATUS(status)));
+                }
+            }
+        }
+        state = CompilerState::linked;
+    }
+    else
+    {
+        errmng->error("Can't link, code is not compiled");
     }
 }
 
