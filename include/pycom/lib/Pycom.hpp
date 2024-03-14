@@ -58,4 +58,5 @@ public:
     void generate();
     void compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olevel, llvm::PIELevel::Level _PIE, llvm::PICLevel::Level _PIC);
     void emitLLVM(llvm::raw_ostream &_stream);
+    void link(std::string& _input_file, std::string& _output_file);
 };
