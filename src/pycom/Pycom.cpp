@@ -168,7 +168,7 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     }
 }
 
-void Pycom::link(std::string &_input_file, std::string &_output_file)
+void Pycom::link(std::string &, std::string &)
 {
     if (state >= CompilerState::compiled)
     {
@@ -183,12 +183,12 @@ void Pycom::link(std::string &_input_file, std::string &_output_file)
         {
             const uint32_t size = 10;
 
-            auto args = std::make_unique<char *[]>(size);
-            memset(args.get(), 0, sizeof(char *) * size);
+            auto args = std::make_unique<const char*[]>(size);
+            memset(args.get(), 0, sizeof(const char *) * size);
 
-            args[0] = "/usr/bin/ld";
+            args[0] = "ld";
 
-            if (execvp("ld", args.get()) < 0)
+            if (execvp(args[0], const_cast<char*const*>(args.get())) < 0)
             {
                 errmng->error("Can't execute linker");
                 errmng->error(strerror(errno));
@@ -208,7 +208,13 @@ void Pycom::link(std::string &_input_file, std::string &_output_file)
                 if (WEXITSTATUS(status) != 0)
                 {
                     errmng->error(std::string("Linker exited with exit status ") + std::to_string(WEXITSTATUS(status)));
+                    return;
                 }
+            }
+            else
+            {
+                errmng->error("Linker process aborted");
+                return;
             }
         }
         state = CompilerState::linked;
