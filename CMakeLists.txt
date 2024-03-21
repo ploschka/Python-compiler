@@ -39,6 +39,7 @@ set(codegenlib src/pycom/CodeGenerator.cpp src/pycom/CodeEmittingNodeVisitor.cpp
 set(optimizerlib src/pycom/Optimizer.cpp src/pycom/CalculateVisitor.cpp src/pycom/ShortenExpressionVisitor.cpp)
 set(utilitylib src/pycom/ErrorManager.cpp)
 set(stdlib src/pycom/stdlib.cpp)
+set(runlib src/pycom/run.cpp)
 
 add_library(token STATIC ${tokenlib})
 add_library(ast STATIC ${astlib})
@@ -49,6 +50,7 @@ add_library(codegen STATIC ${codegenlib})
 add_library(optimizer STATIC ${optimizerlib})
 add_library(utility STATIC ${utilitylib})
 add_library(std STATIC ${stdlib})
+add_library(run STATIC ${runlib})
 
 target_link_libraries(lexer token)
 target_link_libraries(parser lexer ast token)
@@ -87,19 +89,19 @@ if(PYCOM_BUILD_TESTS OR PYCOM_BUILD_EXAMPLES)
   set(script_source scripts)
   file(COPY ${script_source} DESTINATION .)
   include_directories(examples)
-  add_library(ex_visitors examples/NodePrintVisitor.cpp examples/NodeToVectorVisitor.cpp)
+  add_library(ex_visitors STATIC examples/NodePrintVisitor.cpp examples/NodeToVectorVisitor.cpp)
+  add_library(throw_errmng STATIC examples/ThrowErrorManager.cpp)
 endif()
 
 if(PYCOM_BUILD_TESTS)
     add_subdirectory(tests/googletest)
 
     add_library(lexermock STATIC tests/LexerMock.cpp)
-    add_library(throwem STATIC tests/ThrowErrorManager.cpp)
     target_link_libraries(lexermock token)
 
     add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp tests/semantictests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} ex_visitors lexermock throwem)
+    target_link_libraries(${testname} gtest gtest_main ${libs} throw_errmng ex_visitors lexermock)
 endif(PYCOM_BUILD_TESTS)
 
 if(PYCOM_BUILD_EXAMPLES)
@@ -113,7 +115,7 @@ if(PYCOM_BUILD_EXAMPLES)
     add_executable(${optimex} examples/optimizer.cpp)
 
     target_link_libraries(${parsex} ex_visitors)
-    target_link_libraries(${optimex} ex_visitors)
+    target_link_libraries(${optimex} ex_visitors throw_errmng)
 
     foreach(ex ${examples})
         target_link_libraries(${ex} ${libs})        
