@@ -7,7 +7,7 @@
 #include <memory>
 #include <pycom/utility/Types.hpp>
 #include <pycom/semanalyzer/SemanticAnalyzer.hpp>
-#include <pycom/error_manager/ThrowErrorManager.hpp>
+#include "ThrowErrorManager.hpp"
 
 int main()
 {

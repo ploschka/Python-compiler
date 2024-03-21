@@ -168,7 +168,7 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     }
 }
 
-void Pycom::link(std::string &, std::string &)
+void Pycom::link(const std::string &_input_file, const std::string &_output_file, bool shared, bool executable)
 {
     if (state >= CompilerState::compiled)
     {
@@ -183,12 +183,30 @@ void Pycom::link(std::string &, std::string &)
         {
             const uint32_t size = 10;
 
-            auto args = std::make_unique<const char*[]>(size);
+            auto args = std::make_unique<const char *[]>(size);
             memset(args.get(), 0, sizeof(const char *) * size);
 
-            args[0] = "ld";
+            args[0] = "gcc";
+            args[1] = _input_file.c_str();
+            args[2] = "libstd.a";
+            args[3] = "-o";
+            args[4] = _output_file.c_str();
+            args[5] = "-lm";
 
-            if (execvp(args[0], const_cast<char*const*>(args.get())) < 0)
+            uint counter = 6;
+            
+            if (shared)
+            {
+                args[counter++] = "-shared";
+            }
+            if (executable)
+            {
+                args[counter++] = "librun.a";
+            }
+            args[counter] = NULL;
+
+
+            if (execvp(args[0], const_cast<char *const *>(args.get())) < 0)
             {
                 errmng->error("Can't execute linker");
                 errmng->error(strerror(errno));
