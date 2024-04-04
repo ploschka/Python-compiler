@@ -88,11 +88,18 @@ void Pycom::open(std::istream &_stream)
 
 bool Pycom::checkSemantics()
 {
+    bool result = true;
+    auto handler = [&result](void*) -> void*{
+        result = false;
+        return nullptr;
+    };
     if (state >= CompilerState::file_opened)
     {
+        errmng->registerHandler(handler);
         seman->checkSemantics(ast.get());
         state = CompilerState::semantics_checked;
-        return true;
+        errmng->registerHandler(nullptr);
+        return result;
     }
     errmng->error("Can't check semantics, file was not opened");
     return false;

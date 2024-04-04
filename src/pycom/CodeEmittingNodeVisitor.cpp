@@ -549,11 +549,9 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
 {
-
     auto &token = _acceptor->iterator->token;
     auto currblock = builder->GetInsertBlock();
     auto parent = builder->GetInsertBlock()->getParent();
-    // llvm::BasicBlock *current_block = builder->GetInsertBlock();
     llvm::BasicBlock *initb = llvm::BasicBlock::Create(*context, "initb", parent);
     llvm::BasicBlock *condb = llvm::BasicBlock::Create(*context, "condb", parent);
     llvm::BasicBlock *bodyb = llvm::BasicBlock::Create(*context, "bodyb", parent);
@@ -569,10 +567,10 @@ void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
     builder->CreateBr(initb);
 
     builder->SetInsertPoint(initb); // loop init
-    auto elem = builder->CreateAlloca(list_elem_type);
+    auto elem = builder->CreateAlloca(list_elem_type, nullptr, token.getValue());
     namedValues.top().insert({token.getValue(), elem}); // store loop variable in symbol table
     _acceptor->condition->accept(this);
-    auto iter = builder->CreateAlloca(voidptrty); // **struct
+    auto iter = builder->CreateAlloca(voidptrty, nullptr, "iter"); // **struct
     builder->CreateStore(stored_values.front(), iter);
     stored_values.pop();
     builder->CreateBr(condb);

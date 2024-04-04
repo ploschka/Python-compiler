@@ -1,20 +1,20 @@
 #include <pycom/utility/ErrorManager.hpp>
 
-void ErrorManager::error(const std::string &_str, void *)
+void ErrorManager::error(const std::string &_str, void *_arg)
 {
     stream << _str << std::endl;
     if (handler)
     {
-        handler(nullptr);
+        handler(_arg);
     }
 }
 
-void ErrorManager::error(const char *_str, void *)
+void ErrorManager::error(const char *_str, void *_arg)
 {
     stream << _str << std::endl;
     if (handler)
     {
-        handler(nullptr);
+        handler(_arg);
     }
 }
 
