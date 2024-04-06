@@ -42,6 +42,7 @@ Pycom::Pycom(ErrorManagerInterface *_errmng) : Target(nullptr),
     seman = std::make_unique<SemanticAnalyzer>();
 
     parser->setLexer(lexer.get());
+    seman->setEM(errmng);
 
     llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
@@ -78,10 +79,6 @@ void Pycom::open(std::istream &_stream)
     lexer->open(_stream);
     seman->reset();
 
-    context = std::make_unique<llvm::LLVMContext>();
-    builder = std::make_unique<llvm::IRBuilder<>>(*context);
-    module = std::make_unique<llvm::Module>("pycom", *context);
-
     ast.reset(parser->getAST());
     state = CompilerState::file_opened;
 }
@@ -89,10 +86,12 @@ void Pycom::open(std::istream &_stream)
 bool Pycom::checkSemantics()
 {
     bool result = true;
-    auto handler = [&result](void*) -> void*{
+    auto handler = [&result](void *) -> void *
+    {
         result = false;
         return nullptr;
     };
+
     if (state >= CompilerState::file_opened)
     {
         errmng->registerHandler(handler);
@@ -109,10 +108,15 @@ void Pycom::generate()
 {
     if (state >= CompilerState::semantics_checked)
     {
+        context = std::make_unique<llvm::LLVMContext>();
+        builder = std::make_unique<llvm::IRBuilder<>>(*context);
+        module = std::make_unique<llvm::Module>("pycom", *context);
+
         module->setDataLayout(TargetMachine->createDataLayout());
         module->setTargetTriple(TargetTriple);
 
         codegen = std::make_unique<CodeGenerator>(builder.get(), module.get(), context.get());
+        codegen->setEM(errmng);
 
         codegen->generate(ast.get());
         state = CompilerState::code_generated;
@@ -201,7 +205,7 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
             args[5] = "-lm";
 
             uint counter = 6;
-            
+
             if (shared)
             {
                 args[counter++] = "-shared";
@@ -211,7 +215,6 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
                 args[counter++] = "librun.a";
             }
             args[counter] = NULL;
-
 
             if (execvp(args[0], const_cast<char *const *>(args.get())) < 0)
             {

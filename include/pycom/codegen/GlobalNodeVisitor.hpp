@@ -14,7 +14,7 @@
 #include <utility>
 #include <tuple>
 
-class CodeEmittingNodeVisitor : public NodeVisitorInterface, public ErrorEmitterInterface
+class GlobalNodeVisitor : public NodeVisitorInterface, public ErrorEmitterInterface
 {
 private:
     typedef std::map<std::string, llvm::Value *> symbtable_t;
@@ -24,28 +24,9 @@ private:
     llvm::Module *module;
     llvm::LLVMContext *context;
 
-    std::stack<symbtable_t> namedValues;
-    std::queue<llvm::Value *> stored_values;
-    std::vector<llvm::Value *> stored_array;
-    llvm::BasicBlock *main_block;
-    std::stack<llvm::BasicBlock *> break_stack;
-    std::stack<llvm::BasicBlock *> continue_stack;
-    std::stack<llvm::BasicBlock *> merge_stack;
-
     ErrorManagerInterface *em;
 
-    enum class my_type
-    {
-        int_type,
-        str_type,
-        bool_type,
-        void_type
-    };
-    static const std::unordered_map<std::string, my_type> typemap;
-
-    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> __str_to_type(const std::string &_str);
-    std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *, bool> str_to_type(const std::string &_str);
-    llvm::Value *getLeafValue(Leaf *_leaf);
+    void stdinit();
     void error(const std::string &_str);
 
 public:
@@ -67,7 +48,7 @@ public:
     void visitWhileNode(WhileNode *_acceptor);
     void visitForNode(ForNode *_acceptor);
     void visitListNode(ListNode *_acceptor);
-    CodeEmittingNodeVisitor(llvm::IRBuilder<> *_builder,
+    GlobalNodeVisitor(llvm::IRBuilder<> *_builder,
                             llvm::Module *_module,
                             llvm::LLVMContext *_context);
 

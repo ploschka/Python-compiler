@@ -2,10 +2,11 @@
 
 #include <pycom/interface/SemanticAnalyzerInterface.hpp>
 #include <pycom/semanalyzer/SemanticVisitor.hpp>
+#include <pycom/interface/ErrorEmitterInterface.hpp>
 
 #include <memory>
 
-class SemanticAnalyzer : public SemanticAnalyzerInterface
+class SemanticAnalyzer : public SemanticAnalyzerInterface, public ErrorEmitterInterface
 {
 private:
     std::unique_ptr<SemanticVisitor> visitor;

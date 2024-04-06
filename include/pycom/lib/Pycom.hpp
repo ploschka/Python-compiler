@@ -41,10 +41,10 @@ private:
     llvm::TargetOptions opt;
     llvm::Reloc::Model RM;
 
-    std::unique_ptr<LexerInterface> lexer;
-    std::unique_ptr<ParserInterface> parser;
-    std::unique_ptr<SemanticAnalyzerInterface> seman;
-    std::unique_ptr<CodeGeneratorInterface> codegen;
+    std::unique_ptr<Lexer> lexer;
+    std::unique_ptr<Parser> parser;
+    std::unique_ptr<SemanticAnalyzer> seman;
+    std::unique_ptr<CodeGenerator> codegen;
     std::unique_ptr<AST> ast;
     ErrorManagerInterface *errmng;
 

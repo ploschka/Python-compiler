@@ -210,7 +210,7 @@ void SemanticVisitor::visitFunctionNode(FunctionNode *_acceptor)
     {
         symtable.top()->insert({token.getValue(), {token, symtype.first}});
 
-        symtable.push(std::make_unique<localtable_t>(*symtable.top()));
+        symtable.push(std::make_shared<localtable_t>(*symtable.top()));
         auto curr = funcs.insert({token.getValue(), {}}).first;
         curr->second.first = set.insert(_acceptor->return_type->token.getValue()).first;
 
@@ -404,7 +404,7 @@ void SemanticVisitor::visitListNode(ListNode *_acceptor)
 
 void SemanticVisitor::stdinit()
 {
-    symtable.push(std::make_unique<localtable_t>());
+    symtable.push(std::make_shared<localtable_t>());
 
     symbol_t _1 = {{"True", Type::id}, set.insert("bool").first};
     symbol_t _2 = {{"False", Type::id}, set.insert("bool").first};

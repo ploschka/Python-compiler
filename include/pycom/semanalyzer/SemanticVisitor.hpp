@@ -4,6 +4,7 @@
 #include <pycom/token/Token.hpp>
 #include <pycom/utility/Types.hpp>
 #include <pycom/interface/ErrorManagerInterface.hpp>
+#include <pycom/interface/ErrorEmitterInterface.hpp>
 
 #include <memory>
 #include <stack>
@@ -13,7 +14,7 @@
 #include <vector>
 #include <set>
 
-class SemanticVisitor : public NodeVisitorInterface
+class SemanticVisitor : public NodeVisitorInterface, public ErrorEmitterInterface
 {
 public:
     void visitLeaf(Leaf *_acceptor);

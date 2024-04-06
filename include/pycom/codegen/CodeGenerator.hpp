@@ -6,14 +6,17 @@
 
 #include <pycom/interface/CodeGeneratorInterface.hpp>
 #include <pycom/codegen/CodeEmittingNodeVisitor.hpp>
+#include <pycom/codegen/GlobalNodeVisitor.hpp>
 #include <pycom/interface/ErrorManagerInterface.hpp>
+#include <pycom/interface/ErrorEmitterInterface.hpp>
 
 #include <memory>
 
-class CodeGenerator : public CodeGeneratorInterface
+class CodeGenerator : public CodeGeneratorInterface, public ErrorEmitterInterface
 {
 private:
-    std::unique_ptr<CodeEmittingNodeVisitor> visitor;
+    std::unique_ptr<CodeEmittingNodeVisitor> codevisitor;
+    std::unique_ptr<GlobalNodeVisitor> globalvisitor;
 
 public:
     void generate(AST *_ast);
