@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <utility>
 #include <tuple>
+#include <algorithm>
 
 const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmittingNodeVisitor::typemap = {
     {INTEGER_TYPE, CodeEmittingNodeVisitor::my_type::int_type},
@@ -186,7 +187,6 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
 
 void CodeEmittingNodeVisitor::visitActualParamsNode(ActualParamsNode *_acceptor)
 {
-    stored_array.clear();
     for (auto &i : _acceptor->params)
     {
         i->accept(this);
@@ -201,7 +201,11 @@ void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
     auto funcname = _acceptor->callable.getValue();
     auto callable = module->getFunction(funcname);
     _acceptor->params->accept(this);
-    auto call = builder->CreateCall(callable, stored_array);
+    auto size = callable->arg_size();
+    std::vector<llvm::Value*> actual(size);
+    std::copy(stored_array.end() - size, stored_array.end(), actual.begin());
+    stored_array.resize(stored_array.size() - size);
+    auto call = builder->CreateCall(callable, actual);
     stored_values.push(call);
 }
 
