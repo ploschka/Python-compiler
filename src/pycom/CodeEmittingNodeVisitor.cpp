@@ -46,6 +46,9 @@ std::tuple<CodeEmittingNodeVisitor::my_type, llvm::Type *> CodeEmittingNodeVisit
     case my_type::bool_type:
         return std::make_tuple(tt, llvm::Type::getInt8Ty(*context));
         break;
+    case my_type::str_type:
+        return std::make_tuple(tt, llvm::Type::getInt8PtrTy(*context));
+        break;
     default:
         break;
     }
@@ -110,10 +113,10 @@ llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
                     return (builder->CreateLoad(std::get<1>(tt), v)); // load int variable
                     break;
                 case my_type::str_type:
-                    return (v); // return pointer to string
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // load pointer to string
                     break;
                 case my_type::bool_type:
-                    return (builder->CreateLoad(std::get<1>(tt), v)); // lload bool variable
+                    return (builder->CreateLoad(std::get<1>(tt), v)); // load bool variable
                     break;
                 default:
                     break;
@@ -202,8 +205,7 @@ void CodeEmittingNodeVisitor::visitCallNode(CallNode *_acceptor)
     auto callable = module->getFunction(funcname);
     _acceptor->params->accept(this);
     auto size = callable->arg_size();
-    std::vector<llvm::Value*> actual(size);
-    std::copy(stored_array.end() - size, stored_array.end(), actual.begin());
+    std::vector<llvm::Value *> actual(stored_array.end() - size, stored_array.end());
     stored_array.resize(stored_array.size() - size);
     auto call = builder->CreateCall(callable, actual);
     stored_values.push(call);
@@ -325,8 +327,8 @@ void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
     auto name = _acceptor->left->token.getValue();
     if (namedValues.top().find(name) == namedValues.top().end())
     {
-        auto size = llvm::ConstantInt::get(*context, llvm::APInt(32, 1));
-        left = builder->CreateAlloca(tt, size, name);
+        // auto size = llvm::ConstantInt::get(*context, llvm::APInt(32, 1));
+        left = builder->CreateAlloca(tt, nullptr, name);
         namedValues.top().insert({name, left});
     }
     else
@@ -376,7 +378,6 @@ void CodeEmittingNodeVisitor::visitProgramNode(ProgramNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
 {
-    auto floatty = llvm::Type::getFloatTy(*context);
     auto name = _acceptor->id->token.getValue();
     // auto paramsize = llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*context), llvm::APInt(32, 1));
     if (namedValues.top().find(name) != namedValues.top().end())
@@ -387,18 +388,26 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     namedValues.emplace(namedValues.top());
 
     auto size = _acceptor->formal_params->params.size();
-    std::vector<llvm::Type *> args(size, floatty);
-    auto type = llvm::FunctionType::get(floatty, args, false);
+    std::vector<llvm::Type *> args;
+    args.reserve(size);
+    for (auto &i : _acceptor->formal_params->types)
+    {
+        auto tt = std::get<1>(str_to_type(i->token.getValue()));
+        args.push_back(tt);
+    }
+    auto returntype = std::get<1>(str_to_type(_acceptor->return_type->token.getValue()));
+    auto type = llvm::FunctionType::get(returntype, args, false);
     auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, name, module);
 
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(BB);
 
     auto arg_iter = func->args().begin();
+    auto type_iter = _acceptor->formal_params->types.begin();
 
     for (auto &i : _acceptor->formal_params->params)
     {
-        auto alloc = builder->CreateAlloca(floatty, nullptr, i->token.getValue());
+        auto alloc = builder->CreateAlloca(std::get<1>(str_to_type((*(type_iter++))->token.getValue())), nullptr, i->token.getValue());
         builder->CreateStore(arg_iter++, alloc);
         namedValues.top().insert({i->token.getValue(), alloc});
     }
