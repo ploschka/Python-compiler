@@ -28,9 +28,14 @@ private:
     std::queue<llvm::Value *> stored_values;
     std::vector<llvm::Value *> stored_array;
     llvm::BasicBlock *main_block;
+    llvm::BasicBlock *return_block = nullptr;
+    llvm::Value *return_value = nullptr;
+    bool block_ended = false;
     std::stack<llvm::BasicBlock *> break_stack;
     std::stack<llvm::BasicBlock *> continue_stack;
     std::stack<llvm::BasicBlock *> merge_stack;
+    unsigned int lastpos;
+    unsigned int lastrow;
 
     ErrorManagerInterface *em;
 

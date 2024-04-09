@@ -17,7 +17,6 @@
 #include <unordered_map>
 #include <utility>
 #include <tuple>
-#include <algorithm>
 
 const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmittingNodeVisitor::typemap = {
     {INTEGER_TYPE, CodeEmittingNodeVisitor::my_type::int_type},
@@ -78,6 +77,9 @@ void CodeEmittingNodeVisitor::visitTypeNode(TypeNode *) {}
 
 llvm::Value *CodeEmittingNodeVisitor::getLeafValue(Leaf *_leaf)
 {
+    lastrow = _leaf->token.getRow();
+    lastpos = _leaf->token.getPos();
+
     Type t = _leaf->token.getType();
     std::string val = _leaf->token.getValue();
     llvm::Value *v;
@@ -144,6 +146,10 @@ CodeEmittingNodeVisitor::CodeEmittingNodeVisitor(
 void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
 {
     auto &t = _acceptor->token;
+
+    lastrow = t.getRow();
+    lastpos = t.getPos();
+
     llvm::Value *v;
     switch (t.getType())
     {
@@ -159,6 +165,7 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
         else
         {
             builder->CreateBr(continue_stack.top());
+            block_ended = true;
         }
         break;
     case Type::breakkw:
@@ -173,6 +180,7 @@ void CodeEmittingNodeVisitor::visitLeaf(Leaf *_acceptor)
         else
         {
             builder->CreateBr(break_stack.top());
+            block_ended = true;
         }
         break;
     case Type::id:
@@ -341,10 +349,23 @@ void CodeEmittingNodeVisitor::visitAssignmentNode(AssignmentNode *_acceptor)
 
 void CodeEmittingNodeVisitor::visitReturnNode(ReturnNode *_acceptor)
 {
+    block_ended = true;
+
     _acceptor->return_value->accept(this);
     auto ret_val = stored_values.front();
     stored_values.pop();
-    builder->CreateRet(ret_val);
+
+    if (return_value && return_block)
+    {
+        builder->CreateStore(ret_val, return_value);
+        builder->CreateBr(return_block);
+    }
+    else
+    {
+        error(std::string("Return statement outside function\n"
+                          "Occured at row: ") +
+              std::to_string(lastrow) + " pos: " + std::to_string(lastpos));
+    }
     stored_values.push(nullptr);
 }
 
@@ -354,6 +375,10 @@ void CodeEmittingNodeVisitor::visitBlockNode(BlockNode *_acceptor)
     {
         i->accept(this);
         stored_values.pop();
+        if (block_ended)
+        {
+            return;
+        }
     }
 }
 
@@ -400,7 +425,10 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     auto func = llvm::Function::Create(type, llvm::GlobalValue::ExternalLinkage, name, module);
 
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context, "body", func);
+    return_block = llvm::BasicBlock::Create(*context, "retblock", func);
     builder->SetInsertPoint(BB);
+
+    return_value = builder->CreateAlloca(returntype, nullptr, "__retval");
 
     auto arg_iter = func->args().begin();
     auto type_iter = _acceptor->formal_params->types.begin();
@@ -414,7 +442,14 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     namedValues.top().insert({name, func});
     _acceptor->body->accept(this);
     namedValues.pop();
+
+    builder->SetInsertPoint(return_block);
+    builder->CreateRet(builder->CreateLoad(returntype, return_value));
     builder->SetInsertPoint(main_block);
+
+    return_block = nullptr;
+    return_value = nullptr;
+    block_ended = false;
     stored_values.push(nullptr);
 }
 
@@ -431,7 +466,11 @@ void CodeEmittingNodeVisitor::visitElifNode(ElifNode *_acceptor)
 
     builder->SetInsertPoint(thenb);
     _acceptor->body->accept(this);
-    builder->CreateBr(merge_stack.top());
+    if (!block_ended)
+    {
+        builder->CreateBr(merge_stack.top());
+    }
+    block_ended = false;
 
     parent->insert(parent->end(), elseb);
     builder->SetInsertPoint(elseb);
@@ -454,7 +493,11 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
 
     builder->SetInsertPoint(thenb);
     _acceptor->body->accept(this);
-    builder->CreateBr(merge);
+    if (!block_ended)
+    {
+        builder->CreateBr(merge);
+    }
+    block_ended = false;
     thenb = builder->GetInsertBlock();
 
     parent->insert(parent->end(), elseb);
@@ -483,7 +526,11 @@ void CodeEmittingNodeVisitor::visitIfNode(IfNode *_acceptor)
         _acceptor->next_else->body->accept(this);
     }
 
-    builder->CreateBr(merge);
+    if (!block_ended)
+    {
+        builder->CreateBr(merge);
+    }
+    block_ended = false;
 
     parent->insert(parent->end(), merge);
     builder->SetInsertPoint(merge);
@@ -519,7 +566,12 @@ void CodeEmittingNodeVisitor::visitWhileNode(WhileNode *_acceptor)
 
     builder->SetInsertPoint(bodyb);
     _acceptor->body->accept(this);
-    builder->CreateBr(condb);
+
+    if(!block_ended)
+    {
+        builder->CreateBr(condb);
+    }
+    block_ended = false;
 
     parent->insert(parent->end(), afterb);
     builder->SetInsertPoint(afterb);
@@ -573,7 +625,11 @@ void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
     auto load = builder->CreateCall(loadfunc, {builder->CreateLoad(voidptrty, iter)}); // pointer to list element data
     builder->CreateStore(builder->CreateLoad(list_elem_type, load), elem);             // store list element data to loop variable
     _acceptor->body->accept(this);
-    builder->CreateBr(nextb);
+    if(!block_ended)
+    {
+        builder->CreateBr(nextb);
+    }
+    block_ended = false;
 
     builder->SetInsertPoint(nextb);
 
