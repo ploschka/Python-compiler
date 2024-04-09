@@ -85,20 +85,11 @@ void Pycom::open(std::istream &_stream)
 
 bool Pycom::checkSemantics()
 {
-    bool result = true;
-    auto handler = [&result](void *) -> void *
-    {
-        result = false;
-        return nullptr;
-    };
-
     if (state >= CompilerState::file_opened)
     {
-        errmng->registerHandler(handler);
         seman->checkSemantics(ast.get());
         state = CompilerState::semantics_checked;
-        errmng->registerHandler(nullptr);
-        return result;
+        return !errmng->errorOccured();
     }
     errmng->error("Can't check semantics, file was not opened");
     return false;
@@ -119,11 +110,15 @@ void Pycom::generate()
         codegen->setEM(errmng);
 
         codegen->generate(ast.get());
-        state = CompilerState::code_generated;
+        if (!errmng->errorOccured())
+        {
+            state = CompilerState::code_generated;
+        }
     }
     else
     {
         errmng->error("Can't generate code, semantics have not been checked");
+        return;
     }
 }
 
@@ -148,6 +143,7 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
         if (llvm::verifyModule(*module, &llvm::errs()))
         {
             errmng->error("Invalid module");
+            return;
         }
         MPM.run(*module, MAM);
 
@@ -156,6 +152,7 @@ void Pycom::compile(llvm::raw_fd_ostream &_stream, llvm::OptimizationLevel _Olev
         if (TargetMachine->addPassesToEmitFile(PM, _stream, nullptr, FileType))
         {
             errmng->error("TargetMachine can't emit a file of this type");
+            return;
         }
         PM.run(*module);
         _stream.flush();
@@ -230,6 +227,7 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
             {
                 errmng->error("Can't wait for linker process");
                 errmng->error(strerror(errno));
+                return;
             }
             if (WIFEXITED(status))
             {
@@ -250,6 +248,7 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
     else
     {
         errmng->error("Can't link, code is not compiled");
+        return;
     }
 }
 

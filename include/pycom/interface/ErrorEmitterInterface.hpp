@@ -6,4 +6,5 @@ class ErrorEmitterInterface
 {
 public:
     virtual void setEM(ErrorManagerInterface *_em) = 0;
+    virtual ~ErrorEmitterInterface() = default;
 };
