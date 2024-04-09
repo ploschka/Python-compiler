@@ -443,6 +443,11 @@ void CodeEmittingNodeVisitor::visitFunctionNode(FunctionNode *_acceptor)
     _acceptor->body->accept(this);
     namedValues.pop();
 
+    if (!block_ended)
+    {
+        builder->CreateBr(return_block);
+    }
+
     builder->SetInsertPoint(return_block);
     builder->CreateRet(builder->CreateLoad(returntype, return_value));
     builder->SetInsertPoint(main_block);
