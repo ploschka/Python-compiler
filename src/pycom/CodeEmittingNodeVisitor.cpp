@@ -659,7 +659,7 @@ void CodeEmittingNodeVisitor::visitForNode(ForNode *_acceptor)
 void CodeEmittingNodeVisitor::visitListNode(ListNode *_acceptor)
 {
     auto create = module->getFunction(LISTCREATE);
-    llvm::Function *push;
+    llvm::Function *push = nullptr;
 
     auto listelemtype = std::get<0>(str_to_type(*_acceptor->type));
     switch (listelemtype)
@@ -674,6 +674,7 @@ void CodeEmittingNodeVisitor::visitListNode(ListNode *_acceptor)
         push = module->getFunction(LISTPUSHSTR);
         break;
     default:
+        error("Unexpected type\nOccured at row: " + std::to_string(lastrow) + " pos: " + std::to_string(lastpos));
         break;
     }
 
