@@ -176,7 +176,12 @@ void Pycom::emitLLVM(llvm::raw_ostream &_stream)
     }
 }
 
-void Pycom::link(const std::string &_input_file, const std::string &_output_file, bool shared, bool executable)
+void Pycom::link(
+    const std::string &_input_file,
+    const std::string &_output_file,
+    const std::string &_stdlib,
+    const std::string &_runlib,
+    bool shared)
 {
     if (state >= CompilerState::compiled)
     {
@@ -196,7 +201,7 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
 
             args[0] = "gcc";
             args[1] = _input_file.c_str();
-            args[2] = "libstd.a";
+            args[2] = _stdlib.c_str();
             args[3] = "-o";
             args[4] = _output_file.c_str();
             args[5] = "-lm";
@@ -207,9 +212,9 @@ void Pycom::link(const std::string &_input_file, const std::string &_output_file
             {
                 args[counter++] = "-shared";
             }
-            if (executable)
+            if (!_runlib.empty())
             {
-                args[counter++] = "librun.a";
+                args[counter++] = _runlib.c_str();
             }
             args[counter] = NULL;
 
