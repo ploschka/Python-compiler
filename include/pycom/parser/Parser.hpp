@@ -59,5 +59,5 @@ private:
 public:
     void setLexer(LexerInterface *);
     AST *getAST();
-    Parser();
+    Parser() = default;
 };

@@ -41,8 +41,6 @@ static const std::map<std::string, std::set<Type>> FIRSTS = {
     {"if_stmt", {Type::ifkw}},
     {"return_stmt", {Type::returnkw}}};
 
-Parser::Parser() : token(Token("хуй", Type::bandass)){};
-
 void Parser::setLexer(LexerInterface *_lexer)
 {
     this->lexer = _lexer;

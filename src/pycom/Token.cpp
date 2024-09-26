@@ -30,6 +30,7 @@ void Token::setType(Type _type)
     this->type = _type;
 }
 
+Token::Token() : value(""), type(Type::eof), row(0), pos(0) {}
 Token::Token(std::string _value, Type _type, unsigned int _row, unsigned int _pos) : value(_value), type(_type), row(_row), pos(_pos) {}
 
 bool Token::operator==(const Token &_other) const
