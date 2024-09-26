@@ -3,6 +3,7 @@ project(Python_compiler
     VERSION 0.5.0
     DESCRIPTION "Python compiler made using LLVM"
     LANGUAGES C CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
 option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
