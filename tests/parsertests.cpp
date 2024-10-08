@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
+
 #include <pycom/parser/Parser.hpp>
 #include <pycom/token/Token.hpp>
-#include <fstream>
 #include <pycom/lexer/Lexer.hpp>
-#include <NodeToVectorVisitor.h>
+
+#include "NodeToVectorVisitor.h"
 #include "LexerMock.hpp"
 
 std::pair<std::vector<std::string>, std::vector<std::string>> convert(

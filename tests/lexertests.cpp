@@ -1,7 +1,8 @@
-#include <pycom/lexer/Lexer.hpp>
 #include <gtest/gtest.h>
+
+#include <pycom/lexer/Lexer.hpp>
+
 #include <vector>
-#include <fstream>
 #include <sstream>
 
 static std::unique_ptr<LexerInterface> lexer = std::make_unique<Lexer>();

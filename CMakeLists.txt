@@ -83,18 +83,16 @@ if(PYCOM_BUILD_EXECUTABLE)
     target_compile_options(${exename} PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
 
-  target_link_libraries(${exename} ${libname})
+    target_link_libraries(${exename} ${libname})
 endif(PYCOM_BUILD_EXECUTABLE)
 
-if(PYCOM_BUILD_TESTS OR PYCOM_BUILD_EXAMPLES)
-  set(script_source scripts)
-  file(COPY ${script_source} DESTINATION .)
-  include_directories(examples)
-  add_library(ex_visitors STATIC examples/NodePrintVisitor.cpp examples/NodeToVectorVisitor.cpp)
-  add_library(throw_errmng STATIC examples/ThrowErrorManager.cpp)
-endif()
-
 if(PYCOM_BUILD_TESTS)
+    set(script_source scripts)
+    file(COPY ${script_source} DESTINATION .)
+    include_directories(examples)
+    add_library(test_visitors STATIC tests/NodePrintVisitor.cpp tests/NodeToVectorVisitor.cpp)
+    add_library(throw_errmng STATIC tests/ThrowErrorManager.cpp)
+
     add_subdirectory(tests/googletest)
 
     add_library(lexermock STATIC tests/LexerMock.cpp)
@@ -102,23 +100,6 @@ if(PYCOM_BUILD_TESTS)
 
     add_executable(${testname} tests/parsertests.cpp tests/lexertests.cpp tests/semantictests.cpp)
 
-    target_link_libraries(${testname} gtest gtest_main ${libs} throw_errmng ex_visitors lexermock)
+    target_link_libraries(${testname} gtest gtest_main ${libs} throw_errmng test_visitors lexermock)
 endif(PYCOM_BUILD_TESTS)
 
-if(PYCOM_BUILD_EXAMPLES)
-    set(lexex lexerexample)
-    set(parsex parserexample)
-    set(optimex optimizerexample)
-    set(examples ${lexex} ${parsex} ${optimex})
-
-    add_executable(${lexex} examples/lexer.cpp)
-    add_executable(${parsex} examples/parser.cpp)
-    add_executable(${optimex} examples/optimizer.cpp)
-
-    target_link_libraries(${parsex} ex_visitors)
-    target_link_libraries(${optimex} ex_visitors throw_errmng)
-
-    foreach(ex ${examples})
-        target_link_libraries(${ex} ${libs})        
-    endforeach()
-endif()

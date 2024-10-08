@@ -1,7 +1,9 @@
-#include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <gtest/gtest.h>
+
+#include <pycom/semanalyzer/SemanticAnalyzer.hpp>
 #include <pycom/parser/Parser.hpp>
 #include <pycom/token/Token.hpp>
+
 #include "ThrowErrorManager.hpp"
 
 static std::unique_ptr<SemanticAnalyzer> semantic = std::make_unique<SemanticAnalyzer>();
