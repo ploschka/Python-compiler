@@ -9,9 +9,6 @@
 #include <pycom/interface/ErrorEmitterInterface.hpp>
 
 #include <map>
-#include <queue>
-#include <stack>
-#include <utility>
 #include <tuple>
 
 class GlobalNodeVisitor : public NodeVisitorInterface, public ErrorEmitterInterface

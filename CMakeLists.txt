@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 project(Python_compiler
     VERSION 0.5.0
     DESCRIPTION "Python compiler made using LLVM"
@@ -61,7 +61,7 @@ target_link_libraries(optimizer ast token)
 set(libs lexer parser codegen semanalyzer utility optimizer)
 
 add_library(${libname} SHARED src/pycom/Pycom.cpp)
-set_property(TARGET codegen PROPERTY CXX_STANDARD 17)
+set_property(TARGET codegen PROPERTY CXX_STANDARD 20)
 
 foreach(l ${libs} ${libname})
   if(MSVC)
@@ -75,7 +75,7 @@ target_link_libraries(${libname} ${libs} ${llvm_libraries} ${targets} ${target_a
 
 if(PYCOM_BUILD_EXECUTABLE)
   add_executable(${exename} main.cpp)
-  set_property(TARGET ${exename} PROPERTY CXX_STANDARD 17)
+  set_property(TARGET ${exename} PROPERTY CXX_STANDARD 20)
 
   if(MSVC)
     target_compile_options(${exename} PRIVATE /W4 /WX)

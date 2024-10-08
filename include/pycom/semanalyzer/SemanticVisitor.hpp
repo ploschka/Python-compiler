@@ -11,8 +11,6 @@
 #include <string>
 #include <utility>
 #include <map>
-#include <vector>
-#include <set>
 
 class SemanticVisitor : public NodeVisitorInterface, public ErrorEmitterInterface
 {

@@ -2,6 +2,7 @@
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/token/Token.hpp>
 #include <pycom/optimizer/CalculateVisitor.hpp>
+
 #include <vector>
 #include <map>
 

@@ -2,7 +2,6 @@
 #include <pycom/interface/NodeVisitorInterface.hpp>
 #include <pycom/AST/ASTNode.hpp>
 #include <pycom/token/Token.hpp>
-#include <vector>
 
 /**
  * Визитёр, вычисляющий значения некоторых узлов.

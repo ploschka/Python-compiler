@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <functional>
-#include <unordered_set>
 #include <string>
 
 #define IMPL(name)                                                                            \

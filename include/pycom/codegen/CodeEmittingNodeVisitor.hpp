@@ -11,7 +11,6 @@
 #include <map>
 #include <queue>
 #include <stack>
-#include <utility>
 #include <tuple>
 
 class CodeEmittingNodeVisitor : public NodeVisitorInterface, public ErrorEmitterInterface

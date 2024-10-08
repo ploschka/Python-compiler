@@ -15,7 +15,6 @@
 #include <pycom/utility/Types.hpp>
 
 #include <unordered_map>
-#include <utility>
 #include <tuple>
 
 const std::unordered_map<std::string, CodeEmittingNodeVisitor::my_type> CodeEmittingNodeVisitor::typemap = {

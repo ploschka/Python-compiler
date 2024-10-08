@@ -14,10 +14,6 @@
 #include <pycom/AST/ASTNode.hpp>
 #include <pycom/utility/Types.hpp>
 
-#include <unordered_map>
-#include <utility>
-#include <tuple>
-
 void GlobalNodeVisitor::stdinit()
 {
     auto floatty = llvm::Type::getFloatTy(*context);
