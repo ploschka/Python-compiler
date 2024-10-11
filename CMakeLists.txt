@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 project(Python_compiler
     VERSION 0.5.0
-    DESCRIPTION "Python compiler made using LLVM"
+    DESCRIPTION "Python language subset compiler"
     LANGUAGES C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(PYCOM_BUILD_TESTS "Build pycom tests" ON)
-option(PYCOM_BUILD_EXAMPLES "Build pycom examples" ON)
 option(PYCOM_BUILD_EXECUTABLE "Build pycom executable" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -61,30 +60,27 @@ target_link_libraries(optimizer ast token)
 set(libs lexer parser codegen semanalyzer utility optimizer)
 
 add_library(${libname} SHARED src/pycom/Pycom.cpp)
-set_property(TARGET codegen PROPERTY CXX_STANDARD 20)
 
-foreach(l ${libs} ${libname})
-  if(MSVC)
-    target_compile_options(${l} PRIVATE /W4 /WX)
-  else()
-    target_compile_options(${l} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  endif()       
-endforeach()
+set(project_targets ${libs} ${libname})
 
 target_link_libraries(${libname} ${libs} ${llvm_libraries} ${targets} ${target_asmparsers})
 
 if(PYCOM_BUILD_EXECUTABLE)
-  add_executable(${exename} main.cpp)
-  set_property(TARGET ${exename} PROPERTY CXX_STANDARD 20)
-
-  if(MSVC)
-    target_compile_options(${exename} PRIVATE /W4 /WX)
-  else()
-    target_compile_options(${exename} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  endif()
+    add_executable(${exename} main.cpp)
+    list(APPEND project_targets  ${exename})
 
     target_link_libraries(${exename} ${libname})
 endif(PYCOM_BUILD_EXECUTABLE)
+
+foreach(t ${project_targets})
+    if(MSVC)
+        target_compile_options(${t} PRIVATE /W4 /WX)
+    else()
+        target_compile_options(${t} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    endif()       
+
+    set_property(TARGET ${t} PROPERTY CXX_STANDARD 20)
+endforeach()
 
 if(PYCOM_BUILD_TESTS)
     set(script_source scripts)
