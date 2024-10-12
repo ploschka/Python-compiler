@@ -44,8 +44,9 @@ bool Token::operator==(const Token &_other) const
 
 bool Token::operator!=(const Token &_other) const
 {
-    return this->type != _other.getType() ||
-           this->value != _other.getValue() ||
-           this->row != _other.getRow() ||
-           this->pos != _other.getPos();
+    bool neq_types = this->type != _other.type;
+    bool neq_values = this->value != _other.value;
+    bool neq_pos = this->pos != _other.pos || this->pos != _other.pos;
+
+    return this->type == Type::id ? neq_types || neq_values || neq_pos : neq_types || neq_pos;
 }
