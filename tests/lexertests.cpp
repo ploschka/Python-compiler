@@ -27,7 +27,7 @@ static bool compvec(const std::vector<Token> &_v1, const std::vector<Token> &_v2
     return true;
 }
 
-bool is_equal(std::string input_str, std::vector<Token> true_output_tokens)
+bool is_equal(const std::string& input_str, const std::vector<Token>& true_output_tokens)
 {
     std::stringstream ss;
     ss << input_str;

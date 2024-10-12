@@ -4,7 +4,7 @@
 
 void ThrowErrorManager::error(const std::string &_str, void *)
 {
-    std::cerr << _str << std::endl;
+    // std::cerr << _str << std::endl;
     throw std::runtime_error(_str);
 }
 
