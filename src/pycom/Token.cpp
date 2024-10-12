@@ -35,10 +35,11 @@ Token::Token(std::string _value, Type _type, unsigned int _row, unsigned int _po
 
 bool Token::operator==(const Token &_other) const
 {
-    return this->type == _other.getType() &&
-           this->value == _other.getValue() &&
-           this->row == _other.getRow() &&
-           this->pos == _other.getPos();
+    bool eq_types = this->type == _other.type;
+    bool eq_values = this->value == _other.value;
+    bool eq_pos = this->row == _other.row && this->pos == _other.pos;
+
+    return this->type == Type::id ? eq_types && eq_values && eq_pos : eq_types && eq_pos;
 }
 
 bool Token::operator!=(const Token &_other) const
